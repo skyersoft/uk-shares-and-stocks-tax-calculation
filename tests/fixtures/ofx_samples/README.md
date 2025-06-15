@@ -12,6 +12,9 @@ This directory contains OFX (Open Financial Exchange) sample files extracted fro
 - `cusip_security.ofx` - Transaction using CUSIP security identifier
 - `multiple_transactions.ofx` - Multiple transactions in single file
 - `mixed_security_types.ofx` - Mix of buy/sell with different security ID types
+- `extreme_currency_rates.ofx` - Transactions with extreme currency exchange rates
+- `negative_price_transaction.ofx` - Transaction with negative price value
+- `zero_quantity_transaction.ofx` - Transaction with zero quantity
 
 ### Header and Structure Samples
 - `header_only.ofx` - OFX file with only header information
@@ -21,6 +24,7 @@ This directory contains OFX (Open Financial Exchange) sample files extracted fro
 - `malformed_xml.ofx` - Malformed XML for parser error testing
 - `error_recovery.ofx` - Mix of valid and invalid transactions for error recovery testing
 - `empty_file.ofx` - Empty file for empty file handling tests
+- `truncated_malformed.ofx` - Truncated file with malformed content for robustness testing
 
 ## Usage
 
@@ -30,6 +34,8 @@ These files should be used by test cases instead of embedding OFX content direct
 2. Makes OFX samples reusable across different tests
 3. Allows easy modification of test data without changing test code
 4. Provides a central location for all test OFX samples
+
+See `example_usage.py` for a demonstration of how to use these test fixtures in your tests.
 
 ## Important Notes
 
