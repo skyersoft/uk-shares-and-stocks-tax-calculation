@@ -1,0 +1,24 @@
+<OFX>
+  <INVSTMTTRNRS>
+    <INVSTMTRS>
+      <INVTRANLIST>
+        <BUYSTOCK>
+          <INVBUY>
+            <INVTRAN>
+              <FITID>TXN2</FITID>
+              <DTTRADE>20240102</DTTRADE>
+            </INVTRAN>
+            <SECID>
+              <UNIQUEID>037833100</UNIQUEID>
+              <UNIQUEIDTYPE>CUSIP</UNIQUEIDTYPE>
+            </SECID>
+            <UNITS>5</UNITS>
+            <UNITPRICE>20</UNITPRICE>
+            <TOTAL>100</TOTAL>
+            <COMMISSION>1</COMMISSION>
+          </INVBUY>
+        </BUYSTOCK>
+      </INVTRANLIST>
+    </INVSTMTRS>
+  </INVSTMTTRNRS>
+</OFX>

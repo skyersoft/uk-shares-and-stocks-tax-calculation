@@ -1,0 +1,29 @@
+<OFX>
+    <INVSTMTTRNRS>
+        <INVSTMTRS>
+            <INVTRANLIST>
+                <SELLSTOCK>
+                    <INVSELL>
+                        <INVTRAN>
+                            <FITID>TX125</FITID>
+                            <DTTRADE>20240104</DTTRADE>
+                            <MEMO>Sell 50 AAPL</MEMO>
+                        </INVTRAN>
+                        <SECID>
+                            <UNIQUEID>GB00B16KPT44</UNIQUEID>
+                            <UNIQUEIDTYPE>ISIN</UNIQUEIDTYPE>
+                        </SECID>
+                        <UNITS>50</UNITS>
+                        <UNITPRICE>180.75</UNITPRICE>
+                        <COMMISSION>14.95</COMMISSION>
+                        <TOTAL>9022.55</TOTAL>
+                        <CURRENCY>
+                            <CURSYM>GBP</CURSYM>
+                            <CURRATE>1.0</CURRATE>
+                        </CURRENCY>
+                    </INVSELL>
+                </SELLSTOCK>
+            </INVTRANLIST>
+        </INVSTMTRS>
+    </INVSTMTTRNRS>
+</OFX>

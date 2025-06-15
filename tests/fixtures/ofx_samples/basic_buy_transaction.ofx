@@ -1,0 +1,30 @@
+<OFX>
+    <SIGNONMSGSRSV1>
+        <SONRS>
+            <STATUS><CODE>0</CODE><SEVERITY>INFO</SEVERITY></STATUS>
+            <DTSERVER>20240101100000</DTSERVER>
+            <FI><ORG>IBKR</ORG></FI>
+        </SONRS>
+    </SIGNONMSGSRSV1>
+    <INVSTMTTRNRS>
+        <INVSTMTRS>
+            <INVTRANLIST>
+                <BUYSTOCK>
+                    <INVBUY>
+                        <INVTRAN>
+                            <FITID>TX123</FITID>
+                            <DTTRADE>20240101</DTTRADE>
+                        </INVTRAN>
+                        <SECID>
+                            <UNIQUEID>GB00B16KPT44</UNIQUEID>
+                            <UNIQUEIDTYPE>ISIN</UNIQUEIDTYPE>
+                        </SECID>
+                        <UNITS>100</UNITS>
+                        <UNITPRICE>10.50</UNITPRICE>
+                        <TOTAL>1050.00</TOTAL>
+                    </INVBUY>
+                </BUYSTOCK>
+            </INVTRANLIST>
+        </INVSTMTRS>
+    </INVSTMTTRNRS>
+</OFX>

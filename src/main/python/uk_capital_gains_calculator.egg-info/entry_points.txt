@@ -1,0 +1,2 @@
+[console_scripts]
+capital-gains-calculator = capital_gains_calculator:main

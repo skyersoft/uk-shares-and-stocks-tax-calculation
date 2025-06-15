@@ -1,0 +1,16 @@
+<OFX>
+    <SIGNONMSGSRSV1>
+        <SONRS>
+            <STATUS>
+                <CODE>0</CODE>
+                <SEVERITY>INFO</SEVERITY>
+            </STATUS>
+            <DTSERVER>20240101100000</DTSERVER>
+            <LANGUAGE>ENG</LANGUAGE>
+            <FI>
+                <ORG>IBKR</ORG>
+                <FID>IBKR</FID>
+            </FI>
+        </SONRS>
+    </SIGNONMSGSRSV1>
+</OFX>

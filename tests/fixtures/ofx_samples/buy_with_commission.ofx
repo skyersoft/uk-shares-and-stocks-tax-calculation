@@ -1,0 +1,29 @@
+<OFX>
+    <INVSTMTTRNRS>
+        <INVSTMTRS>
+            <INVTRANLIST>
+                <BUYSTOCK>
+                    <INVBUY>
+                        <INVTRAN>
+                            <FITID>TX124</FITID>
+                            <DTTRADE>20240103</DTTRADE>
+                            <MEMO>Buy 200 MSFT</MEMO>
+                        </INVTRAN>
+                        <SECID>
+                            <UNIQUEID>594918104</UNIQUEID>
+                            <UNIQUEIDTYPE>CUSIP</UNIQUEIDTYPE>
+                        </SECID>
+                        <UNITS>200</UNITS>
+                        <UNITPRICE>350.50</UNITPRICE>
+                        <COMMISSION>9.95</COMMISSION>
+                        <TOTAL>70109.95</TOTAL>
+                        <CURRENCY>
+                            <CURSYM>USD</CURSYM>
+                            <CURRATE>1.25</CURRATE>
+                        </CURRENCY>
+                    </INVBUY>
+                </BUYSTOCK>
+            </INVTRANLIST>
+        </INVSTMTRS>
+    </INVSTMTTRNRS>
+</OFX>

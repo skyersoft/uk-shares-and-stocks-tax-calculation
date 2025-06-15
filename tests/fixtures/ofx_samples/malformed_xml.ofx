@@ -1,0 +1,9 @@
+<OFX>
+    <INVSTMTTRNRS>
+        <INVSTMTRS>
+            <INVTRANLIST>
+                <BUYSTOCK>
+                    <INVBUY>
+                        <INVTRAN>
+                            <FITID>TX123
+        <!-- Missing closing tags -->
