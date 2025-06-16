@@ -245,4 +245,95 @@ This project plan is structured for agile, test-driven development, and SOLID-co
 
 ---
 
-_Last updated: 2025-06-13_
+### Sprint 5: CSV Parser Implementation
+
+#### CSV Sample Management
+
+| ID    | Component               | Task Description                                                           | Test Type  | Dependencies | Status |
+|-------|------------------------|---------------------------------------------------------------------------|------------|--------------|---------|
+| 11.1  | Test Infrastructure    | Extract CSV sample from Sharesight.csv to test fixtures                   | Infrastructure | None     | Todo    |
+| 11.2  | Test Infrastructure    | Create CSV sample loader utility for tests                                | Infrastructure | 11.1     | Todo    |
+| 11.3  | Test Infrastructure    | Document CSV sample structure and column mapping                           | Infrastructure | 11.2     | Todo    |
+| 11.4  | Test Infrastructure    | Create minimal test CSV files for different transaction types              | Infrastructure | 11.1-11.3 | Todo    |
+
+#### CSV Parser Interface and Component Tasks
+
+| ID    | Component               | Task Description                                                           | Test Type  | Dependencies | Status |
+|-------|------------------------|---------------------------------------------------------------------------|------------|--------------|---------|
+| 12.1  | CsvParserInterface     | Design interface for CSV parser compatible with existing FileParserInterface | Unit     | None        | Todo    |
+| 12.2  | CsvParserInterface     | Test CSV parser interface with mock implementations                        | Unit       | 12.1        | Todo    |
+| 12.3  | CsvSecurityFactory     | Test creating Security objects from CSV row data                           | Unit       | 12.1-12.2   | Todo    |
+| 12.4  | CsvSecurityFactory     | Implement security factory for CSV with ID type handling                    | Unit       | 12.3        | Todo    |
+| 12.5  | CsvTransactionFactory  | Test creating Transaction objects from CSV row data                        | Unit       | 12.4        | Todo    |
+| 12.6  | CsvTransactionFactory  | Implement transaction factory for CSV with currency support                 | Unit       | 12.5        | Todo    |
+| 12.7  | CsvParser              | Test parsing CSV headers and column validation                             | Unit       | 12.1-12.6   | Todo    |
+| 12.8  | CsvParser              | Test CSV row parsing with different transaction types                      | Unit       | 12.7        | Todo    |
+| 12.9  | CsvParser              | Implement CSV parser using component factories                              | Unit       | 12.7-12.8   | Todo    |
+| 12.10 | CsvParser              | Test currency conversion transactions handling                             | Unit       | 12.9        | Todo    |
+| 12.11 | CsvParser              | Implement special case handling for currency transactions                   | Unit       | 12.10       | Todo    |
+| 12.12 | CsvParser              | Integration test for full CSV file parsing                                 | Integration| 12.1-12.11  | Todo    |
+
+#### File Format Detection Tasks
+
+| ID    | Component               | Task Description                                                           | Test Type  | Dependencies | Status |
+|-------|------------------------|---------------------------------------------------------------------------|------------|--------------|---------|
+| 13.1  | FileFormatDetector     | Test file format detection (QFX vs CSV)                                   | Unit       | None         | Todo    |
+| 13.2  | FileFormatDetector     | Implement file format detection service                                    | Unit       | 13.1         | Todo    |
+| 13.3  | ParserFactory          | Test parser factory for selecting appropriate parser                       | Unit       | 13.2         | Todo    |
+| 13.4  | ParserFactory          | Implement parser factory with strategy pattern                             | Unit       | 13.3         | Todo    |
+
+#### Calculator Integration Tasks
+
+| ID    | Component               | Task Description                                                           | Test Type  | Dependencies | Status |
+|-------|------------------------|---------------------------------------------------------------------------|------------|--------------|---------|
+| 14.1  | CapitalGainsCalculator | Update calculator to use parser factory                                    | Unit       | 13.1-13.4    | Todo    |
+| 14.2  | CapitalGainsCalculator | Test calculator with CSV input                                             | Integration| 14.1         | Todo    |
+| 14.3  | CLI                    | Update CLI to support CSV files                                           | Unit       | 14.1-14.2    | Todo    |
+| 14.4  | CLI                    | Test CLI with CSV input                                                    | Integration| 14.3         | Todo    |
+
+#### System Testing Tasks
+
+| ID    | Component               | Task Description                                                           | Test Type  | Dependencies | Status |
+|-------|------------------------|---------------------------------------------------------------------------|------------|--------------|---------|
+| 15.1  | System                 | End-to-end system test with CSV file                                      | System     | 11.1-14.4    | Todo    |
+| 15.2  | System                 | Performance testing with large CSV files                                  | System     | 15.1         | Todo    |
+| 15.3  | System                 | Test switching between file formats in same run                           | System     | 15.1-15.2    | Todo    |
+
+#### Documentation Tasks
+
+| ID    | Component               | Task Description                                                           | Test Type  | Dependencies | Status |
+|-------|------------------------|---------------------------------------------------------------------------|------------|--------------|---------|
+| 16.1  | Documentation          | Update README with CSV file support                                       | Doc        | 15.1-15.3    | Todo    |
+| 16.2  | Documentation          | Document CSV file format requirements and column mapping                    | Doc        | 16.1         | Todo    |
+| 16.3  | Documentation          | Create sample usage guide for CSV files                                    | Doc        | 16.2         | Todo    |
+
+### Implementation Notes for CSV Parser
+
+- CSV parser should implement the same interface as QFX parser for plug-and-play compatibility
+- Use Python's CSV module or pandas for CSV parsing
+- Handle the Sharesight CSV format's specific columns:
+  - Map "BUY"/"SELL" in Buy/Sell column to TransactionType
+  - Extract security information from Symbol, SecurityID, SecurityIDType columns
+  - Handle currency conversion using CurrencyPrimary and FXRateToBase
+  - Filter out currency exchange transactions or handle them appropriately
+- Follow existing patterns:
+  - Factory classes for creating domain objects
+  - Dependency injection for testability
+  - Robust error handling and validation
+- Ensure backwards compatibility with existing QFX parsing
+
+### Test Strategy for CSV Parser
+
+- Unit tests:
+  - Test each component in isolation with mock CSV data
+  - Test edge cases: missing columns, currency transactions, zero quantities
+  - Test validation of required fields
+- Integration tests:
+  - Test with real Sharesight CSV files
+  - Verify proper mapping of all transaction fields
+  - Test end-to-end parsing pipeline
+- System tests:
+  - Test full tax calculation with CSV input
+  - Compare results with QFX-based calculations for consistency
+
+_Last updated: 2025-06-16_
