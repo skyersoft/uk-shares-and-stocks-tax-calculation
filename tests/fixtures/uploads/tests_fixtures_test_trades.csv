@@ -1,0 +1,3 @@
+Date,Type,Symbol,Quantity,Price,Amount,Currency
+2024-01-01,BUY,AAPL,100,150.00,-15000.00,USD
+2024-06-01,SELL,AAPL,100,180.00,18000.00,USD

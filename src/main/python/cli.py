@@ -20,13 +20,14 @@ class CapitalGainsCLI:
         """Create and configure the argument parser."""
         parser = argparse.ArgumentParser(
             prog='capital-gains-calculator',
-            description='Calculate UK Capital Gains Tax from QFX files',
+            description='Calculate UK Capital Gains Tax from financial transaction files',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog="""
 Examples:
   %(prog)s data.qfx 2024-2025
+  %(prog)s data.csv 2024-2025 --file-type csv
   %(prog)s data.qfx 2024-2025 --output my_report --format json
-  %(prog)s data.qfx 2024-2025 -o report -f csv --verbose
+  %(prog)s data.csv 2024-2025 -t csv -o report -f csv --verbose
             """
         )
         
@@ -40,7 +41,7 @@ Examples:
         # Required positional arguments
         parser.add_argument(
             'file_path',
-            help='Path to the QFX file to process'
+            help='Path to the transaction file to process'
         )
         
         parser.add_argument(
@@ -49,6 +50,13 @@ Examples:
         )
         
         # Optional arguments
+        parser.add_argument(
+            '-t', '--file-type',
+            choices=['qfx', 'csv'],
+            default='qfx',
+            help='Type of input file (default: qfx)'
+        )
+        
         parser.add_argument(
             '-o', '--output',
             dest='output_path',
@@ -74,15 +82,21 @@ Examples:
         """Parse command line arguments."""
         return self.parser.parse_args(args)
     
-    def validate_file_path(self, file_path: str) -> None:
-        """Validate the input file path."""
+    def validate_file_path(self, file_path: str, file_type: str) -> None:
+        """Validate the input file path.
+        
+        Args:
+            file_path: Path to the input file
+            file_type: Type of file ('qfx' or 'csv')
+        """
         # Check if file exists
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
         
-        # Check file extension
-        if not file_path.lower().endswith('.qfx'):
-            raise ValueError("File must have .qfx extension")
+        # Check file extension matches file type
+        expected_extension = f".{file_type.lower()}"
+        if not file_path.lower().endswith(expected_extension):
+            raise ValueError(f"File type mismatch: Expected {file_type} file but {file_path} has different extension")
     
     def validate_tax_year(self, tax_year: str) -> None:
         """Validate the tax year format."""
@@ -129,14 +143,32 @@ Examples:
                 logging.basicConfig(level=logging.WARNING)
             
             # Validate arguments
-            self.validate_file_path(parsed_args.file_path)
+            self.validate_file_path(parsed_args.file_path, parsed_args.file_type)
             self.validate_tax_year(parsed_args.tax_year)
             
             if parsed_args.output_path:
                 self.validate_output_path(parsed_args.output_path)
             
-            # Create calculator
-            calculator = CapitalGainsTaxCalculator()
+            # Create calculator with appropriate report generator based on format
+            from .services.report_generator import CSVReportGenerator, JSONReportGenerator
+            
+            if parsed_args.format == 'json':
+                report_generator = JSONReportGenerator()
+            else:
+                report_generator = CSVReportGenerator()
+            
+            # Create parser based on file type
+            if parsed_args.file_type == 'csv':
+                from .parsers.csv_parser import CsvParser
+                file_parser = CsvParser(base_currency="GBP")
+            else:  # Default to QFX parser
+                from .parsers.qfx_parser import QfxParser
+                file_parser = QfxParser(base_currency="GBP")
+            
+            calculator = CapitalGainsTaxCalculator(
+                file_parser=file_parser,
+                report_generator=report_generator
+            )
             
             # Determine output path
             output_path = parsed_args.output_path
@@ -147,6 +179,7 @@ Examples:
             
             if parsed_args.verbose:
                 print(f"Processing file: {parsed_args.file_path}")
+                print(f"File type: {parsed_args.file_type}")
                 print(f"Tax year: {parsed_args.tax_year}")
                 print(f"Output format: {parsed_args.format}")
                 print(f"Output path: {output_path}")
@@ -157,7 +190,8 @@ Examples:
                 file_path=parsed_args.file_path,
                 tax_year=parsed_args.tax_year,
                 output_path=output_path,
-                report_format=parsed_args.format
+                report_format=parsed_args.format,
+                file_type=parsed_args.file_type
             )
             
             # Display results

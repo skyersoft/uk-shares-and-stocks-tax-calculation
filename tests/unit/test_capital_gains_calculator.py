@@ -134,36 +134,30 @@ class TestCapitalGainsTaxCalculator:
             temp_path = temp_file.name
         
         try:
-            # Mock the CSVReportGenerator since the calculator creates a new one based on format
-            with patch('src.main.python.calculator.CSVReportGenerator') as mock_csv_gen_class:
-                mock_csv_gen = Mock()
-                mock_csv_gen_class.return_value = mock_csv_gen
-                
-                result = calculator.calculate(
-                    file_path=temp_path,
-                    tax_year="2024-2025",
-                    output_path="test_report",
-                    report_format="csv"
-                )
-                
-                # Verify all components were called correctly
-                mock_parser.parse.assert_called_once_with(temp_path)
-                mock_matcher.match_disposals.assert_called_once_with(transactions)
-                mock_disposal_calc.calculate_disposal.assert_called_once_with(sell_tx, [buy_tx])
-                mock_tax_calc.calculate_tax_year_summary.assert_called_once_with(
-                    disposals=[disposal],
-                    tax_year="2024-2025"
-                )
-                
-                # Verify CSV generator was created and used
-                mock_csv_gen_class.assert_called_once()
-                mock_csv_gen.generate_report.assert_called_once_with(
-                    tax_year_summary=summary,
-                    output_path="test_report"
-                )
-                
-                # Verify result
-                assert result is summary
+            result = calculator.calculate(
+                file_path=temp_path,
+                tax_year="2024-2025",
+                output_path="test_report",
+                report_format="csv"
+            )
+            
+            # Verify all components were called correctly
+            mock_parser.parse.assert_called_once_with(temp_path)
+            mock_matcher.match_disposals.assert_called_once_with(transactions)
+            mock_disposal_calc.calculate_disposal.assert_called_once_with(sell_tx, [buy_tx])
+            mock_tax_calc.calculate_tax_year_summary.assert_called_once_with(
+                disposals=[disposal],
+                tax_year="2024-2025"
+            )
+            
+            # Verify injected report generator was used
+            mock_report_gen.generate_report.assert_called_once_with(
+                tax_year_summary=summary,
+                output_path="test_report"
+            )
+            
+            # Verify result
+            assert result is summary
             
         finally:
             # Clean up
@@ -177,6 +171,7 @@ class TestCapitalGainsTaxCalculator:
         mock_matcher = Mock()
         mock_disposal_calc = Mock()
         mock_tax_calc = Mock()
+        mock_report_gen = Mock()
         
         # Set up minimal mock data with at least one transaction
         security = Security(isin="GB00B16KPT44", symbol="HSBA")
@@ -203,40 +198,35 @@ class TestCapitalGainsTaxCalculator:
         mock_matcher.match_disposals.return_value = matched_disposals
         mock_tax_calc.calculate_tax_year_summary.return_value = summary
         
-        # Create calculator with mocks (no report generator mock to test format selection)
+        # Create calculator with mocks including report generator
         calculator = CapitalGainsTaxCalculator(
             file_parser=mock_parser,
             transaction_matcher=mock_matcher,
             disposal_calculator=mock_disposal_calc,
-            tax_year_calculator=mock_tax_calc
+            tax_year_calculator=mock_tax_calc,
+            report_generator=mock_report_gen
         )
         
-        # Mock the JSONReportGenerator
-        with patch('src.main.python.calculator.JSONReportGenerator') as mock_json_gen_class:
-            mock_json_gen = Mock()
-            mock_json_gen_class.return_value = mock_json_gen
+        with tempfile.NamedTemporaryFile(suffix='.qfx', delete=False) as temp_file:
+            temp_path = temp_file.name
+        
+        try:
+            calculator.calculate(
+                file_path=temp_path,
+                tax_year="2024-2025",
+                output_path="test_report",
+                report_format="json"
+            )
             
-            with tempfile.NamedTemporaryFile(suffix='.qfx', delete=False) as temp_file:
-                temp_path = temp_file.name
+            # Verify injected report generator was used (regardless of format)
+            mock_report_gen.generate_report.assert_called_once_with(
+                tax_year_summary=summary,
+                output_path="test_report"
+            )
             
-            try:
-                calculator.calculate(
-                    file_path=temp_path,
-                    tax_year="2024-2025",
-                    output_path="test_report",
-                    report_format="json"
-                )
-                
-                # Verify JSON generator was created and used
-                mock_json_gen_class.assert_called_once()
-                mock_json_gen.generate_report.assert_called_once_with(
-                    tax_year_summary=summary,
-                    output_path="test_report"
-                )
-                
-            finally:
-                if os.path.exists(temp_path):
-                    os.unlink(temp_path)
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
     
     def test_calculate_with_invalid_tax_year(self):
         """Test calculation with invalid tax year raises error."""
@@ -520,10 +510,77 @@ class TestCapitalGainsTaxCalculator:
                 
                 # Verify logging calls
                 assert mock_log.call_count >= 2
-                mock_log.assert_any_call(f"Calculating capital gains for 2024-2025 from {temp_path}")
+                mock_log.assert_any_call(f"Calculating capital gains for 2024-2025 from {temp_path} (file type: qfx)")
                 mock_log.assert_any_call("Parsed 1 transactions")
                 mock_log.assert_any_call("Matched 0 disposals")
                 
+        finally:
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+    
+    def test_calculate_with_csv_file_type(self):
+        """Test calculation with CSV file type parameter."""
+        # Create mock parser that supports CSV files
+        mock_csv_parser = Mock()
+        mock_csv_parser.supports_file_type.return_value = True
+        mock_csv_parser.parse.return_value = [
+            Transaction(
+                transaction_id="buy1",
+                transaction_type=TransactionType.BUY,
+                security=Security(isin="GB00B16KPT44", symbol="HSBA"),
+                date=datetime(2024, 1, 15),
+                quantity=100.0,
+                price_per_unit=5.0,
+                commission=10.0,
+                taxes=0.0,
+                currency=Currency(code="GBP", rate_to_base=1.0)
+            )
+        ]
+        
+        # Create mock components
+        mock_matcher = Mock()
+        mock_disposal_calc = Mock()
+        mock_tax_calc = Mock()
+        mock_report_gen = Mock()
+        
+        # Configure mocks
+        mock_matcher.match_disposals.return_value = []
+        mock_tax_calc.calculate_tax_year_summary.return_value = TaxYearSummary(tax_year="2024-2025")
+        
+        # Create calculator with CSV parser
+        calculator = CapitalGainsTaxCalculator(
+            file_parser=mock_csv_parser,
+            transaction_matcher=mock_matcher,
+            disposal_calculator=mock_disposal_calc,
+            tax_year_calculator=mock_tax_calc,
+            report_generator=mock_report_gen
+        )
+        
+        with tempfile.NamedTemporaryFile(suffix='.csv', delete=False) as temp_file:
+            temp_path = temp_file.name
+        
+        try:
+            # Test with CSV file type - should use the injected parser
+            result = calculator.calculate(
+                file_path=temp_path,
+                tax_year="2024-2025",
+                output_path="test_report",
+                file_type="csv"
+            )
+            
+            # Verify the injected parser was used
+            mock_csv_parser.supports_file_type.assert_called_with("csv")
+            mock_csv_parser.parse.assert_called_once_with(temp_path)
+            
+            # Verify other components were called
+            mock_matcher.match_disposals.assert_called_once()
+            mock_tax_calc.calculate_tax_year_summary.assert_called_once()
+            mock_report_gen.generate_report.assert_called_once()
+            
+            # Verify result
+            assert isinstance(result, TaxYearSummary)
+            assert result.tax_year == "2024-2025"
+            
         finally:
             if os.path.exists(temp_path):
                 os.unlink(temp_path)

@@ -300,8 +300,14 @@ class TestEdgeCases:
         
         print("✓ Memory pressure scenarios handled correctly")
     
-    def test_unicode_and_encoding_edge_cases(self, calculator, temp_output_dir):
+    def test_unicode_and_encoding_edge_cases(self, temp_output_dir):
         """Test handling of unicode and encoding edge cases."""
+        # Import the JSON report generator
+        from src.main.python.services.report_generator import JSONReportGenerator
+        
+        # Create calculator with JSON report generator
+        calculator = CapitalGainsTaxCalculator(report_generator=JSONReportGenerator())
+        
         # Create a file with unicode characters in path
         unicode_dir = os.path.join(temp_output_dir, "测试目录")
         os.makedirs(unicode_dir, exist_ok=True)
@@ -348,14 +354,22 @@ class TestEdgeCases:
         
         print("✓ Boundary date scenarios handled correctly")
     
-    def test_output_format_edge_cases(self, calculator, temp_output_dir):
+    def test_output_format_edge_cases(self, temp_output_dir):
         """Test edge cases in output format handling."""
+        from src.main.python.services.report_generator import CSVReportGenerator, JSONReportGenerator
+        
         sample_path = get_sample_path("basic_buy_transaction.ofx")
         
         # Test both supported formats
         formats = ["csv", "json"]
         
         for fmt in formats:
+            # Create calculator with appropriate report generator
+            if fmt == "json":
+                calculator = CapitalGainsTaxCalculator(report_generator=JSONReportGenerator())
+            else:
+                calculator = CapitalGainsTaxCalculator(report_generator=CSVReportGenerator())
+            
             output_path = os.path.join(temp_output_dir, f"format_test_{fmt}")
             
             summary = calculator.calculate(

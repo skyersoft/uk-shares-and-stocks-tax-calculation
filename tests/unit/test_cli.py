@@ -94,6 +94,48 @@ class TestCapitalGainsCLI:
         with pytest.raises(SystemExit):
             cli.parse_args([])
     
+    def test_parse_file_type_argument(self):
+        """Test parsing file type argument."""
+        cli = CapitalGainsCLI()
+        
+        # Test with CSV file type
+        args = cli.parse_args([
+            'test.csv',
+            '2024-2025',
+            '--file-type', 'csv'
+        ])
+        
+        assert args.file_path == 'test.csv'
+        assert args.file_type == 'csv'
+        
+        # Test with QFX file type (explicit)
+        args = cli.parse_args([
+            'test.qfx',
+            '2024-2025',
+            '--file-type', 'qfx'
+        ])
+        
+        assert args.file_path == 'test.qfx'
+        assert args.file_type == 'qfx'
+        
+        # Test with short argument
+        args = cli.parse_args([
+            'test.csv',
+            '2024-2025',
+            '-t', 'csv'
+        ])
+        
+        assert args.file_path == 'test.csv'
+        assert args.file_type == 'csv'
+        
+        # Test default value
+        args = cli.parse_args([
+            'test.qfx',
+            '2024-2025'
+        ])
+        
+        assert args.file_type == 'qfx'  # Default
+    
     def test_validate_file_path_exists(self):
         """Test file path validation when file exists."""
         cli = CapitalGainsCLI()
@@ -104,7 +146,7 @@ class TestCapitalGainsCLI:
         
         try:
             # Should not raise any exception
-            cli.validate_file_path(temp_path)
+            cli.validate_file_path(temp_path, 'qfx')
         finally:
             os.unlink(temp_path)
     
@@ -114,7 +156,7 @@ class TestCapitalGainsCLI:
         
         # Should raise FileNotFoundError
         with pytest.raises(FileNotFoundError):
-            cli.validate_file_path('non_existent_file.qfx')
+            cli.validate_file_path('non_existent_file.qfx', 'qfx')
     
     def test_validate_file_path_wrong_extension(self):
         """Test file path validation with wrong extension."""
@@ -126,8 +168,8 @@ class TestCapitalGainsCLI:
         
         try:
             # Should raise ValueError for wrong extension
-            with pytest.raises(ValueError, match="File must have .qfx extension"):
-                cli.validate_file_path(temp_path)
+            with pytest.raises(ValueError, match="File type mismatch"):
+                cli.validate_file_path(temp_path, 'qfx')
         finally:
             os.unlink(temp_path)
     
@@ -228,7 +270,8 @@ class TestCapitalGainsCLI:
                     file_path=temp_path,
                     tax_year='2024-2025',
                     output_path='test_report',
-                    report_format='csv'
+                    report_format='csv',
+                    file_type='qfx'
                 )
                 
                 # Verify return value

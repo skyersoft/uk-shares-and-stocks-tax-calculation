@@ -22,6 +22,10 @@ class QfxParser(FileParserInterface):
         self.base_currency = base_currency
         self.logger = logging.getLogger(__name__)
     
+    def supports_file_type(self, file_type: str) -> bool:
+        """Check if this parser supports the given file type."""
+        return file_type.lower() == "qfx"
+    
     def parse(self, file_path: str) -> List[Transaction]:
         """Parse a QFX file and extract transactions.
         

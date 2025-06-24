@@ -11,6 +11,7 @@ from .interfaces.calculator_interfaces import (
     ReportGeneratorInterface
 )
 from .parsers.qfx_parser import QfxParser
+from .parsers.csv_parser import CsvParser
 from .services.transaction_matcher import UKTransactionMatcher
 from .services.disposal_calculator import UKDisposalCalculator
 from .services.tax_year_calculator import UKTaxYearCalculator
@@ -57,7 +58,8 @@ class CapitalGainsTaxCalculator:
         file_path: str,
         tax_year: str,
         output_path: str,
-        report_format: str = "csv"
+        report_format: str = "csv",
+        file_type: str = "qfx"
     ) -> TaxYearSummary:
         """
         Calculate capital gains for a tax year from a transaction file.
@@ -67,11 +69,12 @@ class CapitalGainsTaxCalculator:
             tax_year: The tax year to calculate for
             output_path: Path to save the report
             report_format: Format of the report ("csv" or "json")
+            file_type: Type of the input file ("qfx" or "csv")
             
         Returns:
             Tax year summary
         """
-        self.logger.info(f"Calculating capital gains for {tax_year} from {file_path}")
+        self.logger.info(f"Calculating capital gains for {tax_year} from {file_path} (file type: {file_type})")
         
         # Validate tax year
         if tax_year not in TAX_YEARS:
@@ -80,6 +83,12 @@ class CapitalGainsTaxCalculator:
         # Check if file exists
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
+        
+        # Validate that the injected parser supports the requested file type
+        if not self.file_parser.supports_file_type(file_type):
+            raise ValueError(f"The configured parser does not support file type: {file_type}")
+        
+        self.logger.info(f"Using injected parser for file: {file_path}")
         
         # Parse the transaction file
         transactions = self.file_parser.parse(file_path)
@@ -106,7 +115,10 @@ class CapitalGainsTaxCalculator:
         )
         
         # Generate report
-        if report_format.lower() == "json":
+        # Use injected report generator if available, otherwise create one based on format
+        if self.report_generator:
+            report_generator = self.report_generator
+        elif report_format.lower() == "json":
             report_generator = JSONReportGenerator()
         else:
             report_generator = CSVReportGenerator()

@@ -32,7 +32,7 @@ def calculate(
         ...,
         "--input",
         "-i",
-        help="Path to the QFX file containing transaction data"
+        help="Path to the input file containing transaction data (QFX or CSV)"
     ),
     tax_year: str = typer.Option(
         ...,
@@ -52,6 +52,12 @@ def calculate(
         "-f",
         help="Format of the report (csv or json)"
     ),
+    file_type: str = typer.Option(
+        "qfx",
+        "--file-type",
+        "-ft",
+        help="Type of input file (qfx or csv)"
+    ),
     verbose: bool = typer.Option(
         False,
         "--verbose",
@@ -64,35 +70,31 @@ def calculate(
     if verbose:
         logger.setLevel(logging.DEBUG)
     
+    console.print(f"[bold green]Calculating capital gains for {tax_year}...[/]")
+    console.print(f"Calculating capital gains for {tax_year} from {input_file} (file type: {file_type})")
+    
     try:
-        # Validate input file
-        if not os.path.isfile(input_file):
-            console.print(f"[bold red]Error:[/] Input file not found: {input_file}")
-            sys.exit(1)
+        # Create appropriate parser based on file type
+        if file_type.lower() == "csv":
+            from .parsers.csv_parser import CsvParser
+            parser = CsvParser(base_currency=BASE_CURRENCY)
+        else:
+            from .parsers.qfx_parser import QfxParser
+            parser = QfxParser(base_currency=BASE_CURRENCY)
         
-        # Validate tax year
-        if tax_year not in TAX_YEARS:
-            console.print(f"[bold red]Error:[/] Invalid tax year: {tax_year}")
-            console.print(f"Available years: {', '.join(TAX_YEARS.keys())}")
-            sys.exit(1)
-        
-        # Validate format
-        if format.lower() not in ["csv", "json"]:
-            console.print(f"[bold red]Error:[/] Invalid format: {format}")
-            console.print("Supported formats: csv, json")
-            sys.exit(1)
-        
-        # Create the calculator
-        calculator = CapitalGainsTaxCalculator(base_currency=BASE_CURRENCY)
+        calculator = CapitalGainsTaxCalculator(file_parser=parser)
+
+        # Add txt extension if no extension in output_file
+        if not os.path.splitext(output_file)[1]:
+            output_file = f"{output_file}.{format}"
         
         # Calculate capital gains
-        console.print(f"[bold green]Calculating capital gains for {tax_year}...[/]")
-        
         summary = calculator.calculate(
             file_path=input_file,
             tax_year=tax_year,
             output_path=output_file,
-            report_format=format
+            report_format=format,
+            file_type=file_type
         )
         
         # Print summary

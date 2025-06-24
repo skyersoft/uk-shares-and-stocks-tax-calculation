@@ -1,0 +1,87 @@
+2025-06-24 00:01:37,929 - src.main.python.calculator - INFO - Calculating capital gains for 2024-2025 from data/Sharesight.csv (file type: csv)
+2025-06-24 00:01:37,929 - src.main.python.calculator - INFO - Using injected parser for file: data/Sharesight.csv
+2025-06-24 00:01:37,929 - src.main.python.parsers.csv_parser - INFO - Parsing CSV file: data/Sharesight.csv
+2025-06-24 00:01:37,931 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: EUR.GBP
+2025-06-24 00:01:37,931 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: EUR.GBP
+2025-06-24 00:01:37,931 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: EUR.GBP
+2025-06-24 00:01:37,931 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: EUR.GBP
+2025-06-24 00:01:37,931 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: EUR.GBP
+2025-06-24 00:01:37,931 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: EUR.GBP
+2025-06-24 00:01:37,931 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: EUR.GBP
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: EUR.GBP
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: EUR.GBP
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,932 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.parsers.csv_parser - DEBUG - Skipping currency transaction: GBP.USD
+2025-06-24 00:01:37,933 - src.main.python.calculator - INFO - Parsed 18 transactions
+2025-06-24 00:01:37,933 - src.main.python.services.transaction_matcher - INFO - Matching disposal: 247291552 - 100.0 shares of GB00B63H8491
+2025-06-24 00:01:37,933 - src.main.python.services.transaction_matcher - INFO - Matching disposal: 257619312 - 100.0 shares of CA65340P1062
+2025-06-24 00:01:37,933 - src.main.python.services.transaction_matcher - INFO - Matching disposal: 257619315 - 30.0 shares of CA65340P1062
+2025-06-24 00:01:37,934 - src.main.python.services.transaction_matcher - INFO - Matching disposal: 258574714 - 10.0 shares of US0231351067
+2025-06-24 00:01:37,934 - src.main.python.services.transaction_matcher - INFO - Matching disposal: 263254302 - 12.0 shares of JE00B1VS3770
+2025-06-24 00:01:37,934 - src.main.python.calculator - INFO - Matched 5 disposals
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - INFO - Calculating disposal for 247291552 - 100.0 shares of GB00B63H8491
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Gross proceeds: 438.0, Selling costs: 3.0
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Currency rate: 1.0
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Net proceeds in base currency: 435.0
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - INFO - Disposal calculation: Proceeds=435.00, Cost basis=438.60, Expenses=2.69, Gain/Loss=-6.29, Rule=section-104
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - INFO - Calculating disposal for 257619312 - 100.0 shares of CA65340P1062
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Gross proceeds: 799.0, Selling costs: 1.0436122
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Currency rate: 0.77013
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Net proceeds in base currency: 614.530152936414
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - INFO - Disposal calculation: Proceeds=614.53, Cost basis=607.98, Expenses=0.80, Gain/Loss=5.75, Rule=section-104
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - INFO - Calculating disposal for 257619315 - 30.0 shares of CA65340P1062
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Gross proceeds: 239.70000000000002, Selling costs: 0.01380366
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Currency rate: 0.77013
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Net proceeds in base currency: 184.5895303873242
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - INFO - Disposal calculation: Proceeds=184.59, Cost basis=182.39, Expenses=0.80, Gain/Loss=1.40, Rule=section-104
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - INFO - Calculating disposal for 258574714 - 10.0 shares of US0231351067
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Gross proceeds: 1978.3000000000002, Selling costs: 1.05713674
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Currency rate: 0.7738
+2025-06-24 00:01:37,934 - src.main.python.services.disposal_calculator - DEBUG - Net proceeds in base currency: 1529.9905275905883
+2025-06-24 00:01:37,935 - src.main.python.services.disposal_calculator - INFO - Disposal calculation: Proceeds=1529.99, Cost basis=1508.82, Expenses=0.80, Gain/Loss=20.38, Rule=section-104
+2025-06-24 00:01:37,935 - src.main.python.services.disposal_calculator - INFO - Calculating disposal for 263254302 - 12.0 shares of JE00B1VS3770
+2025-06-24 00:01:37,935 - src.main.python.services.disposal_calculator - DEBUG - Gross proceeds: 2331.12, Selling costs: 3.0
+2025-06-24 00:01:37,935 - src.main.python.services.disposal_calculator - DEBUG - Currency rate: 1.0
+2025-06-24 00:01:37,935 - src.main.python.services.disposal_calculator - DEBUG - Net proceeds in base currency: 2328.12
+2025-06-24 00:01:37,935 - src.main.python.services.disposal_calculator - INFO - Disposal calculation: Proceeds=2328.12, Cost basis=2280.84, Expenses=3.00, Gain/Loss=44.28, Rule=section-104
+2025-06-24 00:01:37,935 - src.main.python.services.tax_year_calculator - INFO - Calculating tax year summary for 2024-2025
+2025-06-24 00:01:37,935 - src.main.python.services.tax_year_calculator - INFO - Tax year summary 2024-2025: Total gains=71.80, Total losses=6.29, Net gain=65.51, Exemption used=65.51, Taxable gain=0.00
+2025-06-24 00:01:37,935 - src.main.python.services.report_generator - INFO - Generating CSV report for 2024-2025 to sharesight_report_2024_2025.csv
+2025-06-24 00:01:37,935 - src.main.python.services.report_generator - INFO - CSV report successfully generated at sharesight_report_2024_2025.csv

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}About the Capital Gains Tax Calculator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h2>About the UK Capital Gains Tax Calculator</h2>
+            </div>
+            <div class="card-body">
+                <h3>Overview</h3>
+                <p class="lead">
+                    This application calculates UK capital gains tax for stocks and shares based on 
+                    transactions from QFX (Quicken Exchange Format) or CSV files, typically exported 
+                    from trading platforms like Interactive Brokers.
+                </p>
+                
+                <h3 class="mt-4">Key Features</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Basic Share Disposals</h5>
+                        <ul>
+                            <li>Buy shares and sell them later, calculating the gain or loss</li>
+                            <li>Handle multiple acquisitions and disposals of the same security</li>
+                            <li>Apply the "same-day" and "30-day" matching rules</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Currency Considerations</h5>
+                        <ul>
+                            <li>Convert non-GBP transactions to GBP for tax calculations</li>
+                            <li>Handle exchange rate fluctuations between purchase and sale</li>
+                            <li>Use exchange rates at the time of each transaction</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h5>Costs and Allowances</h5>
+                        <ul>
+                            <li>Include purchase and selling costs (commissions, fees)</li>
+                            <li>Calculate total allowable costs for each disposal</li>
+                            <li>Apply the annual tax-free allowance (Annual Exempt Amount)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Share Pooling</h5>
+                        <ul>
+                            <li>Maintain share pools for securities with multiple purchase dates</li>
+                            <li>Calculate the average purchase price for securities in a pool</li>
+                            <li>Apply "Section 104 holding" rules for matching disposals</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <h3 class="mt-4">Tax Rules Implemented</h3>
+                <p>
+                    The calculator follows HMRC rules for capital gains tax calculations. In the UK, 
+                    when you dispose of shares, the matching rules determine which shares you've sold 
+                    in this specific order:
+                </p>
+                <ol>
+                    <li>Shares acquired on the same day as the disposal</li>
+                    <li>Shares acquired in the 30 days following the disposal (FIFO basis)</li>
+                    <li>Shares from the "Section 104" holding (average cost of all remaining shares)</li>
+                </ol>
+                
+                <h3 class="mt-4">Implementation Details</h3>
+                <p>
+                    The calculator follows SOLID principles and includes comprehensive tests. It 
+                    processes QFX or CSV files to extract transaction data, applies UK tax rules, 
+                    and generates detailed reports of gains/losses.
+                </p>
+                
+                <h5>Technical Features</h5>
+                <ul>
+                    <li>Robust QFX and CSV parsing with error recovery</li>
+                    <li>Support for various security identifier formats (ISIN, CUSIP, etc.)</li>
+                    <li>Currency conversion for non-GBP transactions</li>
+                    <li>Configurable tax year reporting</li>
+                </ul>
+                
+                <div class="alert alert-warning mt-4">
+                    <h4 class="alert-heading">Disclaimer</h4>
+                    <p>
+                        This calculator is provided for informational purposes only and does not 
+                        constitute tax advice. The calculations are based on our understanding of 
+                        UK tax rules, but we cannot guarantee their accuracy or applicability to 
+                        your specific situation.
+                    </p>
+                    <p class="mb-0">
+                        Always consult with a qualified tax professional before submitting your tax 
+                        return. The creators of this calculator accept no liability for any errors 
+                        or omissions.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

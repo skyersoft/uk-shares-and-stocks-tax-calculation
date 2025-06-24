@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 
 from src.main.python.calculator import CapitalGainsTaxCalculator
+from src.main.python.parsers.csv_parser import CsvParser
 
 
 class TestCapitalGainsCalculatorIntegration:
@@ -83,8 +84,11 @@ class TestCapitalGainsCalculatorIntegration:
     
     def test_end_to_end_calculation_with_json_format(self, real_qfx_file_path):
         """Test complete end-to-end calculation with JSON report format."""
-        # Create calculator with default components
-        calculator = CapitalGainsTaxCalculator()
+        # Import the JSON report generator
+        from src.main.python.services.report_generator import JSONReportGenerator
+        
+        # Create calculator with JSON report generator
+        calculator = CapitalGainsTaxCalculator(report_generator=JSONReportGenerator())
         
         # Test JSON report generation
         with tempfile.NamedTemporaryFile(mode='w', suffix='_test_report', delete=False) as temp_file:

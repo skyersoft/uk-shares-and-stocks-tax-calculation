@@ -19,6 +19,11 @@ class FileParserInterface(ABC):
     def parse(self, file_path: str) -> List[Transaction]:
         """Parse a file and return a list of transactions."""
         pass
+    
+    @abstractmethod
+    def supports_file_type(self, file_type: str) -> bool:
+        """Check if this parser supports the given file type."""
+        pass
 
 
 class TransactionMatcherInterface(ABC):

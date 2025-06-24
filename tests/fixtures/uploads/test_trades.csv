@@ -1,0 +1,3 @@
+ClientAccountID,Symbol,SecurityID,SecurityIDType,Buy/Sell,TradeDate,SettleDate,Quantity,UnitPrice,TotalAmount,Commission,Currency,CurrencyRate,AssetClass
+U12345,AAPL,US0378331005,ISIN,BUY,2024-01-15,2024-01-17,100,150.00,-15000.00,7.95,USD,0.787,STK
+U12345,AAPL,US0378331005,ISIN,SELL,2024-06-15,2024-06-17,100,180.00,18000.00,8.25,USD,0.780,STK

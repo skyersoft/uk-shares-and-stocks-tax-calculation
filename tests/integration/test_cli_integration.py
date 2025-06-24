@@ -17,6 +17,13 @@ class TestCLIIntegration:
         """Path to real QFX data file."""
         return "data/U11075163_20240408_20250404.qfx"
     
+    @pytest.fixture
+    def sample_csv_file_path(self):
+        """Path to sample CSV data file."""
+        # Use one of the test CSV samples for testing CLI
+        from tests.fixtures.csv_samples import get_sample_path, MIXED_TRANSACTIONS
+        return get_sample_path(MIXED_TRANSACTIONS)
+    
     def test_cli_with_real_qfx_data_csv_format(self, real_qfx_file_path):
         """Test CLI end-to-end with real QFX data and CSV output (Task 9.4)."""
         cli = CapitalGainsCLI()
@@ -333,3 +340,55 @@ class TestCLIIntegration:
             assert execution_time < 5.0, f"CLI execution took too long: {execution_time:.2f} seconds"
             
             print(f"✓ Performance test passed - execution time: {execution_time:.3f} seconds")
+    
+    def test_cli_with_csv_data_explicit_type_selection(self, sample_csv_file_path):
+        """Test CLI end-to-end with CSV data and explicit file type selection (Task 14.4)."""
+        cli = CapitalGainsCLI()
+        
+        # Create temporary output directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = os.path.join(temp_dir, "csv_integration_test_report")
+            
+            # Run CLI with CSV data and explicit file type
+            result = cli.run([
+                sample_csv_file_path,
+                "2024-2025",
+                "--output", output_path,
+                "--format", "csv",
+                "--file-type", "csv"  # Explicitly specify CSV file type
+            ])
+            
+            # Verify successful execution
+            assert result == 0, "CLI should return success exit code"
+            
+            # Verify CSV report was created
+            csv_file = f"{output_path}.csv"
+            assert os.path.exists(csv_file), f"CSV report should be created at {csv_file}"
+            
+            # Verify CSV content
+            with open(csv_file, 'r') as f:
+                content = f.read()
+                
+                # Check for expected headers and content
+                assert 'Disposal Date' in content, "CSV should contain disposal headers"
+                assert 'Security' in content, "CSV should contain security information"
+                assert 'Quantity' in content, "CSV should contain quantity information"
+                
+            # Also test with short form argument for file type
+            output_path = os.path.join(temp_dir, "csv_integration_short_args")
+            
+            # Run CLI with CSV data and short-form file type argument
+            result = cli.run([
+                sample_csv_file_path,
+                "2024-2025",
+                "-o", output_path,
+                "-f", "csv",
+                "-t", "csv"  # Short form for file-type
+            ])
+            
+            # Verify successful execution
+            assert result == 0, "CLI should return success exit code with short arguments"
+            
+            # Verify CSV report was created
+            csv_file = f"{output_path}.csv"
+            assert os.path.exists(csv_file), f"CSV report should be created at {csv_file}"
