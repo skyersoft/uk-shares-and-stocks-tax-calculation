@@ -18,19 +18,19 @@
                             <table class="table table-bordered">
                                 <tbody>
                                     <tr>
-                                        <th>Total Gain/Loss:</th>
-                                        <td class="{% if results.total_gain_loss < 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
-                                            £{{ results.total_gain_loss|abs|round(2) }} 
-                                            {% if results.total_gain_loss < 0 %}Loss{% else %}Gain{% endif %}
+                                        <th>Total Proceeds:</th>
+                                        <td>£{{ results.total_proceeds|float|round(2) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Total Gain:</th>
+                                        <td class="{% if results.total_gain|float < 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                                            £{{ results.total_gain|float|abs|round(2) }} 
+                                            {% if results.total_gain|float < 0 %}Loss{% else %}Gain{% endif %}
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Annual Exempt Amount:</th>
-                                        <td>£{{ results.annual_exemption|round(2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Taxable Gain:</th>
-                                        <td class="fw-bold">£{{ results.taxable_gain|round(2) }}</td>
+                                        <th>Total Cost:</th>
+                                        <td>£{{ results.total_cost|float|round(2) }}</td>
                                     </tr>
                                     <tr>
                                         <th>Total Disposals:</th>
@@ -47,10 +47,10 @@
                     <div class="card-header">Actions</div>
                     <div class="card-body">
                         <div class="d-grid gap-3">
-                            <a href="{{ url_for('download') }}" class="btn btn-primary">
+                            <a href="{{ url_for('main.download') }}" class="btn btn-primary">
                                 <i class="bi bi-download"></i> Download {{ output_format|upper }} Report
                             </a>
-                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-repeat"></i> Calculate Another
                             </a>
                         </div>
@@ -79,14 +79,14 @@
                 <tbody>
                     {% for disposal in results.disposals %}
                     <tr>
-                        <td>{{ disposal.date }}</td>
-                        <td>{{ disposal.security_name }}</td>
+                        <td>{{ disposal.disposal_date or 'N/A' }}</td>
+                        <td>{{ disposal.symbol or 'Unknown' }}</td>
                         <td>{{ disposal.quantity }}</td>
-                        <td>£{{ disposal.proceeds|round(2) }}</td>
-                        <td>£{{ disposal.cost_basis|round(2) }}</td>
-                        <td class="{% if disposal.gain_loss < 0 %}text-danger{% else %}text-success{% endif %}">
-                            £{{ disposal.gain_loss|abs|round(2) }} 
-                            {% if disposal.gain_loss < 0 %}Loss{% else %}Gain{% endif %}
+                        <td>£{{ disposal.proceeds|float|round(2) }}</td>
+                        <td>£{{ disposal.cost|float|round(2) }}</td>
+                        <td class="{% if disposal.gain|float < 0 %}text-danger{% else %}text-success{% endif %}">
+                            £{{ disposal.gain|float|abs|round(2) }} 
+                            {% if disposal.gain|float < 0 %}Loss{% else %}Gain{% endif %}
                         </td>
                     </tr>
                     {% endfor %}

@@ -50,7 +50,36 @@ def init_routes(storage_service, calculation_service):
                 file_type=_get_file_type(filename)
             )
 
-            session['task_id'] = task_id
+            # Wait for calculation to complete and get results
+            import time
+            max_wait = 30  # Maximum wait time in seconds
+            wait_time = 0
+            
+            while wait_time < max_wait:
+                status = calculation_service.get_calculation_status(task_id)
+                if status == 'completed':
+                    results = calculation_service.get_calculation_result(task_id)
+                    if results:
+                        # Store results in session for download
+                        session['results'] = results
+                        session['tax_year'] = form.tax_year.data
+                        session['output_format'] = 'csv'  # Default format
+                        
+                        # Render results template
+                        return render_template('results.html', 
+                                             results=results, 
+                                             tax_year=form.tax_year.data,
+                                             output_format='csv')
+                elif status == 'failed':
+                    error = calculation_service.get_calculation_error(task_id)
+                    flash(f"Calculation failed: {error or 'Unknown error'}", 'error')
+                    return redirect(url_for('main.index'))
+                
+                time.sleep(1)
+                wait_time += 1
+            
+            # If we get here, calculation timed out
+            flash('Calculation is taking longer than expected. Please try again.', 'warning')
             return redirect(url_for('main.index'))
 
         except Exception as e:
