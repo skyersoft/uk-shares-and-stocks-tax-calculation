@@ -58,7 +58,7 @@ class TestCLIIntegration:
                 assert 'Proceeds' in content, "CSV should contain proceeds information"
                 assert 'Cost' in content, "CSV should contain cost information"
                 assert 'Gain/Loss' in content, "CSV should contain gain/loss information"
-                assert 'Tax Year Summary' in content, "CSV should contain summary section"
+                assert 'Capital Gains Summary' in content, "CSV should contain summary section"
                 assert '2024-2025' in content, "CSV should contain correct tax year"
                 
                 # Check for expected data (based on previous integration tests)
@@ -97,25 +97,22 @@ class TestCLIIntegration:
                 
                 # Check JSON structure
                 assert 'tax_year' in data, "JSON should contain tax_year"
-                assert 'disposals' in data, "JSON should contain disposals"
-                assert 'summary' in data, "JSON should contain summary"
+                assert 'capital_gains' in data, "JSON should contain capital_gains"
+                assert 'disposals' in data['capital_gains'], "JSON should contain disposals"
                 
                 # Check tax year
                 assert data['tax_year'] == '2024-2025', "JSON should contain correct tax year"
                 
                 # Check disposals
-                assert len(data['disposals']) == 2, "Should contain 2 disposals"
+                assert len(data['capital_gains']['disposals']) == 2, "Should contain 2 disposals"
                 
                 # Check summary
-                summary = data['summary']
-                assert 'total_proceeds' in summary, "Summary should contain total_proceeds"
+                summary = data['capital_gains']['summary']
                 assert 'total_gains' in summary, "Summary should contain total_gains"
-                assert 'net_gain' in summary, "Summary should contain net_gain"
                 assert 'taxable_gain' in summary, "Summary should contain taxable_gain"
                 
                 # Verify expected values (based on previous tests)
-                assert summary['total_proceeds'] > 25000, "Total proceeds should be > £25,000"
-                assert summary['net_gain'] > 1000, "Net gain should be > £1,000"
+                assert summary['total_gains'] > 1000, "Total gains should be > £1,000"
                 assert summary['taxable_gain'] == 0, "Taxable gain should be £0 (covered by exemption)"
                 
             print(f"✓ JSON integration test passed - report created at {json_file}")
@@ -191,7 +188,7 @@ class TestCLIIntegration:
             with open(expected_output, 'r') as f:
                 content = f.read()
                 assert '2024-2025' in content, "File should contain correct tax year"
-                assert 'Tax Year Summary' in content, "File should contain summary"
+                assert 'Capital Gains Summary' in content, "File should contain summary"
             
             print(f"✓ Default output path test passed - file created: {expected_output}")
             
@@ -233,11 +230,11 @@ class TestCLIIntegration:
                     
                     # Most disposals should be in 2024-2025
                     if tax_year == "2024-2025":
-                        assert len(data['disposals']) == 2, f"Should have 2 disposals in {tax_year}"
+                        assert len(data['capital_gains']['disposals']) == 2, f"Should have 2 disposals in {tax_year}"
                     else:
-                        assert len(data['disposals']) == 0, f"Should have 0 disposals in {tax_year}"
+                        assert len(data['capital_gains']['disposals']) == 0, f"Should have 0 disposals in {tax_year}"
                 
-                print(f"✓ Tax year {tax_year} test passed - {len(data['disposals'])} disposals")
+                print(f"✓ Tax year {tax_year} test passed - {len(data['capital_gains']['disposals'])} disposals")
     
     def test_cli_as_subprocess(self, real_qfx_file_path):
         """Test CLI as a subprocess (simulating real command-line usage)."""

@@ -283,7 +283,9 @@ class TestRealQfxDataIntegration:
         """Test the complete tax calculation pipeline with real QFX data (Task 6.5)."""
         from src.main.python.services.transaction_matcher import UKTransactionMatcher
         from src.main.python.services.disposal_calculator import UKDisposalCalculator
-        from src.main.python.services.tax_year_calculator import UKTaxYearCalculator
+        from src.main.python.services.currency_processor import CurrencyExchangeProcessor
+        from src.main.python.services.dividend_processor import DividendProcessor
+        from src.main.python.services.tax_year_calculator import EnhancedTaxYearCalculator
         
         # Step 1: Parse transactions from real QFX file
         transactions = qfx_parser.parse(real_qfx_file_path)
@@ -312,7 +314,12 @@ class TestRealQfxDataIntegration:
         assert len(disposals) > 0, "Should have calculated some disposals"
         
         # Step 4: Calculate tax year summaries
-        tax_calculator = UKTaxYearCalculator()
+        tax_calculator = EnhancedTaxYearCalculator(
+            disposal_calculator=calculator,
+            dividend_processor=DividendProcessor(),
+            currency_processor=CurrencyExchangeProcessor(),
+            transaction_matcher=matcher
+        )
         
         # Test with 2024-2025 tax year (covers the QFX file period)
         tax_year = "2024-2025"
@@ -347,7 +354,9 @@ class TestRealQfxDataIntegration:
         """Test tax calculation across multiple tax years with real data."""
         from src.main.python.services.transaction_matcher import UKTransactionMatcher
         from src.main.python.services.disposal_calculator import UKDisposalCalculator
-        from src.main.python.services.tax_year_calculator import UKTaxYearCalculator
+        from src.main.python.services.currency_processor import CurrencyExchangeProcessor
+        from src.main.python.services.dividend_processor import DividendProcessor
+        from src.main.python.services.tax_year_calculator import EnhancedTaxYearCalculator
         
         # Parse and process transactions
         transactions = qfx_parser.parse(real_qfx_file_path)
@@ -361,7 +370,13 @@ class TestRealQfxDataIntegration:
             disposals.append(disposal)
         
         # Calculate summaries for multiple tax years
-        tax_calculator = UKTaxYearCalculator()
+        tax_calculator = EnhancedTaxYearCalculator(
+            disposal_calculator=calculator,
+            dividend_processor=DividendProcessor(),
+            currency_processor=CurrencyExchangeProcessor(),
+            transaction_matcher=matcher
+        )
+        
         tax_years = ["2023-2024", "2024-2025", "2025-2026"]
         
         total_disposals_across_years = 0

@@ -11,8 +11,10 @@ from src.main.python.models.domain_models import (
     TransactionType,
     Security,
     Currency,
-    Disposal,
-    TaxYearSummary
+    TaxYearSummary,
+    ComprehensiveTaxSummary,
+    DividendSummary,
+    CurrencyGainLossSummary
 )
 
 
@@ -61,8 +63,6 @@ class TestCapitalGainsTaxCalculator:
         """Test the main calculate method orchestration."""
         # Create mock components
         mock_parser = Mock()
-        mock_matcher = Mock()
-        mock_disposal_calc = Mock()
         mock_tax_calc = Mock()
         mock_report_gen = Mock()
         
@@ -97,34 +97,25 @@ class TestCapitalGainsTaxCalculator:
         
         transactions = [buy_tx, sell_tx]
         
-        # Mock disposal
-        disposal = Disposal(
-            security=security,
-            sell_date=datetime(2024, 6, 15),
-            quantity=100.0,
-            proceeds=690.0,
-            cost_basis=510.0,
-            expenses=0.0,
-            matching_rule="section-104"
-        )
+        # Mock comprehensive tax summary
+        capital_gains = TaxYearSummary(tax_year="2024-2025")
+        dividend_income = DividendSummary(tax_year="2024-2025")
+        currency_gains = CurrencyGainLossSummary(tax_year="2024-2025")
         
-        # Mock tax year summary
-        summary = TaxYearSummary(tax_year="2024-2025")
-        summary.add_disposal(disposal)
-        summary.annual_exemption_used = 180.0
-        summary.taxable_gain = 0.0
+        comprehensive_summary = ComprehensiveTaxSummary(
+            tax_year="2024-2025",
+            capital_gains=capital_gains,
+            dividend_income=dividend_income,
+            currency_gains=currency_gains
+        )
         
         # Configure mocks
         mock_parser.parse.return_value = transactions
-        mock_matcher.match_disposals.return_value = [(sell_tx, [buy_tx])]
-        mock_disposal_calc.calculate_disposal.return_value = disposal
-        mock_tax_calc.calculate_tax_year_summary.return_value = summary
+        mock_tax_calc.calculate_comprehensive_tax_summary.return_value = comprehensive_summary
         
         # Create calculator with mocks
         calculator = CapitalGainsTaxCalculator(
             file_parser=mock_parser,
-            transaction_matcher=mock_matcher,
-            disposal_calculator=mock_disposal_calc,
             tax_year_calculator=mock_tax_calc,
             report_generator=mock_report_gen
         )
@@ -141,23 +132,22 @@ class TestCapitalGainsTaxCalculator:
                 report_format="csv"
             )
             
-            # Verify all components were called correctly
+            # Verify components were called correctly
             mock_parser.parse.assert_called_once_with(temp_path)
-            mock_matcher.match_disposals.assert_called_once_with(transactions)
-            mock_disposal_calc.calculate_disposal.assert_called_once_with(sell_tx, [buy_tx])
-            mock_tax_calc.calculate_tax_year_summary.assert_called_once_with(
-                disposals=[disposal],
+            mock_tax_calc.calculate_comprehensive_tax_summary.assert_called_once_with(
+                transactions=transactions,
                 tax_year="2024-2025"
             )
             
             # Verify injected report generator was used
             mock_report_gen.generate_report.assert_called_once_with(
-                tax_year_summary=summary,
+                tax_year_summary=comprehensive_summary,
                 output_path="test_report"
             )
             
             # Verify result
-            assert result is summary
+            assert result is comprehensive_summary
+            assert isinstance(result, ComprehensiveTaxSummary)
             
         finally:
             # Clean up
@@ -168,8 +158,6 @@ class TestCapitalGainsTaxCalculator:
         """Test calculation with JSON report format."""
         # Create mock components
         mock_parser = Mock()
-        mock_matcher = Mock()
-        mock_disposal_calc = Mock()
         mock_tax_calc = Mock()
         mock_report_gen = Mock()
         
@@ -190,19 +178,26 @@ class TestCapitalGainsTaxCalculator:
         )
         
         transactions = [transaction]
-        matched_disposals = []
-        summary = TaxYearSummary(tax_year="2024-2025")
+        
+        # Mock comprehensive tax summary
+        capital_gains = TaxYearSummary(tax_year="2024-2025")
+        dividend_income = DividendSummary(tax_year="2024-2025")
+        currency_gains = CurrencyGainLossSummary(tax_year="2024-2025")
+        
+        comprehensive_summary = ComprehensiveTaxSummary(
+            tax_year="2024-2025",
+            capital_gains=capital_gains,
+            dividend_income=dividend_income,
+            currency_gains=currency_gains
+        )
         
         # Configure mocks
         mock_parser.parse.return_value = transactions
-        mock_matcher.match_disposals.return_value = matched_disposals
-        mock_tax_calc.calculate_tax_year_summary.return_value = summary
+        mock_tax_calc.calculate_comprehensive_tax_summary.return_value = comprehensive_summary
         
         # Create calculator with mocks including report generator
         calculator = CapitalGainsTaxCalculator(
             file_parser=mock_parser,
-            transaction_matcher=mock_matcher,
-            disposal_calculator=mock_disposal_calc,
             tax_year_calculator=mock_tax_calc,
             report_generator=mock_report_gen
         )
@@ -220,7 +215,7 @@ class TestCapitalGainsTaxCalculator:
             
             # Verify injected report generator was used (regardless of format)
             mock_report_gen.generate_report.assert_called_once_with(
-                tax_year_summary=summary,
+                tax_year_summary=comprehensive_summary,
                 output_path="test_report"
             )
             
@@ -250,8 +245,6 @@ class TestCapitalGainsTaxCalculator:
         """Test calculation with multiple disposals."""
         # Create mock components
         mock_parser = Mock()
-        mock_matcher = Mock()
-        mock_disposal_calc = Mock()
         mock_tax_calc = Mock()
         mock_report_gen = Mock()
         
@@ -308,49 +301,25 @@ class TestCapitalGainsTaxCalculator:
             )
         ]
         
-        # Mock matched disposals
-        matched_disposals = [
-            (transactions[1], [transactions[0]]),  # sell1 matched with buy1
-            (transactions[3], [transactions[2]])   # sell2 matched with buy2
-        ]
+        # Mock comprehensive tax summary with multiple disposals
+        capital_gains = TaxYearSummary(tax_year="2024-2025")
+        dividend_income = DividendSummary(tax_year="2024-2025")
+        currency_gains = CurrencyGainLossSummary(tax_year="2024-2025")
         
-        # Mock disposals
-        disposal1 = Disposal(
-            security=security1,
-            sell_date=datetime(2024, 6, 15),
-            quantity=50.0,
-            proceeds=345.0,
-            cost_basis=255.0,
-            expenses=0.0,
-            matching_rule="section-104"
+        comprehensive_summary = ComprehensiveTaxSummary(
+            tax_year="2024-2025",
+            capital_gains=capital_gains,
+            dividend_income=dividend_income,
+            currency_gains=currency_gains
         )
-        
-        disposal2 = Disposal(
-            security=security2,
-            sell_date=datetime(2024, 7, 15),
-            quantity=100.0,
-            proceeds=1190.0,
-            cost_basis=1010.0,
-            expenses=0.0,
-            matching_rule="section-104"
-        )
-        
-        # Mock tax year summary
-        summary = TaxYearSummary(tax_year="2024-2025")
-        summary.add_disposal(disposal1)
-        summary.add_disposal(disposal2)
         
         # Configure mocks
         mock_parser.parse.return_value = transactions
-        mock_matcher.match_disposals.return_value = matched_disposals
-        mock_disposal_calc.calculate_disposal.side_effect = [disposal1, disposal2]
-        mock_tax_calc.calculate_tax_year_summary.return_value = summary
+        mock_tax_calc.calculate_comprehensive_tax_summary.return_value = comprehensive_summary
         
         # Create calculator with mocks
         calculator = CapitalGainsTaxCalculator(
             file_parser=mock_parser,
-            transaction_matcher=mock_matcher,
-            disposal_calculator=mock_disposal_calc,
             tax_year_calculator=mock_tax_calc,
             report_generator=mock_report_gen
         )
@@ -366,17 +335,16 @@ class TestCapitalGainsTaxCalculator:
                 output_path="test_report"
             )
             
-            # Verify disposal calculator was called twice
-            assert mock_disposal_calc.calculate_disposal.call_count == 2
-            
-            # Verify tax year calculator was called with both disposals
-            mock_tax_calc.calculate_tax_year_summary.assert_called_once_with(
-                disposals=[disposal1, disposal2],
+            # Verify components were called correctly
+            mock_parser.parse.assert_called_once_with(temp_path)
+            mock_tax_calc.calculate_comprehensive_tax_summary.assert_called_once_with(
+                transactions=transactions,
                 tax_year="2024-2025"
             )
             
             # Verify result
-            assert result is summary
+            assert result is comprehensive_summary
+            assert isinstance(result, ComprehensiveTaxSummary)
             
         finally:
             if os.path.exists(temp_path):
@@ -386,8 +354,6 @@ class TestCapitalGainsTaxCalculator:
         """Test calculation when no disposals are found."""
         # Create mock components
         mock_parser = Mock()
-        mock_matcher = Mock()
-        mock_disposal_calc = Mock()
         mock_tax_calc = Mock()
         mock_report_gen = Mock()
         
@@ -406,22 +372,25 @@ class TestCapitalGainsTaxCalculator:
             )
         ]
         
-        # No matched disposals (only buys, no sells)
-        matched_disposals = []
+        # Mock comprehensive tax summary with no disposals
+        capital_gains = TaxYearSummary(tax_year="2024-2025")
+        dividend_income = DividendSummary(tax_year="2024-2025")
+        currency_gains = CurrencyGainLossSummary(tax_year="2024-2025")
         
-        # Empty tax year summary
-        summary = TaxYearSummary(tax_year="2024-2025")
+        comprehensive_summary = ComprehensiveTaxSummary(
+            tax_year="2024-2025",
+            capital_gains=capital_gains,
+            dividend_income=dividend_income,
+            currency_gains=currency_gains
+        )
         
         # Configure mocks
         mock_parser.parse.return_value = transactions
-        mock_matcher.match_disposals.return_value = matched_disposals
-        mock_tax_calc.calculate_tax_year_summary.return_value = summary
+        mock_tax_calc.calculate_comprehensive_tax_summary.return_value = comprehensive_summary
         
         # Create calculator with mocks
         calculator = CapitalGainsTaxCalculator(
             file_parser=mock_parser,
-            transaction_matcher=mock_matcher,
-            disposal_calculator=mock_disposal_calc,
             tax_year_calculator=mock_tax_calc,
             report_generator=mock_report_gen
         )
@@ -437,17 +406,16 @@ class TestCapitalGainsTaxCalculator:
                 output_path="test_report"
             )
             
-            # Verify disposal calculator was not called
-            mock_disposal_calc.calculate_disposal.assert_not_called()
-            
-            # Verify tax year calculator was called with empty disposals list
-            mock_tax_calc.calculate_tax_year_summary.assert_called_once_with(
-                disposals=[],
+            # Verify components were called correctly
+            mock_parser.parse.assert_called_once_with(temp_path)
+            mock_tax_calc.calculate_comprehensive_tax_summary.assert_called_once_with(
+                transactions=transactions,
                 tax_year="2024-2025"
             )
             
             # Verify result
-            assert result is summary
+            assert result is comprehensive_summary
+            assert isinstance(result, ComprehensiveTaxSummary)
             
         finally:
             if os.path.exists(temp_path):
@@ -457,8 +425,6 @@ class TestCapitalGainsTaxCalculator:
         """Test that calculation logs appropriate messages."""
         # Create mock components
         mock_parser = Mock()
-        mock_matcher = Mock()
-        mock_disposal_calc = Mock()
         mock_tax_calc = Mock()
         mock_report_gen = Mock()
         
@@ -479,19 +445,26 @@ class TestCapitalGainsTaxCalculator:
         )
         
         transactions = [transaction]
-        matched_disposals = []
-        summary = TaxYearSummary(tax_year="2024-2025")
+        
+        # Mock comprehensive tax summary
+        capital_gains = TaxYearSummary(tax_year="2024-2025")
+        dividend_income = DividendSummary(tax_year="2024-2025")
+        currency_gains = CurrencyGainLossSummary(tax_year="2024-2025")
+        
+        comprehensive_summary = ComprehensiveTaxSummary(
+            tax_year="2024-2025",
+            capital_gains=capital_gains,
+            dividend_income=dividend_income,
+            currency_gains=currency_gains
+        )
         
         # Configure mocks
         mock_parser.parse.return_value = transactions
-        mock_matcher.match_disposals.return_value = matched_disposals
-        mock_tax_calc.calculate_tax_year_summary.return_value = summary
+        mock_tax_calc.calculate_comprehensive_tax_summary.return_value = comprehensive_summary
         
         # Create calculator with mocks
         calculator = CapitalGainsTaxCalculator(
             file_parser=mock_parser,
-            transaction_matcher=mock_matcher,
-            disposal_calculator=mock_disposal_calc,
             tax_year_calculator=mock_tax_calc,
             report_generator=mock_report_gen
         )
@@ -508,11 +481,10 @@ class TestCapitalGainsTaxCalculator:
                     output_path="test_report"
                 )
                 
-                # Verify logging calls
+                # Verify logging calls - updated for new architecture
                 assert mock_log.call_count >= 2
-                mock_log.assert_any_call(f"Calculating capital gains for 2024-2025 from {temp_path} (file type: qfx)")
+                mock_log.assert_any_call(f"Calculating comprehensive tax for 2024-2025 from {temp_path} (file type: qfx)")
                 mock_log.assert_any_call("Parsed 1 transactions")
-                mock_log.assert_any_call("Matched 0 disposals")
                 
         finally:
             if os.path.exists(temp_path):
@@ -538,20 +510,27 @@ class TestCapitalGainsTaxCalculator:
         ]
         
         # Create mock components
-        mock_matcher = Mock()
-        mock_disposal_calc = Mock()
         mock_tax_calc = Mock()
         mock_report_gen = Mock()
         
+        # Mock comprehensive tax summary
+        capital_gains = TaxYearSummary(tax_year="2024-2025")
+        dividend_income = DividendSummary(tax_year="2024-2025")
+        currency_gains = CurrencyGainLossSummary(tax_year="2024-2025")
+        
+        comprehensive_summary = ComprehensiveTaxSummary(
+            tax_year="2024-2025",
+            capital_gains=capital_gains,
+            dividend_income=dividend_income,
+            currency_gains=currency_gains
+        )
+        
         # Configure mocks
-        mock_matcher.match_disposals.return_value = []
-        mock_tax_calc.calculate_tax_year_summary.return_value = TaxYearSummary(tax_year="2024-2025")
+        mock_tax_calc.calculate_comprehensive_tax_summary.return_value = comprehensive_summary
         
         # Create calculator with CSV parser
         calculator = CapitalGainsTaxCalculator(
             file_parser=mock_csv_parser,
-            transaction_matcher=mock_matcher,
-            disposal_calculator=mock_disposal_calc,
             tax_year_calculator=mock_tax_calc,
             report_generator=mock_report_gen
         )
@@ -573,12 +552,11 @@ class TestCapitalGainsTaxCalculator:
             mock_csv_parser.parse.assert_called_once_with(temp_path)
             
             # Verify other components were called
-            mock_matcher.match_disposals.assert_called_once()
-            mock_tax_calc.calculate_tax_year_summary.assert_called_once()
+            mock_tax_calc.calculate_comprehensive_tax_summary.assert_called_once()
             mock_report_gen.generate_report.assert_called_once()
             
             # Verify result
-            assert isinstance(result, TaxYearSummary)
+            assert isinstance(result, ComprehensiveTaxSummary)
             assert result.tax_year == "2024-2025"
             
         finally:

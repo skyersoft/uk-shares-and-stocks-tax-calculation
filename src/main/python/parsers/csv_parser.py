@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 
 from ..interfaces.calculator_interfaces import FileParserInterface
-from ..models.domain_models import Transaction, TransactionType, Security, Currency
+from ..models.domain_models import Transaction, TransactionType, Security, Currency, AssetClass
 
 
 class CsvParser(FileParserInterface):
@@ -46,19 +46,9 @@ class CsvParser(FileParserInterface):
             with open(file_path, 'r', encoding='utf-8') as file:
                 reader = csv.DictReader(file)
                 for row in reader:
-                    # Skip currency exchange transactions for now
-                    if self._is_currency_transaction(row):
-                        self.logger.debug(f"Skipping currency transaction: {row.get('Symbol')}")
-                        continue
-                    
-                    # Skip rows that don't have required fields
-                    if not self._has_required_fields(row):
-                        self.logger.warning(f"Skipping row with missing required fields: {row}")
-                        continue
-                    
                     # Create transaction
                     transaction = self._create_transaction_from_row(row)
-                    if transaction:
+                    if transaction: # Only add if transaction creation was successful
                         transactions.append(transaction)
             
             return transactions
@@ -66,47 +56,6 @@ class CsvParser(FileParserInterface):
         except Exception as e:
             self.logger.error(f"Error parsing CSV file: {e}")
             return transactions
-    
-    def _is_currency_transaction(self, row: Dict[str, Any]) -> bool:
-        """Check if a row represents a currency exchange transaction.
-        
-        Args:
-            row: A dictionary representing a row from the CSV
-            
-        Returns:
-            True if the row is a currency transaction, False otherwise
-        """
-        symbol = row.get('Symbol', '')
-        asset_class = row.get('AssetClass', '')
-        
-        # Currency transactions have 'CASH' as AssetClass and currency pairs as Symbol
-        return (asset_class == 'CASH' and 
-                ('.' in symbol or symbol in ['EUR/GBP', 'GBP/USD', 'USD/EUR']))
-    
-    def _has_required_fields(self, row: Dict[str, Any]) -> bool:
-        """Check if a row has all required fields for transaction creation.
-        
-        Args:
-            row: A dictionary representing a row from the CSV
-            
-        Returns:
-            True if the row has all required fields, False otherwise
-        """
-        required_fields = [
-            'Buy/Sell', 'TradeDate', 'Symbol', 'Quantity'
-        ]
-        
-        # Check for price field (can be TradePrice or UnitPrice)
-        has_price = 'TradePrice' in row or 'UnitPrice' in row
-        
-        # Check for currency field (can be CurrencyPrimary or Currency)
-        has_currency = 'CurrencyPrimary' in row or 'Currency' in row
-        
-        # Check for FX rate field (can be FXRateToBase or CurrencyRate)
-        has_fx_rate = 'FXRateToBase' in row or 'CurrencyRate' in row
-        
-        return (all(field in row and row[field] for field in required_fields) and
-                has_price and has_currency and has_fx_rate)
     
     def _create_transaction_from_row(self, row: Dict[str, Any]) -> Optional[Transaction]:
         """Create a Transaction object from a CSV row.
@@ -119,29 +68,51 @@ class CsvParser(FileParserInterface):
         """
         try:
             # Determine transaction type
-            transaction_type = self._get_transaction_type(row)
+            transaction_type = self._map_transaction_type(row)
             
             # Create security
             security = self._create_security_from_row(row)
             
-            # Parse date
-            date = self._parse_date(row.get('TradeDate', ''))
+            # Parse date (handle alternative field names)
+            date_str = row.get('TradeDate') or row.get('Date', '')
+            date = self._parse_date(date_str)
+            if not date: # If date parsing failed, skip this row
+                self.logger.warning(f"Skipping row due to invalid date: {row}")
+                return None
             
             # Parse quantity (ensure it's positive for buys, negative for sells)
-            quantity = float(row.get('Quantity', '0'))
+            quantity_str = row.get('Quantity', '0')
+            if not quantity_str:
+                self.logger.warning(f"Skipping row due to missing quantity: {row}")
+                return None
+            quantity = float(quantity_str)
+            
+            # Sharesight CSV has quantity as positive for both buy/sell, adjust for internal model
             if transaction_type == TransactionType.SELL and quantity > 0:
                 quantity = -quantity
-            elif transaction_type == TransactionType.BUY and quantity < 0:
-                quantity = abs(quantity)
             
             # Parse price and fees (handle alternative field names)
-            price_per_unit = float(row.get('TradePrice') or row.get('UnitPrice', '0'))
+            price_per_unit_str = row.get('TradePrice') or row.get('UnitPrice', '0')
+            if not price_per_unit_str:
+                self.logger.warning(f"Skipping row due to missing price: {row}")
+                return None
+            price_per_unit = float(price_per_unit_str)
+            
             commission = abs(float(row.get('IBCommission') or row.get('Commission', '0')))
             taxes = abs(float(row.get('Taxes', '0')))
             
+            # Extract additional fields (these are not critical for basic transaction creation)
+            close_price = float(row.get('ClosePrice', '0'))
+            mtm_pnl = float(row.get('MtmPnl', '0'))
+            fifo_pnl_realized = float(row.get('FifoPnlRealized', '0'))
+            
             # Create currency (handle alternative field names)
             currency_code = row.get('CurrencyPrimary') or row.get('Currency', self.base_currency)
-            fx_rate = float(row.get('FXRateToBase') or row.get('CurrencyRate', '1.0'))
+            fx_rate_str = row.get('FXRateToBase') or row.get('CurrencyRate', '1.0')
+            if not fx_rate_str:
+                self.logger.warning(f"Skipping row due to missing FX rate: {row}")
+                return None
+            fx_rate = float(fx_rate_str)
             currency = Currency(code=currency_code, rate_to_base=fx_rate)
             
             # Create transaction
@@ -158,28 +129,44 @@ class CsvParser(FileParserInterface):
             )
             
         except (ValueError, TypeError) as e:
-            self.logger.error(f"Error creating transaction from row: {e}")
+            self.logger.error(f"Error creating transaction from row: {row}. Error: {e}")
             return None
     
-    def _get_transaction_type(self, row: Dict[str, Any]) -> TransactionType:
-        """Determine the transaction type from a CSV row.
-        
-        Args:
-            row: A dictionary representing a row from the CSV
-            
-        Returns:
-            A TransactionType enum value
-        """
+    def _map_transaction_type(self, row: Dict[str, Any]) -> TransactionType:
+        """Map Sharesight transaction data to internal transaction types."""
+        asset_class = row.get('AssetClass', '')
         buy_sell = row.get('Buy/Sell', '')
-        
-        if buy_sell == 'BUY':
+        transaction_type_str = row.get('TransactionType', '')
+
+        if asset_class == 'CASH':
+            return TransactionType.CURRENCY_EXCHANGE
+        elif buy_sell == 'BUY':
             return TransactionType.BUY
         elif buy_sell == 'SELL':
             return TransactionType.SELL
-        else:
-            # Default to BUY if unknown
-            self.logger.warning(f"Unknown transaction type: {buy_sell}, defaulting to BUY")
-            return TransactionType.BUY
+        elif 'DIV' in transaction_type_str:
+            return TransactionType.DIVIDEND
+        elif 'INT' in transaction_type_str:
+            return TransactionType.INTEREST
+        elif 'COMM' in transaction_type_str:
+            return TransactionType.COMMISSION
+        elif 'TAX' in transaction_type_str:
+            return TransactionType.TAX_WITHHOLDING
+        elif 'SPLIT' in transaction_type_str:
+            return TransactionType.SPLIT
+        elif 'MERGER' in transaction_type_str:
+            return TransactionType.MERGER
+        elif 'TRANSFER_IN' in transaction_type_str:
+            return TransactionType.TRANSFER_IN
+        elif 'TRANSFER_OUT' in transaction_type_str:
+            return TransactionType.TRANSFER_OUT
+        elif 'CASH_ADJ' in transaction_type_str:
+            return TransactionType.CASH_ADJUSTMENT
+        elif 'FEE' in transaction_type_str:
+            return TransactionType.FEE
+        
+        self.logger.warning(f"Unknown transaction type in row: {row}, defaulting to BUY")
+        return TransactionType.BUY
     
     def _create_security_from_row(self, row: Dict[str, Any]) -> Security:
         """Create a Security object from a CSV row.
@@ -191,7 +178,13 @@ class CsvParser(FileParserInterface):
             A Security object
         """
         symbol = row.get('Symbol', '')
-        name = row.get('Description', '')
+        name = row.get('Name', '') or row.get('Description', '')
+        
+        # Get asset class information if available
+        asset_class_str = row.get('AssetClass', '')
+        sub_category = row.get('SubCategory', '')
+        listing_exchange = row.get('ListingExchange', '')
+        trading_exchange = row.get('Exchange', '')
         
         # Determine security ID and type
         security_id = row.get('SecurityID', '')
@@ -204,24 +197,55 @@ class CsvParser(FileParserInterface):
         
         # Create security based on ID type
         if security_id_type == 'ISIN':
-            return Security.create_with_isin(
+            security = Security.create_with_isin(
                 isin=security_id,
                 symbol=symbol,
                 name=name
             )
         elif security_id_type == 'CUSIP':
-            return Security.create_with_cusip(
+            security = Security.create_with_cusip(
                 cusip=security_id,
                 symbol=symbol,
                 name=name
             )
         else:
             # Default to using symbol as ticker if no recognized ID
-            return Security.create_with_ticker(
+            security = Security.create_with_ticker(
                 ticker=symbol,
                 symbol=symbol,
                 name=name
             )
+        
+        # Set asset class if available and the security has the attribute
+        if asset_class_str:
+            try:
+                # Map CSV asset class strings to AssetClass enum
+                asset_class_map = {
+                    'STK': AssetClass.STOCK,
+                    'ETF': AssetClass.ETF,
+                    'CLOSED-END FUND': AssetClass.CLOSED_END_FUND,
+                    'CASH': AssetClass.CASH,
+                    'BOND': AssetClass.BOND,
+                    'OPT': AssetClass.OPTION,
+                    'FUT': AssetClass.FUTURE
+                }
+                
+                if asset_class_str in asset_class_map:
+                    security.asset_class = asset_class_map[asset_class_str]
+            except (AttributeError, ValueError) as e:
+                self.logger.warning(f"Could not set asset class: {e}")
+        
+        # Set exchange information if available and the security has the attributes
+        if listing_exchange:
+            security.listing_exchange = listing_exchange
+        
+        if trading_exchange:
+            security.trading_exchange = trading_exchange
+        
+        if sub_category:
+            security.sub_category = sub_category
+        
+        return security
     
     def _parse_date(self, date_str: str) -> datetime:
         """Parse a date string from the CSV file.
@@ -240,6 +264,9 @@ class CsvParser(FileParserInterface):
                 # Fallback to MM/DD/YYYY format
                 return datetime.strptime(date_str, '%m/%d/%Y')
             except ValueError:
-                self.logger.error(f"Error parsing date: {date_str}")
-                # Return current date as fallback
-                return datetime.now()
+                try:
+                    # Try DD/MM/YYYY format
+                    return datetime.strptime(date_str, '%d/%m/%Y')
+                except ValueError:
+                    self.logger.error(f"Error parsing date: {date_str}")
+                    return None # Return None on parsing failure

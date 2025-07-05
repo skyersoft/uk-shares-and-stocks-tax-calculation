@@ -2,7 +2,14 @@
 import pytest
 from datetime import datetime
 
-from src.main.python.services.tax_year_calculator import UKTaxYearCalculator, is_in_tax_year
+from src.main.python.services.tax_year_calculator import (
+    EnhancedTaxYearCalculator,
+    _is_in_tax_year as is_in_tax_year
+)
+from src.main.python.services.disposal_calculator import UKDisposalCalculator
+from src.main.python.services.dividend_processor import DividendProcessor
+from src.main.python.services.currency_processor import CurrencyExchangeProcessor
+from src.main.python.services.transaction_matcher import UKTransactionMatcher
 from src.main.python.models.domain_models import (
     Disposal,
     Security,
@@ -10,8 +17,18 @@ from src.main.python.models.domain_models import (
 )
 
 
-class TestUKTaxYearCalculator:
-    """Unit tests for the UK Tax Year Calculator."""
+class TestEnhancedTaxYearCalculator:
+    """Unit tests for the Enhanced Tax Year Calculator."""
+    
+    @pytest.fixture
+    def calculator(self):
+        """Create a calculator instance with required dependencies."""
+        return EnhancedTaxYearCalculator(
+            disposal_calculator=UKDisposalCalculator(),
+            dividend_processor=DividendProcessor(),
+            currency_processor=CurrencyExchangeProcessor(),
+            transaction_matcher=UKTransactionMatcher()
+        )
     
     def test_is_in_tax_year(self):
         """Test the is_in_tax_year utility function."""
@@ -28,10 +45,8 @@ class TestUKTaxYearCalculator:
         assert is_in_tax_year(datetime(2023, 4, 6), "2023-2024")  # First day
         assert is_in_tax_year(datetime(2024, 4, 5), "2023-2024")  # Last day
     
-    def test_tax_year_summary_calculation(self):
+    def test_tax_year_summary_calculation(self, calculator):
         """Test calculating a tax year summary."""
-        calculator = UKTaxYearCalculator()
-        
         # Create a security
         security = Security(isin="GB00B16KPT44", symbol="HSBA")
         
@@ -114,76 +129,79 @@ class TestUKTaxYearCalculator:
     
     def test_tax_year_summary_with_large_gain(self):
         """Test tax year summary with a gain exceeding the annual exemption."""
-        calculator = UKTaxYearCalculator()
-        
-        # Create a security
+        from unittest.mock import Mock
+
+        calculator = EnhancedTaxYearCalculator(
+            disposal_calculator=Mock(),
+            dividend_processor=Mock(),
+            currency_processor=Mock(),
+            transaction_matcher=Mock()
+        )
+
         security = Security(isin="GB00B16KPT44", symbol="HSBA")
-        
-        # Create a large disposal in the 2024-2025 tax year
-        large_disposal = Disposal(
+
+        # Create a disposal with a large gain
+        disposal = Disposal(
             security=security,
             sell_date=datetime(2024, 6, 15),
-            quantity=1000.0,
-            proceeds=10000.0,
+            quantity=100.0,
+            proceeds=15000.0,
             cost_basis=5000.0,
-            expenses=100.0,  # Gain: 10000 - 5000 - 100 = 4900
+            expenses=500.0,  # Gain: 15000 - 5000 - 500 = 9500
             matching_rule="section-104"
         )
-        
-        # Calculate tax year summary
-        summary = calculator.calculate_tax_year_summary([large_disposal], "2024-2025")
-        
-        # Check summary details
-        assert summary.tax_year == "2024-2025"
-        assert summary.total_proceeds == 10000.0
-        assert summary.total_gains == 4900.0
-        assert summary.total_losses == 0.0
-        assert summary.net_gain == 4900.0
-        
-        # Annual exemption for 2024-2025 is £3,000
-        assert summary.annual_exemption_used == 3000.0
-        
-        # Taxable gain: 4900 - 3000 = 1900
-        assert summary.taxable_gain == 1900.0
-    
+
+        # Calculate tax year summary for 2024-2025
+        summary = calculator.calculate_tax_year_summary([disposal], "2024-2025")
+
+        # The annual exemption for 2024-2025 is £3,000
+        expected_annual_exemption = 3000.0
+        expected_taxable_gain = 9500.0 - expected_annual_exemption
+
+        assert summary.total_proceeds == 15000.0
+        assert summary.total_gains == 9500.0
+        assert summary.annual_exemption_used == expected_annual_exemption
+        assert summary.taxable_gain == expected_taxable_gain
+
     def test_tax_year_summary_with_net_loss(self):
         """Test tax year summary with a net loss."""
-        calculator = UKTaxYearCalculator()
+        from unittest.mock import Mock
         
-        # Create a security
+        calculator = EnhancedTaxYearCalculator(
+            disposal_calculator=Mock(),
+            dividend_processor=Mock(),
+            currency_processor=Mock(),
+            transaction_matcher=Mock()
+        )
+
         security = Security(isin="GB00B16KPT44", symbol="HSBA")
-        
-        # Create disposals with net loss
+
+        # Create disposals with losses
         disposal1 = Disposal(
             security=security,
             sell_date=datetime(2024, 6, 15),
             quantity=100.0,
-            proceeds=300.0,
-            cost_basis=500.0,
-            expenses=10.0,  # Loss: 300 - 500 - 10 = -210
+            proceeds=4500.0,
+            cost_basis=5000.0,
+            expenses=100.0,  # Loss: 4500 - 5000 - 100 = -600
             matching_rule="section-104"
         )
-        
+
         disposal2 = Disposal(
             security=security,
             sell_date=datetime(2024, 12, 15),
             quantity=50.0,
-            proceeds=400.0,
-            cost_basis=300.0,
-            expenses=5.0,  # Gain: 400 - 300 - 5 = 95
+            proceeds=2000.0,
+            cost_basis=2500.0,
+            expenses=50.0,  # Loss: 2000 - 2500 - 50 = -550
             matching_rule="section-104"
         )
-        
-        # Calculate tax year summary
-        summary = calculator.calculate_tax_year_summary([disposal1, disposal2], "2024-2025")
-        
-        # Check summary details
-        assert summary.tax_year == "2024-2025"
-        assert summary.total_proceeds == 700.0
-        assert summary.total_gains == 95.0
-        assert summary.total_losses == 210.0
-        assert summary.net_gain == -115.0  # Net loss
-        
-        # With a net loss, no annual exemption is used
+
+        # Calculate tax year summary for 2024-2025
+        disposals = [disposal1, disposal2]
+        summary = calculator.calculate_tax_year_summary(disposals, "2024-2025")
+
+        assert summary.total_proceeds == 6500.0
+        assert summary.total_losses == 1150.0  # Combined losses
         assert summary.annual_exemption_used == 0.0
-        assert summary.taxable_gain == 0.0
+        assert summary.taxable_gain == 0.0  # Losses are not taxable

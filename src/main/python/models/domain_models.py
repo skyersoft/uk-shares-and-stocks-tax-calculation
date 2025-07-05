@@ -2,7 +2,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from uuid import UUID, uuid4
 
 
@@ -11,11 +11,27 @@ class TransactionType(Enum):
     BUY = "BUY"
     SELL = "SELL"
     DIVIDEND = "DIV"
+    CURRENCY_EXCHANGE = "FX"
+    INTEREST = "INT"
+    COMMISSION = "COMM"
+    TAX_WITHHOLDING = "TAX"
     SPLIT = "SPLIT"
     MERGER = "MERGER"
-    FEE = "FEE"
     TRANSFER_IN = "TRANSFER_IN"
     TRANSFER_OUT = "TRANSFER_OUT"
+    CASH_ADJUSTMENT = "CASH_ADJ"
+    FEE = "FEE"
+
+
+class AssetClass(Enum):
+    """Types of asset classes for securities."""
+    STOCK = "STK"
+    ETF = "ETF"
+    CLOSED_END_FUND = "CLOSED-END FUND"
+    CASH = "CASH"
+    BOND = "BOND"
+    OPTION = "OPT"
+    FUTURE = "FUT"
 
 
 @dataclass
@@ -133,6 +149,10 @@ class Security:
     symbol: str = ""
     name: Optional[str] = None
     security_type: Optional[str] = None  # Type of identifier (ISIN, CUSIP, SEDOL, TICKER)
+    asset_class: AssetClass = AssetClass.STOCK
+    sub_category: Optional[str] = None  # COMMON, PREFERRED, etc.
+    listing_exchange: Optional[str] = None  # LSE, NASDAQ, NYSE, etc.
+    trading_exchange: Optional[str] = None  # Actual trading venue
     
     def __post_init__(self):
         """Validate security data after initialization."""
@@ -216,11 +236,11 @@ class Security:
         if ticker.startswith("TICKER:"):
             ticker = ticker[7:]  # Remove "TICKER:" prefix
         
-        # Ticker should be 1-10 characters (reasonable range)
-        if not (1 <= len(ticker) <= 10):
-            raise ValueError(f"Ticker must be 1-10 characters, got {len(ticker)}: {ticker}")
+        # Ticker should be 1-20 characters (allowing for longer symbols with exchange suffixes)
+        if not (1 <= len(ticker) <= 20):
+            raise ValueError(f"Ticker must be 1-20 characters, got {len(ticker)}: {ticker}")
         
-        # Ticker should be alphanumeric (may include dots for exchange suffixes)
+        # Ticker should be alphanumeric (may include dots and hyphens for exchange suffixes)
         if not all(c.isalnum() or c in '.:-' for c in ticker):
             raise ValueError(f"Ticker contains invalid characters: {ticker}")
     
@@ -558,7 +578,6 @@ class SharePool:
 
 
 @dataclass
-@dataclass
 class Disposal:
     """Represents a disposal of shares for tax purposes."""
     id: UUID = field(default_factory=uuid4)
@@ -601,3 +620,443 @@ class TaxYearSummary:
         else:
             self.total_losses += abs(disposal.gain_or_loss)
         self.net_gain = self.total_gains - self.total_losses
+
+
+@dataclass
+class DividendIncome:
+    """Represents dividend income for tax purposes."""
+    id: UUID = field(default_factory=uuid4)
+    security: Security = None
+    payment_date: datetime = None
+    record_date: Optional[datetime] = None
+    amount_foreign_currency: float = 0.0
+    foreign_currency: Currency = None
+    amount_gbp: float = 0.0
+    withholding_tax_foreign: float = 0.0
+    withholding_tax_gbp: float = 0.0
+    dividend_type: str = "ORDINARY"  # ORDINARY, SPECIAL, RETURN_OF_CAPITAL
+    
+    @property
+    def net_dividend_gbp(self) -> float:
+        """Net dividend after withholding tax in GBP."""
+        return self.amount_gbp - self.withholding_tax_gbp
+    
+    @property
+    def gross_dividend_gbp(self) -> float:
+        """Gross dividend before withholding tax in GBP."""
+        return self.amount_gbp
+
+@dataclass
+class DividendSummary:
+    """Summary of dividend income for a tax year."""
+    tax_year: str
+    dividends: List[DividendIncome] = field(default_factory=list)
+    total_gross_gbp: float = 0.0
+    total_withholding_tax_gbp: float = 0.0
+    total_net_gbp: float = 0.0
+    
+    def add_dividend(self, dividend: DividendIncome) -> None:
+        """Add a dividend to the summary."""
+        self.dividends.append(dividend)
+        self.total_gross_gbp += dividend.gross_dividend_gbp
+        self.total_withholding_tax_gbp += dividend.withholding_tax_gbp
+        self.total_net_gbp += dividend.net_dividend_gbp
+    
+    @property
+    def taxable_dividend_income(self) -> float:
+        """Calculate taxable dividend income after allowance."""
+        # UK dividend allowance for 2024-25
+        DIVIDEND_ALLOWANCE = 500.0
+        return max(0, self.total_net_gbp - DIVIDEND_ALLOWANCE)
+    
+    @property
+    def dividend_allowance_used(self) -> float:
+        """Calculate dividend allowance used."""
+        DIVIDEND_ALLOWANCE = 500.0
+        return min(self.total_net_gbp, DIVIDEND_ALLOWANCE)
+    
+    def get_foreign_dividends(self) -> List[DividendIncome]:
+        """Get dividends from foreign securities."""
+        return [
+            d for d in self.dividends 
+            if d.foreign_currency and not d.foreign_currency.is_base_currency()
+        ]
+    
+    def get_dividends_by_security(self) -> Dict[str, List[DividendIncome]]:
+        """Group dividends by security."""
+        grouped = {}
+        for dividend in self.dividends:
+            symbol = dividend.security.symbol if dividend.security else "Unknown"
+            if symbol not in grouped:
+                grouped[symbol] = []
+            grouped[symbol].append(dividend)
+        return grouped
+
+
+@dataclass
+class CurrencyExchange:
+    """Represents a currency exchange transaction."""
+    id: UUID = field(default_factory=uuid4)
+    transaction_date: datetime = None
+    from_currency: Currency = None
+    to_currency: Currency = None
+    amount_from: float = 0.0
+    amount_to: float = 0.0
+    exchange_rate: float = 0.0
+    gain_loss_gbp: float = 0.0
+    
+    @property
+    def currency_pair(self) -> str:
+        """Get currency pair string (e.g., 'EUR.GBP')."""
+        if self.from_currency and self.to_currency:
+            return f"{self.from_currency.code}.{self.to_currency.code}"
+        return ""
+    
+    def __post_init__(self):
+        """Validate currency exchange data after initialization."""
+        self._validate_exchange()
+    
+    def _validate_exchange(self) -> None:
+        """Validate currency exchange data."""
+        if self.amount_from < 0:
+            raise ValueError("From amount cannot be negative")
+        
+        if self.amount_to < 0:
+            raise ValueError("To amount cannot be negative")
+        
+        if self.exchange_rate <= 0:
+            raise ValueError("Exchange rate must be positive")
+        
+        if not self.from_currency or not self.to_currency:
+            raise ValueError("Both currencies must be specified")
+
+
+@dataclass
+class CurrencyGainLoss:
+    """Represents currency gain/loss for tax purposes."""
+    id: UUID = field(default_factory=uuid4)
+    currency_pair: str = ""
+    transaction_date: datetime = None
+    amount_gbp: float = 0.0
+    gain_loss_gbp: float = 0.0
+    exchange_rate_used: float = 0.0
+    exchange_rate_original: float = 0.0
+    disposal_method: str = "FIFO"  # FIFO, LIFO, etc.
+    
+    @property
+    def is_gain(self) -> bool:
+        """Check if this is a gain (positive) or loss (negative)."""
+        return self.gain_loss_gbp > 0
+    
+    @property
+    def is_loss(self) -> bool:
+        """Check if this is a loss (negative)."""
+        return self.gain_loss_gbp < 0
+    
+    def __post_init__(self):
+        """Validate currency gain/loss data after initialization."""
+        self._validate_gain_loss()
+    
+    def _validate_gain_loss(self) -> None:
+        """Validate currency gain/loss data."""
+        if self.amount_gbp < 0:
+            raise ValueError("Amount in GBP cannot be negative")
+        
+        if self.exchange_rate_used <= 0:
+            raise ValueError("Exchange rate used must be positive")
+        
+        if self.exchange_rate_original <= 0:
+            raise ValueError("Original exchange rate must be positive")
+
+
+@dataclass
+class CurrencyGainLossSummary:
+    """Summary of currency gains/losses for a tax year."""
+    tax_year: str
+    currency_transactions: List[CurrencyGainLoss] = field(default_factory=list)
+    total_gains: float = 0.0
+    total_losses: float = 0.0
+    net_gain_loss: float = 0.0
+    
+    def add_currency_transaction(self, transaction: CurrencyGainLoss) -> None:
+        """Add a currency transaction to the summary."""
+        self.currency_transactions.append(transaction)
+        if transaction.is_gain:
+            self.total_gains += transaction.gain_loss_gbp
+        else:
+            self.total_losses += abs(transaction.gain_loss_gbp)
+        self.net_gain_loss = self.total_gains - self.total_losses
+    
+    def get_transactions_by_currency_pair(self) -> Dict[str, List[CurrencyGainLoss]]:
+        """Group transactions by currency pair."""
+        grouped = {}
+        for transaction in self.currency_transactions:
+            pair = transaction.currency_pair
+            if pair not in grouped:
+                grouped[pair] = []
+            grouped[pair].append(transaction)
+        return grouped
+    
+    def get_gains_only(self) -> List[CurrencyGainLoss]:
+        """Get only gain transactions."""
+        return [t for t in self.currency_transactions if t.is_gain]
+    
+    def get_losses_only(self) -> List[CurrencyGainLoss]:
+        """Get only loss transactions."""
+        return [t for t in self.currency_transactions if t.is_loss]
+    
+    @property
+    def number_of_transactions(self) -> int:
+        """Total number of currency transactions."""
+        return len(self.currency_transactions)
+    
+    @property
+    def number_of_currency_pairs(self) -> int:
+        """Number of different currency pairs."""
+        return len(set(t.currency_pair for t in self.currency_transactions))
+    
+    @property
+    def is_net_gain(self) -> bool:
+        """Check if there's a net gain overall."""
+        return self.net_gain_loss > 0
+    
+    @property
+    def is_net_loss(self) -> bool:
+        """Check if there's a net loss overall."""
+        return self.net_gain_loss < 0
+
+
+@dataclass
+class CurrencyPool:
+    """Represents a pool of currency holdings for FIFO matching."""
+    currency_code: str
+    entries: List[Dict[str, Any]] = field(default_factory=list)
+    
+    def add_purchase(self, amount: float, rate_to_gbp: float, date: datetime) -> None:
+        """Add a currency purchase to the pool."""
+        entry = {
+            'amount': amount,
+            'rate_to_gbp': rate_to_gbp,
+            'date': date,
+            'cost_gbp': amount * rate_to_gbp
+        }
+        self.entries.append(entry)
+        
+        # Sort by date to maintain FIFO order
+        self.entries.sort(key=lambda x: x['date'])
+    
+    def remove_disposal(self, amount: float) -> List[Dict[str, Any]]:
+        """Remove currency from pool using FIFO and return disposal details."""
+        if amount <= 0:
+            raise ValueError("Disposal amount must be positive")
+        
+        remaining_amount = amount
+        disposals = []
+        
+        while remaining_amount > 0 and self.entries:
+            entry = self.entries[0]
+            
+            if entry['amount'] <= remaining_amount:
+                # Use entire entry
+                disposals.append({
+                    'amount': entry['amount'],
+                    'rate_to_gbp': entry['rate_to_gbp'],
+                    'date': entry['date'],
+                    'cost_gbp': entry['cost_gbp']
+                })
+                remaining_amount -= entry['amount']
+                self.entries.pop(0)
+            else:
+                # Use partial entry
+                disposal_amount = remaining_amount
+                disposal_cost = (disposal_amount / entry['amount']) * entry['cost_gbp']
+                
+                disposals.append({
+                    'amount': disposal_amount,
+                    'rate_to_gbp': entry['rate_to_gbp'],
+                    'date': entry['date'],
+                    'cost_gbp': disposal_cost
+                })
+                
+                # Update remaining entry
+                entry['amount'] -= disposal_amount
+                entry['cost_gbp'] -= disposal_cost
+                remaining_amount = 0
+        
+        if remaining_amount > 0:
+            raise ValueError(f"Insufficient currency in pool. Tried to dispose {amount}, but only had {amount - remaining_amount}")
+        
+        return disposals
+    
+    @property
+    def total_amount(self) -> float:
+        """Total amount of currency in the pool."""
+        return sum(entry['amount'] for entry in self.entries)
+    
+    @property
+    def total_cost_gbp(self) -> float:
+        """Total cost of currency in the pool (in GBP)."""
+        return sum(entry['cost_gbp'] for entry in self.entries)
+    
+    @property
+    def average_rate_to_gbp(self) -> float:
+        """Average exchange rate to GBP."""
+        if self.total_cost_gbp > 0:
+            return self.total_amount / self.total_cost_gbp
+        return 0.0
+
+
+@dataclass
+class ComprehensiveTaxSummary:
+    """Comprehensive tax summary including all income types."""
+    tax_year: str
+    capital_gains: Optional[TaxYearSummary] = None
+    dividend_income: Optional[DividendSummary] = None
+    currency_gains: Optional[CurrencyGainLossSummary] = None
+    total_allowable_costs: float = 0.0
+    total_taxable_income: float = 0.0
+    
+    # Tax allowances used
+    dividend_allowance_used: float = 0.0  # UK dividend allowance
+    capital_gains_allowance_used: float = 0.0  # UK CGT allowance
+    currency_gains_allowance_used: float = 0.0  # If applicable
+    
+    # Backward compatibility properties for direct access to capital gains data
+    @property
+    def disposals(self) -> List[Disposal]:
+        """Get disposals from capital gains summary."""
+        if self.capital_gains:
+            return self.capital_gains.disposals
+        return []
+    
+    @property
+    def total_proceeds(self) -> float:
+        """Get total proceeds from capital gains summary."""
+        if self.capital_gains:
+            return self.capital_gains.total_proceeds
+        return 0.0
+    
+    @property
+    def total_gains(self) -> float:
+        """Get total gains from capital gains summary."""
+        if self.capital_gains:
+            return self.capital_gains.total_gains
+        return 0.0
+    
+    @property
+    def total_losses(self) -> float:
+        """Get total losses from capital gains summary."""
+        if self.capital_gains:
+            return self.capital_gains.total_losses
+        return 0.0
+    
+    @property
+    def net_gain(self) -> float:
+        """Get net gain from capital gains summary."""
+        if self.capital_gains:
+            return self.capital_gains.net_gain
+        return 0.0
+    
+    @property
+    def annual_exemption_used(self) -> float:
+        """Get annual exemption used from capital gains summary."""
+        if self.capital_gains:
+            return self.capital_gains.annual_exemption_used
+        return 0.0
+    
+    @property
+    def taxable_gain(self) -> float:
+        """Get taxable gain from capital gains summary."""
+        if self.capital_gains:
+            return self.capital_gains.taxable_gain
+        return 0.0
+    
+    @property
+    def total_tax_liability(self) -> float:
+        """Calculate estimated total tax liability."""
+        # This would include CGT, dividend tax, etc.
+        # Implementation depends on current UK tax rates
+        
+        # Simplified calculation
+        cgt_tax = (self.capital_gains.taxable_gain * 0.10) if self.capital_gains else 0.0
+        dividend_tax = (self.dividend_income.taxable_dividend_income * 0.0875) if self.dividend_income else 0.0
+        currency_tax = (max(0, self.currency_gains.net_gain_loss) * 0.10) if self.currency_gains else 0.0
+        
+        return cgt_tax + dividend_tax + currency_tax
+    
+    @property
+    def summary_by_income_type(self) -> Dict[str, float]:
+        """Get summary breakdown by income type."""
+        return {
+            'capital_gains': self.capital_gains.taxable_gain if self.capital_gains else 0.0,
+            'dividend_income': self.dividend_income.total_net_gbp if self.dividend_income else 0.0,
+            'currency_gains': max(0, self.currency_gains.net_gain_loss) if self.currency_gains else 0.0,
+            'total_allowable_costs': self.total_allowable_costs
+        }
+    
+    @property
+    def has_taxable_income(self) -> bool:
+        """Check if there's any taxable income."""
+        return self.total_taxable_income > 0
+    
+    @property
+    def requires_tax_return(self) -> bool:
+        """Check if a tax return is likely required."""
+        # Simplified logic - real implementation would consider various factors
+        
+        # CGT above allowance
+        if self.capital_gains and self.capital_gains.taxable_gain > 0:
+            return True
+        
+        # Dividend income above allowance
+        if self.dividend_income and self.dividend_income.taxable_dividend_income > 0:
+            return True
+        
+        # Currency gains above de minimis
+        if self.currency_gains and self.currency_gains.net_gain_loss > 1000:  # £1,000 de minimis
+            return True
+        
+        return False
+    
+    def get_allowances_summary(self) -> Dict[str, Dict[str, float]]:
+        """Get summary of tax allowances used."""
+        return {
+            'capital_gains': {
+                'allowance': 3000.0,  # 2024-25 rate
+                'used': self.capital_gains_allowance_used,
+                'remaining': max(0, 3000.0 - self.capital_gains_allowance_used)
+            },
+            'dividend': {
+                'allowance': 500.0,  # 2024-25 rate
+                'used': self.dividend_allowance_used,
+                'remaining': max(0, 500.0 - self.dividend_allowance_used)
+            }
+        }
+    
+    def get_tax_efficiency_metrics(self) -> Dict[str, float]:
+        """Calculate tax efficiency metrics."""
+        total_income = (
+            (self.capital_gains.total_gains if self.capital_gains else 0.0) +
+            (self.dividend_income.total_gross_gbp if self.dividend_income else 0.0) +
+            (self.currency_gains.total_gains if self.currency_gains else 0.0)
+        )
+        
+        if total_income == 0:
+            return {'effective_tax_rate': 0.0, 'allowance_utilization': 0.0, 'tax_saved_by_allowances': 0.0}
+        
+        effective_tax_rate = (self.total_tax_liability / total_income) * 100
+        
+        # Calculate allowance utilization
+        total_allowances = 3000.0 + 500.0  # CGT + Dividend allowances
+        allowances_used = self.capital_gains_allowance_used + self.dividend_allowance_used
+        allowance_utilization = (allowances_used / total_allowances) * 100
+        
+        # Calculate tax saved by allowances
+        cgt_tax_saved = self.capital_gains_allowance_used * 0.10
+        dividend_tax_saved = self.dividend_allowance_used * 0.0875
+        
+        return {
+            'effective_tax_rate': effective_tax_rate,
+            'allowance_utilization': allowance_utilization,
+            'tax_saved_by_allowances': cgt_tax_saved + dividend_tax_saved
+        }

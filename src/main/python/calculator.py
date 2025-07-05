@@ -1,6 +1,8 @@
 """Main calculator module."""
 import logging
 import os
+import logging
+import os
 from typing import List, Dict, Optional
 
 from .interfaces.calculator_interfaces import (
@@ -11,12 +13,14 @@ from .interfaces.calculator_interfaces import (
     ReportGeneratorInterface
 )
 from .parsers.qfx_parser import QfxParser
-from .parsers.csv_parser import CsvParser
+from .parsers.csv_parser import CsvParser # This is used in the default file_parser, so keep it.
 from .services.transaction_matcher import UKTransactionMatcher
 from .services.disposal_calculator import UKDisposalCalculator
-from .services.tax_year_calculator import UKTaxYearCalculator
+from .services.tax_year_calculator import EnhancedTaxYearCalculator
+from .services.dividend_processor import DividendProcessor
+from .services.currency_processor import CurrencyExchangeProcessor
 from .services.report_generator import CSVReportGenerator, JSONReportGenerator
-from .models.domain_models import Transaction, Disposal, TaxYearSummary
+from .models.domain_models import ComprehensiveTaxSummary, Transaction # Keep Transaction as it's used in calculate method
 from .config.tax_config import TAX_YEARS, BASE_CURRENCY
 
 
@@ -28,8 +32,10 @@ class CapitalGainsTaxCalculator:
         file_parser: FileParserInterface = None,
         transaction_matcher: TransactionMatcherInterface = None,
         disposal_calculator: DisposalCalculatorInterface = None,
-        tax_year_calculator: TaxYearCalculatorInterface = None,
+        tax_year_calculator: TaxYearCalculatorInterface = None, # This will now be EnhancedTaxYearCalculator
         report_generator: ReportGeneratorInterface = None,
+        dividend_processor: DividendProcessor = None,
+        currency_processor: CurrencyExchangeProcessor = None,
         base_currency: str = BASE_CURRENCY
     ):
         """
@@ -39,8 +45,10 @@ class CapitalGainsTaxCalculator:
             file_parser: Parser for transaction files
             transaction_matcher: Matcher for buy and sell transactions
             disposal_calculator: Calculator for disposals
-            tax_year_calculator: Calculator for tax year summaries
+            tax_year_calculator: Calculator for tax year summaries (now comprehensive)
             report_generator: Generator for tax reports
+            dividend_processor: Processor for dividend transactions
+            currency_processor: Processor for currency exchange transactions
             base_currency: Base currency for calculations
         """
         self.logger = logging.getLogger(__name__)
@@ -49,8 +57,20 @@ class CapitalGainsTaxCalculator:
         self.file_parser = file_parser or QfxParser(base_currency=base_currency)
         self.transaction_matcher = transaction_matcher or UKTransactionMatcher()
         self.disposal_calculator = disposal_calculator or UKDisposalCalculator()
-        self.tax_year_calculator = tax_year_calculator or UKTaxYearCalculator()
-        self.report_generator = report_generator or CSVReportGenerator()
+        
+        # Initialize dividend and currency processors
+        self.dividend_processor = dividend_processor or DividendProcessor()
+        self.currency_processor = currency_processor or CurrencyExchangeProcessor()
+        
+        # The tax_year_calculator now requires other processors
+        self.tax_year_calculator = tax_year_calculator or EnhancedTaxYearCalculator(
+            disposal_calculator=self.disposal_calculator,
+            dividend_processor=self.dividend_processor,
+            currency_processor=self.currency_processor,
+            transaction_matcher=self.transaction_matcher
+        )
+        
+        self.report_generator = report_generator or CSVReportGenerator() # This will need to be updated to handle ComprehensiveTaxSummary
         self.base_currency = base_currency
         
     def calculate(
@@ -60,9 +80,9 @@ class CapitalGainsTaxCalculator:
         output_path: str,
         report_format: str = "csv",
         file_type: str = "qfx"
-    ) -> TaxYearSummary:
+    ) -> ComprehensiveTaxSummary: # Changed return type
         """
-        Calculate capital gains for a tax year from a transaction file.
+        Calculate comprehensive tax summary for a tax year from a transaction file.
         
         Args:
             file_path: Path to the transaction file
@@ -72,9 +92,9 @@ class CapitalGainsTaxCalculator:
             file_type: Type of the input file ("qfx" or "csv")
             
         Returns:
-            Tax year summary
+            Comprehensive tax summary
         """
-        self.logger.info(f"Calculating capital gains for {tax_year} from {file_path} (file type: {file_type})")
+        self.logger.info(f"Calculating comprehensive tax for {tax_year} from {file_path} (file type: {file_type})")
         
         # Validate tax year
         if tax_year not in TAX_YEARS:
@@ -98,24 +118,15 @@ class CapitalGainsTaxCalculator:
         if not transactions:
             raise ValueError("No transactions found in the file")
         
-        # Match disposals
-        matched_disposals = self.transaction_matcher.match_disposals(transactions)
-        self.logger.info(f"Matched {len(matched_disposals)} disposals")
-        
-        # Calculate disposals
-        disposals = []
-        for sell_tx, matched_buys in matched_disposals:
-            disposal = self.disposal_calculator.calculate_disposal(sell_tx, matched_buys)
-            disposals.append(disposal)
-        
-        # Calculate tax year summary
-        summary = self.tax_year_calculator.calculate_tax_year_summary(
-            disposals=disposals,
+        # Calculate comprehensive tax summary using the new calculator
+        comprehensive_summary = self.tax_year_calculator.calculate_comprehensive_tax_summary(
+            transactions=transactions,
             tax_year=tax_year
         )
         
         # Generate report
-        # Use injected report generator if available, otherwise create one based on format
+        # The report generator needs to be updated to handle ComprehensiveTaxSummary
+        # For now, we'll just pass the comprehensive_summary
         if self.report_generator:
             report_generator = self.report_generator
         elif report_format.lower() == "json":
@@ -123,9 +134,12 @@ class CapitalGainsTaxCalculator:
         else:
             report_generator = CSVReportGenerator()
             
+        # The generate_report method of ReportGeneratorInterface might need to be updated
+        # to accept ComprehensiveTaxSummary instead of TaxYearSummary.
+        # For now, we'll assume it can handle it or will be updated later.
         report_generator.generate_report(
-            tax_year_summary=summary,
+            tax_year_summary=comprehensive_summary, # Changed to comprehensive_summary
             output_path=output_path
         )
         
-        return summary
+        return comprehensive_summary

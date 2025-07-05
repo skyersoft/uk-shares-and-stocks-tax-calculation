@@ -238,16 +238,23 @@ class TestCapitalGainsCLI:
             mock_calc = Mock()
             mock_calc_class.return_value = mock_calc
             
-            # Mock the summary
+            # Mock the comprehensive summary
             mock_summary = Mock()
             mock_summary.tax_year = '2024-2025'
-            mock_summary.total_proceeds = 10000.0
-            mock_summary.total_gains = 1500.0
-            mock_summary.total_losses = 500.0
-            mock_summary.net_gain = 1000.0
-            mock_summary.annual_exemption_used = 1000.0
-            mock_summary.taxable_gain = 0.0
-            mock_summary.disposals = []
+            mock_summary.total_allowable_costs = 10000.0
+            mock_summary.total_taxable_income = 0.0
+            
+            # Mock capital gains section
+            mock_capital_gains = Mock()
+            mock_capital_gains.total_proceeds = 10000.0
+            mock_capital_gains.total_gains = 1500.0
+            mock_capital_gains.total_losses = 500.0
+            mock_capital_gains.net_gain = 1000.0
+            mock_capital_gains.annual_exemption_used = 1000.0
+            mock_capital_gains.taxable_gain = 0.0
+            mock_capital_gains.disposals = []
+            
+            mock_summary.capital_gains = mock_capital_gains
             mock_calc.calculate.return_value = mock_summary
             
             # Create a temporary QFX file
@@ -333,16 +340,23 @@ class TestCapitalGainsCLI:
             mock_calc = Mock()
             mock_calc_class.return_value = mock_calc
             
-            # Mock the summary
+            # Mock the comprehensive summary
             mock_summary = Mock()
             mock_summary.tax_year = '2024-2025'
-            mock_summary.total_proceeds = 10000.0
-            mock_summary.total_gains = 1500.0
-            mock_summary.total_losses = 500.0
-            mock_summary.net_gain = 1000.0
-            mock_summary.annual_exemption_used = 1000.0
-            mock_summary.taxable_gain = 0.0
-            mock_summary.disposals = []
+            mock_summary.total_allowable_costs = 10000.0
+            mock_summary.total_taxable_income = 0.0
+            
+            # Mock capital gains section
+            mock_capital_gains = Mock()
+            mock_capital_gains.total_proceeds = 10000.0
+            mock_capital_gains.total_gains = 1500.0
+            mock_capital_gains.total_losses = 500.0
+            mock_capital_gains.net_gain = 1000.0
+            mock_capital_gains.annual_exemption_used = 1000.0
+            mock_capital_gains.taxable_gain = 0.0
+            mock_capital_gains.disposals = []
+            
+            mock_summary.capital_gains = mock_capital_gains
             mock_calc.calculate.return_value = mock_summary
             
             # Create a temporary QFX file

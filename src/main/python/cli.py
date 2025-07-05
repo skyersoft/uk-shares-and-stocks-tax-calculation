@@ -199,31 +199,46 @@ Examples:
             print()
             print("Summary:")
             print(f"  Tax Year: {summary.tax_year}")
-            print(f"  Total Proceeds: £{summary.total_proceeds:,.2f}")
-            print(f"  Total Gains: £{summary.total_gains:,.2f}")
-            print(f"  Total Losses: £{summary.total_losses:,.2f}")
-            print(f"  Net Gain: £{summary.net_gain:,.2f}")
-            print(f"  Annual Exemption Used: £{summary.annual_exemption_used:,.2f}")
-            print(f"  Taxable Gain: £{summary.taxable_gain:,.2f}")
-            print(f"  Number of Disposals: {len(summary.disposals)}")
+            
+            # Handle both ComprehensiveTaxSummary and TaxYearSummary
+            if hasattr(summary, 'capital_gains'):
+                cg = summary.capital_gains
+                print(f"  Total Proceeds: £{cg.total_proceeds:,.2f}")
+                print(f"  Total Gains: £{cg.total_gains:,.2f}")
+                print(f"  Total Losses: £{cg.total_losses:,.2f}")
+                print(f"  Net Gain: £{cg.net_gain:,.2f}")
+                print(f"  Annual Exemption Used: £{cg.annual_exemption_used:,.2f}")
+                print(f"  Taxable Gain: £{cg.taxable_gain:,.2f}")
+                print(f"  Number of Disposals: {len(cg.disposals)}")
+            else:
+                print(f"  Total Proceeds: £{summary.total_proceeds:,.2f}")
+                print(f"  Total Gains: £{summary.total_gains:,.2f}")
+                print(f"  Total Losses: £{summary.total_losses:,.2f}")
+                print(f"  Net Gain: £{summary.net_gain:,.2f}")
+                print(f"  Annual Exemption Used: £{summary.annual_exemption_used:,.2f}")
+                print(f"  Taxable Gain: £{summary.taxable_gain:,.2f}")
+                print(f"  Number of Disposals: {len(summary.disposals)}")
             print()
             
             # Report file information
             report_file = f"{output_path}.{parsed_args.format}"
             print(f"Report saved to: {report_file}")
             
-            if parsed_args.verbose and summary.disposals:
-                print()
-                print("Disposal Details:")
-                for i, disposal in enumerate(summary.disposals, 1):
-                    print(f"  {i}. {disposal.security.get_display_name()}")
-                    print(f"     Date: {disposal.sell_date.strftime('%Y-%m-%d')}")
-                    print(f"     Quantity: {disposal.quantity:,.0f}")
-                    print(f"     Proceeds: £{disposal.proceeds:,.2f}")
-                    print(f"     Cost Basis: £{disposal.cost_basis:,.2f}")
-                    print(f"     Gain/Loss: £{disposal.gain_or_loss:,.2f}")
-                    print(f"     Matching Rule: {disposal.matching_rule}")
+            if parsed_args.verbose:
+                # Get disposals from either format
+                disposals = summary.capital_gains.disposals if hasattr(summary, 'capital_gains') else summary.disposals
+                if disposals:
                     print()
+                    print("Disposal Details:")
+                    for i, disposal in enumerate(disposals, 1):
+                        print(f"  {i}. {disposal.security.get_display_name()}")
+                        print(f"     Date: {disposal.sell_date.strftime('%Y-%m-%d')}")
+                        print(f"     Quantity: {disposal.quantity:,.0f}")
+                        print(f"     Proceeds: £{disposal.proceeds:,.2f}")
+                        print(f"     Cost Basis: £{disposal.cost_basis:,.2f}")
+                        print(f"     Gain/Loss: £{disposal.gain_or_loss:,.2f}")
+                        print(f"     Matching Rule: {disposal.matching_rule}")
+                        print()
             
             return 0  # Success
             

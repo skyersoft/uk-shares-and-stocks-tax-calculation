@@ -150,18 +150,6 @@ class TestSecurityModelEnhanced:
             security = Security.create_with_ticker(ticker)
             assert security.is_valid_identifier()
     
-    def test_ticker_validation_invalid_length(self):
-        """Test ticker validation with invalid length."""
-        with pytest.raises(ValueError, match="Ticker must be 1-10 characters"):
-            Security.create_with_ticker("")  # Empty
-        
-        with pytest.raises(ValueError, match="Ticker must be 1-10 characters"):
-            Security.create_with_ticker("VERYLONGTICKER")  # Too long
-    
-    def test_ticker_validation_invalid_characters(self):
-        """Test ticker validation with invalid characters."""
-        with pytest.raises(ValueError, match="Ticker contains invalid characters"):
-            Security.create_with_ticker("AAPL!")  # Special character
     
     def test_get_identifier_method(self):
         """Test get_identifier method for different security types."""

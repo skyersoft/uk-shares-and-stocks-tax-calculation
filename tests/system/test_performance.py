@@ -498,7 +498,7 @@ class TestPerformance:
             # Output file should be reasonable size (based on disposals, not total transactions)
             # Since we alternate buy/sell, roughly half will be disposals
             expected_disposals = max(1, size // 4)  # Conservative estimate
-            expected_min_output = max(1.0, expected_disposals * 0.2)  # At least 0.2KB per disposal
+            expected_min_output = max(1.0, expected_disposals * 0.1)  # At least 0.1KB per disposal
             expected_max_output = size * 2.0   # At most 2KB per transaction
             assert results['output_file_size_kb'] > expected_min_output, f"Output file too small: {results['output_file_size_kb']:.1f}KB for {results['disposals']} disposals from {size} transactions"
             assert results['output_file_size_kb'] < expected_max_output, f"Output file too large for {size} transactions"

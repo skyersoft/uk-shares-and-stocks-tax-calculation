@@ -72,7 +72,7 @@ class TestCapitalGainsCalculatorIntegration:
                 content = csvfile.read()
                 assert 'Disposal Date' in content, "CSV header not found"
                 assert '2024-2025' in content, "Tax year not found in CSV"
-                assert 'Tax Year Summary' in content, "Summary section not found in CSV"
+                assert 'Capital Gains Summary' in content, "Summary section not found in CSV"
             
             print(f"✓ CSV report generated successfully at {csv_report_path}")
             
@@ -118,12 +118,12 @@ class TestCapitalGainsCalculatorIntegration:
                 data = json.load(jsonfile)
                 
                 assert 'tax_year' in data
-                assert 'disposals' in data
-                assert 'summary' in data
+                assert 'capital_gains' in data
+                assert 'disposals' in data['capital_gains']
                 assert data['tax_year'] == '2024-2025'
-                assert len(data['disposals']) == 2
-                assert 'total_proceeds' in data['summary']
-                assert 'taxable_gain' in data['summary']
+                assert len(data['capital_gains']['disposals']) == 2
+                assert 'summary' in data['capital_gains']
+                assert 'taxable_gain' in data['capital_gains']['summary']
             
             print(f"✓ JSON report generated successfully at {json_report_path}")
             

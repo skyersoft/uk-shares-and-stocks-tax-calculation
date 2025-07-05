@@ -53,11 +53,16 @@ def create_app(config=None, storage_service=None, calculation_service=None, test
         
         # Create a multi-format calculator that supports both CSV and QFX
         class MultiFormatCalculator(CapitalGainsTaxCalculator):
-            def __init__(self):
-                # Initialize with QFX parser as default for backward compatibility
-                super().__init__(file_parser=QfxParser())
+            def __init__(self, tax_year_calculator=None):
+                # Initialize parsers
                 self.csv_parser = CsvParser()
                 self.qfx_parser = QfxParser()
+                
+                # Initialize with QFX parser as default for backward compatibility
+                super().__init__(
+                    file_parser=self.qfx_parser,
+                    tax_year_calculator=tax_year_calculator
+                )
             
             def calculate(self, file_path, tax_year, output_path, report_format="csv", file_type="qfx"):
                 # Switch parser based on file type
@@ -71,7 +76,28 @@ def create_app(config=None, storage_service=None, calculation_service=None, test
                 else:
                     return super().calculate(file_path, tax_year, output_path, report_format, file_type)
         
-        calculator = MultiFormatCalculator()
+        # Initialize calculators with required dependencies
+        from src.main.python.services.transaction_matcher import UKTransactionMatcher
+        from src.main.python.services.disposal_calculator import UKDisposalCalculator
+        from src.main.python.services.dividend_processor import DividendProcessor
+        from src.main.python.services.currency_processor import CurrencyExchangeProcessor
+        from src.main.python.services.tax_year_calculator import EnhancedTaxYearCalculator
+
+        # Create dependencies
+        transaction_matcher = UKTransactionMatcher()
+        disposal_calculator = UKDisposalCalculator()
+        dividend_processor = DividendProcessor()
+        currency_processor = CurrencyExchangeProcessor()
+
+        # Create tax year calculator with all dependencies
+        tax_year_calculator = EnhancedTaxYearCalculator(
+            disposal_calculator=disposal_calculator,
+            dividend_processor=dividend_processor,
+            currency_processor=currency_processor,
+            transaction_matcher=transaction_matcher
+        )
+
+        calculator = MultiFormatCalculator(tax_year_calculator=tax_year_calculator)
         calculation_service = CalculationService(storage_service, calculator)
 
     # Initialize and register routes blueprint with injected services
