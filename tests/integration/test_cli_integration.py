@@ -62,8 +62,8 @@ class TestCLIIntegration:
                 assert '2024-2025' in content, "CSV should contain correct tax year"
                 
                 # Check for expected data (based on previous integration tests)
-                assert 'JE00B1VS3770' in content, "Should contain JE00B1VS3770 security"
-                assert '871085' in content or 'KYG393871085' in content, "Should contain second security"
+                assert 'PHGP' in content, "Should contain PHGP security"
+                assert 'GFS' in content, "Should contain GFS security"
                 
             print(f"✓ CSV integration test passed - report created at {csv_file}")
     

@@ -90,20 +90,37 @@ class CalculationService:
                     # This is a real TaxYearSummary object
                     result = {
                         'tax_year': summary.tax_year,
-                        'total_gain': str(summary.total_gains),  # Use total_gains, not total_gain
+                        'total_gain': str(summary.total_gains),
                         'total_proceeds': str(summary.total_proceeds),
-                        'total_cost': str(summary.total_proceeds - summary.total_gains),  # Calculate total cost
+                        'total_cost': str(summary.total_proceeds - summary.total_gains),
                         'disposals': [
                             {
-                                'symbol': disposal.security.symbol if disposal.security else 'Unknown',
+                                'security': {
+                                    'symbol': disposal.security.symbol if disposal.security else 'Unknown',
+                                    'name': disposal.security.name if disposal.security else 'Unknown',
+                                },
                                 'quantity': str(disposal.quantity),
                                 'proceeds': str(disposal.proceeds),
-                                'cost': str(disposal.cost_basis),  # Use cost_basis, not cost
-                                'gain': str(disposal.gain_or_loss),  # Use gain_or_loss, not gain
-                                'disposal_date': disposal.sell_date.isoformat() if disposal.sell_date else None  # Use sell_date
+                                'cost': str(disposal.cost_basis),
+                                'gain': str(disposal.gain_or_loss),
+                                'disposal_date': disposal.sell_date.isoformat() if disposal.sell_date else None,
                             }
                             for disposal in summary.disposals
-                        ]
+                        ],
+                        'dividend_income': {
+                            'dividends': [
+                                {
+                                    'security': {
+                                        'symbol': dividend.security.symbol if dividend.security else 'Unknown',
+                                        'name': dividend.security.name if dividend.security else 'Unknown',
+                                    },
+                                    'payment_date': dividend.payment_date.isoformat() if dividend.payment_date else None,
+                                    'amount_gbp': str(dividend.amount_gbp),
+                                    'withholding_tax_gbp': str(dividend.withholding_tax_gbp),
+                                }
+                                for dividend in summary.dividend_income.dividends
+                            ]
+                        } if summary.dividend_income else None,
                     }
 
                 # Update task with result

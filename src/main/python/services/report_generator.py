@@ -55,22 +55,22 @@ class CSVReportGenerator(ReportGeneratorInterface):
         # Pre-format all rows to avoid repeated string formatting
         rows = [
             [
-                'Disposal Date', 
-                'Security', 
-                'Quantity', 
-                'Proceeds (GBP)', 
-                'Cost (GBP)', 
-                'Expenses (GBP)', 
-                'Gain/Loss (GBP)', 
+                'Disposal Date',
+                'Security',
+                'Quantity',
+                'Proceeds (GBP)',
+                'Cost (GBP)',
+                'Expenses (GBP)',
+                'Gain/Loss (GBP)',
                 'Matching Rule'
             ]
         ]
-        
+
         # Pre-format all disposal rows
         for disposal in tax_year_summary.disposals:
             rows.append([
                 disposal.sell_date.strftime('%Y-%m-%d'),
-                disposal.security.isin,
+                disposal.security.get_display_name(),
                 disposal.quantity,
                 round(disposal.proceeds, 2),
                 round(disposal.cost_basis, 2),
@@ -105,22 +105,22 @@ class CSVReportGenerator(ReportGeneratorInterface):
             rows.extend([
                 ['CAPITAL GAINS'],
                 [
-                    'Disposal Date', 
-                    'Security', 
-                    'Quantity', 
-                    'Proceeds (GBP)', 
-                    'Cost (GBP)', 
-                    'Expenses (GBP)', 
-                    'Gain/Loss (GBP)', 
+                    'Disposal Date',
+                    'Security',
+                    'Quantity',
+                    'Proceeds (GBP)',
+                    'Cost (GBP)',
+                    'Expenses (GBP)',
+                    'Gain/Loss (GBP)',
                     'Matching Rule'
                 ]
             ])
-            
+
             # Pre-format all disposal rows
             for disposal in comprehensive_summary.capital_gains.disposals:
                 rows.append([
                     disposal.sell_date.strftime('%Y-%m-%d'),
-                    disposal.security.isin,
+                    disposal.security.get_display_name(),
                     disposal.quantity,
                     round(disposal.proceeds, 2),
                     round(disposal.cost_basis, 2),

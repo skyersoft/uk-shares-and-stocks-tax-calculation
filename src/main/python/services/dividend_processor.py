@@ -34,10 +34,17 @@ class DividendProcessor:
     ) -> DividendIncome:
         """Convert a dividend transaction to dividend income."""
         # Extract dividend-specific data
-        amount_foreign = abs(transaction.quantity * transaction.price_per_unit)
+        # For dividend transactions, price_per_unit contains the total amount
+        amount_foreign = abs(transaction.price_per_unit)
         amount_gbp = amount_foreign * transaction.currency.rate_to_base
         withholding_tax_foreign = transaction.taxes
         withholding_tax_gbp = transaction.taxes_in_base_currency
+
+        self.logger.info(
+            f"Processing dividend: {amount_foreign} {transaction.currency.code} "
+            f"(£{amount_gbp:.2f}), withholding tax: {withholding_tax_foreign} "
+            f"{transaction.currency.code} (£{withholding_tax_gbp:.2f})"
+        )
         
         # Determine dividend type from transaction data
         dividend_type = self._determine_dividend_type(transaction)

@@ -121,7 +121,7 @@ class TestQfxParserIntegration:
             assert tx.price_per_unit > 0, "Price per unit should be positive"
             
             # Transaction type should be valid
-            assert tx.transaction_type in [TransactionType.BUY, TransactionType.SELL]
+            assert tx.transaction_type in [TransactionType.BUY, TransactionType.SELL, TransactionType.DIVIDEND]
             
             # Buy transactions should have positive quantity
             if tx.transaction_type == TransactionType.BUY:
@@ -195,9 +195,9 @@ class TestQfxParserIntegration:
         min_date = min(dates)
         max_date = max(dates)
         
-        # Based on file content, dates should be between 2024-08-20 and 2025-02-18
+        # Based on file content, dates should be between 2024-08-20 and 2025-03-27 (due to dividends)
         assert min_date >= datetime(2024, 8, 20), f"Minimum date {min_date} is earlier than expected"
-        assert max_date <= datetime(2025, 2, 19), f"Maximum date {max_date} is later than expected"
+        assert max_date <= datetime(2025, 3, 28), f"Maximum date {max_date} is later than expected" # Allow one day buffer
         
         # All dates should be valid datetime objects
         for tx in transactions:
@@ -229,11 +229,16 @@ class TestQfxParserIntegration:
             assert tx.transaction_id is not None
             assert tx.date is not None
             assert isinstance(tx.date, datetime)
-            assert tx.transaction_type in [TransactionType.BUY, TransactionType.SELL]
+            assert tx.transaction_type in [TransactionType.BUY, TransactionType.SELL, TransactionType.DIVIDEND]
             
             # QfxNodeParser integration (data extraction worked correctly)
-            assert tx.quantity != 0
-            assert tx.price_per_unit > 0
+            # For dividends, quantity is 1 and price_per_unit is the total amount
+            if tx.transaction_type == TransactionType.DIVIDEND:
+                assert tx.quantity == 1
+                assert tx.price_per_unit > 0
+            else:
+                assert tx.quantity != 0
+                assert tx.price_per_unit > 0
             assert tx.commission >= 0
     
     def test_parse_real_qfx_error_recovery(self, qfx_parser, real_qfx_file_path):
@@ -318,9 +323,10 @@ class TestQfxParserIntegration:
         # Should have multiple securities
         assert len(securities_found) >= 6, f"Expected at least 6 different securities, got {len(securities_found)}"
         
-        # Should have both buy and sell transactions
+        # Should have buy, sell, and dividend transactions
         assert TransactionType.BUY in transaction_types_found
         assert TransactionType.SELL in transaction_types_found
+        assert TransactionType.DIVIDEND in transaction_types_found
         
         # Should have multiple currencies
         expected_currencies = {"GBP", "EUR", "USD"}
@@ -332,6 +338,8 @@ class TestQfxParserIntegration:
             "JE00B1VS3770",  # PHGP WisdomTree Physical Gold (ISIN)
             "JE00B1VS3333",  # PHSP WT Physical Silver (ISIN)
             "KYG393871085",  # GFS GlobalFoundries (ISIN)
+            "CUSIP:65340P106", # NXE Nexgen Energy Ltd (CUSIP)
+            "CUSIP:747525103"  # QCOM Qualcomm Inc (CUSIP)
         ]
         
         for expected_sec in expected_securities:

@@ -89,8 +89,9 @@ class TestDividendProcessor:
         assert dividend.payment_date == mock_dividend_transaction_usd.date
         assert dividend.foreign_currency == mock_dividend_transaction_usd.currency
         
-        # Calculate expected amounts based on mock_dividend_transaction_usd
-        expected_amount_foreign = abs(mock_dividend_transaction_usd.quantity * mock_dividend_transaction_usd.price_per_unit)
+        # Expected amounts should now directly reflect price_per_unit and taxes from the transaction
+        # as the DividendProcessor now treats price_per_unit as the total dividend amount.
+        expected_amount_foreign = mock_dividend_transaction_usd.price_per_unit
         expected_amount_gbp = expected_amount_foreign * mock_dividend_transaction_usd.currency.rate_to_base
         expected_withholding_tax_gbp = mock_dividend_transaction_usd.taxes * mock_dividend_transaction_usd.currency.rate_to_base
 

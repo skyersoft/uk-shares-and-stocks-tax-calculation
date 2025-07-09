@@ -31,7 +31,7 @@ class UKDisposalCalculator(DisposalCalculatorInterface):
         """
         self.logger.info(
             f"Calculating disposal for {sell_transaction.transaction_id} - "
-            f"{abs(sell_transaction.quantity)} shares of {sell_transaction.security.isin}"
+            f"{abs(sell_transaction.quantity)} shares of {sell_transaction.security.get_display_name()}"
         )
         
         # Calculate proceeds (selling price less costs)

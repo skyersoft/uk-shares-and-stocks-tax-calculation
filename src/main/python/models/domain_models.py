@@ -998,25 +998,218 @@ class ComprehensiveTaxSummary:
     def has_taxable_income(self) -> bool:
         """Check if there's any taxable income."""
         return self.total_taxable_income > 0
-    
+
     @property
     def requires_tax_return(self) -> bool:
         """Check if a tax return is likely required."""
         # Simplified logic - real implementation would consider various factors
-        
+
         # CGT above allowance
         if self.capital_gains and self.capital_gains.taxable_gain > 0:
             return True
-        
+
         # Dividend income above allowance
-        if self.dividend_income and self.dividend_income.taxable_dividend_income > 0:
+        if (self.dividend_income and
+            self.dividend_income.taxable_dividend_income > 0):
             return True
-        
+
         # Currency gains above de minimis
-        if self.currency_gains and self.currency_gains.net_gain_loss > 1000:  # £1,000 de minimis
+        if (self.currency_gains and
+            self.currency_gains.net_gain_loss > 1000):  # £1,000 de minimis
             return True
-        
+
         return False
+
+    def get_allowances_summary(self) -> Dict[str, Dict[str, float]]:
+        """Get summary of allowances used."""
+        return {
+            'capital_gains': {
+                'allowance': 3000.0,  # UK CGT allowance
+                'used': self.capital_gains_allowance_used,
+                'remaining': 3000.0 - self.capital_gains_allowance_used
+            },
+            'dividend': {
+                'allowance': 500.0,  # UK dividend allowance
+                'used': self.dividend_allowance_used,
+                'remaining': 500.0 - self.dividend_allowance_used
+            },
+            'currency_gains': {
+                'allowance': 1000.0,  # De minimis threshold
+                'used': self.currency_gains_allowance_used,
+                'remaining': 1000.0 - self.currency_gains_allowance_used
+            }
+        }
+
+    def get_tax_efficiency_metrics(self) -> Dict[str, float]:
+        """Calculate tax efficiency metrics."""
+        total_income = (
+            (self.capital_gains.total_gains if self.capital_gains else 0.0) +
+            (self.dividend_income.total_gross_gbp
+             if self.dividend_income else 0.0) +
+            (self.currency_gains.total_gains if self.currency_gains else 0.0)
+        )
+
+        if total_income == 0:
+            return {
+                'effective_tax_rate': 0.0,
+                'allowance_utilization': 0.0,
+                'tax_saved_by_allowances': 0.0
+            }
+
+        effective_tax_rate = (self.total_tax_liability / total_income) * 100
+
+        # Calculate allowance utilization
+        total_allowances = 3000.0 + 500.0  # CGT + Dividend allowances
+        allowances_used = (
+            self.capital_gains_allowance_used + self.dividend_allowance_used
+        )
+        allowance_utilization = (allowances_used / total_allowances) * 100
+
+        # Calculate tax saved by allowances
+        cgt_tax_saved = self.capital_gains_allowance_used * 0.10
+        dividend_tax_saved = self.dividend_allowance_used * 0.0875
+
+        return {
+            'effective_tax_rate': effective_tax_rate,
+            'allowance_utilization': allowance_utilization,
+            'tax_saved_by_allowances': cgt_tax_saved + dividend_tax_saved
+        }
+
+
+@dataclass
+class Holding:
+    """Represents a current portfolio holding."""
+    id: UUID = field(default_factory=uuid4)
+    security: Security = None
+    quantity: float = 0.0
+    average_cost_gbp: float = 0.0  # Average cost per share in GBP
+    current_price: float = 0.0  # Current price in original currency
+    current_value_gbp: float = 0.0  # Current value in GBP
+    market: str = ""  # LSE, NASDAQ, etc.
+    unrealized_gain_loss: float = 0.0
+
+    # Performance metrics (calculated by PerformanceCalculator)
+    capital_gains_pct: float = 0.0
+    dividend_yield_pct: float = 0.0
+    currency_effect_pct: float = 0.0
+    total_return_pct: float = 0.0
+
+    @property
+    def total_cost_gbp(self) -> float:
+        """Total cost of holding in GBP."""
+        return self.average_cost_gbp * self.quantity
+
+    @property
+    def gain_loss_pct(self) -> float:
+        """Unrealized gain/loss percentage."""
+        if self.total_cost_gbp > 0:
+            return (self.unrealized_gain_loss / self.total_cost_gbp) * 100
+        return 0.0
+
+    @property
+    def weight_in_portfolio(self) -> float:
+        """Weight in portfolio (set by portfolio calculator)."""
+        return getattr(self, '_weight_in_portfolio', 0.0)
+
+    @weight_in_portfolio.setter
+    def weight_in_portfolio(self, value: float):
+        """Set weight in portfolio."""
+        self._weight_in_portfolio = value
+
+
+@dataclass
+class MarketSummary:
+    """Summary of holdings for a specific market/exchange."""
+    market: str
+    holdings: List[Holding] = field(default_factory=list)
+    total_value: float = 0.0
+    total_cost: float = 0.0
+    total_unrealized_gain_loss: float = 0.0
+    weight_in_portfolio: float = 0.0
+
+    def add_holding(self, holding: Holding) -> None:
+        """Add a holding to the market summary."""
+        self.holdings.append(holding)
+        self.total_value += holding.current_value_gbp
+        self.total_cost += holding.total_cost_gbp
+        self.total_unrealized_gain_loss += holding.unrealized_gain_loss
+
+    @property
+    def number_of_holdings(self) -> int:
+        """Number of holdings in this market."""
+        return len(self.holdings)
+
+    @property
+    def average_return_pct(self) -> float:
+        """Average return percentage across holdings."""
+        if not self.holdings:
+            return 0.0
+
+        total_return = sum(h.total_return_pct for h in self.holdings)
+        return total_return / len(self.holdings)
+
+    def get_top_holdings(self, count: int = 5) -> List[Holding]:
+        """Get top holdings by value."""
+        return sorted(
+            self.holdings,
+            key=lambda h: h.current_value_gbp,
+            reverse=True
+        )[:count]
+
+
+@dataclass
+class PortfolioSummary:
+    """Summary of entire portfolio."""
+    market_summaries: Dict[str, MarketSummary] = field(default_factory=dict)
+    total_portfolio_value: float = 0.0
+    total_portfolio_cost: float = 0.0
+    total_unrealized_gain_loss: float = 0.0
+
+    def add_market_summary(self, market_summary: MarketSummary) -> None:
+        """Add a market summary to the portfolio."""
+        self.market_summaries[market_summary.market] = market_summary
+        self.total_portfolio_value += market_summary.total_value
+        self.total_portfolio_cost += market_summary.total_cost
+        self.total_unrealized_gain_loss += (
+            market_summary.total_unrealized_gain_loss
+        )
+
+    @property
+    def total_return_pct(self) -> float:
+        """Total portfolio return percentage."""
+        if self.total_portfolio_cost > 0:
+            return (
+                self.total_unrealized_gain_loss / self.total_portfolio_cost
+            ) * 100
+        return 0.0
+
+    @property
+    def number_of_holdings(self) -> int:
+        """Total number of holdings across all markets."""
+        return sum(
+            ms.number_of_holdings for ms in self.market_summaries.values()
+        )
+
+    @property
+    def number_of_markets(self) -> int:
+        """Number of markets in portfolio."""
+        return len(self.market_summaries)
+
+    def get_all_holdings(self) -> List[Holding]:
+        """Get all holdings across all markets."""
+        all_holdings = []
+        for market_summary in self.market_summaries.values():
+            all_holdings.extend(market_summary.holdings)
+        return all_holdings
+
+    def get_top_holdings(self, count: int = 10) -> List[Holding]:
+        """Get top holdings by value across all markets."""
+        all_holdings = self.get_all_holdings()
+        return sorted(
+            all_holdings,
+            key=lambda h: h.current_value_gbp,
+            reverse=True
+        )[:count]
     
     def get_allowances_summary(self) -> Dict[str, Dict[str, float]]:
         """Get summary of tax allowances used."""
@@ -1032,29 +1225,36 @@ class ComprehensiveTaxSummary:
                 'remaining': max(0, 500.0 - self.dividend_allowance_used)
             }
         }
-    
+
     def get_tax_efficiency_metrics(self) -> Dict[str, float]:
         """Calculate tax efficiency metrics."""
         total_income = (
             (self.capital_gains.total_gains if self.capital_gains else 0.0) +
-            (self.dividend_income.total_gross_gbp if self.dividend_income else 0.0) +
+            (self.dividend_income.total_gross_gbp
+             if self.dividend_income else 0.0) +
             (self.currency_gains.total_gains if self.currency_gains else 0.0)
         )
-        
+
         if total_income == 0:
-            return {'effective_tax_rate': 0.0, 'allowance_utilization': 0.0, 'tax_saved_by_allowances': 0.0}
-        
+            return {
+                'effective_tax_rate': 0.0,
+                'allowance_utilization': 0.0,
+                'tax_saved_by_allowances': 0.0
+            }
+
         effective_tax_rate = (self.total_tax_liability / total_income) * 100
-        
+
         # Calculate allowance utilization
         total_allowances = 3000.0 + 500.0  # CGT + Dividend allowances
-        allowances_used = self.capital_gains_allowance_used + self.dividend_allowance_used
+        allowances_used = (
+            self.capital_gains_allowance_used + self.dividend_allowance_used
+        )
         allowance_utilization = (allowances_used / total_allowances) * 100
-        
+
         # Calculate tax saved by allowances
         cgt_tax_saved = self.capital_gains_allowance_used * 0.10
         dividend_tax_saved = self.dividend_allowance_used * 0.0875
-        
+
         return {
             'effective_tax_rate': effective_tax_rate,
             'allowance_utilization': allowance_utilization,

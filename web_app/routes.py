@@ -66,6 +66,8 @@ def init_routes(storage_service, calculation_service):
                         session['output_format'] = 'csv'  # Default format
                         
                         # Render results template
+                        import json
+                        print(json.dumps(results, indent=2))
                         return render_template('results.html', 
                                              results=results, 
                                              tax_year=form.tax_year.data,

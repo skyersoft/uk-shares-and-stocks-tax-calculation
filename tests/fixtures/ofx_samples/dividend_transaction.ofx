@@ -1,0 +1,68 @@
+OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILEUID:NONE
+NEWFILEUID:NONE
+
+<OFX>
+    <INVSTMTMSGSRSV1>
+        <INVSTMTTRNRS>
+            <INVSTMTRS>
+                <INVTRANLIST>
+                    <INCOME>
+                        <INVTRAN>
+                            <FITID>20240926.U11075163.e.USD.29277764804</FITID>
+                            <DTTRADE>20240926202000.000[-4:EDT]</DTTRADE>
+                            <MEMO>QCOM(US7475251036) CASH DIVIDEND USD 0.85 PER SHARE (Ordinary Dividend)</MEMO>
+                        </INVTRAN>
+                        <SECID>
+                            <UNIQUEID>747525103</UNIQUEID>
+                            <UNIQUEIDTYPE>CUSIP</UNIQUEIDTYPE>
+                        </SECID>
+                        <INCOMETYPE>DIV</INCOMETYPE>
+                        <TOTAL>44.35249</TOTAL>
+                        <SUBACCTSEC>CASH</SUBACCTSEC>
+                        <SUBACCTFUND>CASH</SUBACCTFUND>
+                        <CURRENCY>
+                            <CURRATE>0.7454</CURRATE>
+                            <CURSYM>USD</CURSYM>
+                        </CURRENCY>
+                    </INCOME>
+                    <INVBANKTRAN>
+                        <STMTTRN>
+                            <TRNTYPE>OTHER</TRNTYPE>
+                            <DTPOSTED>20240926202000.000[-4:EDT]</DTPOSTED>
+                            <TRNAMT>-6.6566006</TRNAMT>
+                            <FITID>20240926U1107516329277764821</FITID>
+                            <MEMO>QCOM(US7475251036) CASH DIVIDEND USD 0.85 PER SHARE - US TAX</MEMO>
+                            <CURRENCY>
+                                <CURRATE>0.7454</CURRATE>
+                                <CURSYM>USD</CURSYM>
+                            </CURRENCY>
+                        </STMTTRN>
+                        <SUBACCTFUND>CASH</SUBACCTFUND>
+                    </INVBANKTRAN>
+                </INVTRANLIST>
+            </INVSTMTRS>
+        </INVSTMTTRNRS>
+    </INVSTMTMSGSRSV1>
+    <SECLISTMSGSRSV1>
+        <SECLIST>
+            <STOCKINFO>
+                <SECINFO>
+                    <SECID>
+                        <UNIQUEID>747525103</UNIQUEID>
+                        <UNIQUEIDTYPE>CUSIP</UNIQUEIDTYPE>
+                    </SECID>
+                    <SECNAME>QCOM QUALCOMM INC</SECNAME>
+                    <TICKER>QCOM</TICKER>
+                    <FIID>273544</FIID>
+                </SECINFO>
+            </STOCKINFO>
+        </SECLIST>
+    </SECLISTMSGSRSV1>
+</OFX>

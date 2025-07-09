@@ -92,8 +92,10 @@ class CsvParser(FileParserInterface):
                 quantity = -quantity
             
             # Parse price and fees (handle alternative field names)
-            price_per_unit_str = row.get('TradePrice') or row.get('UnitPrice', '0')
-            if not price_per_unit_str:
+            price_per_unit_str = (row.get('TradePrice') or
+                                 row.get('UnitPrice') or
+                                 row.get('Price', '0'))
+            if not price_per_unit_str or price_per_unit_str == '0':
                 self.logger.warning(f"Skipping row due to missing price: {row}")
                 return None
             price_per_unit = float(price_per_unit_str)
@@ -144,7 +146,7 @@ class CsvParser(FileParserInterface):
             return TransactionType.BUY
         elif buy_sell == 'SELL':
             return TransactionType.SELL
-        elif 'DIV' in transaction_type_str:
+        elif buy_sell == 'DIV' or 'DIV' in transaction_type_str:
             return TransactionType.DIVIDEND
         elif 'INT' in transaction_type_str:
             return TransactionType.INTEREST

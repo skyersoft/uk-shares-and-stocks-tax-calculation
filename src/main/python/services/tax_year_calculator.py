@@ -185,10 +185,10 @@ class EnhancedTaxYearCalculator:
         
         self.logger.info(
             f"Taxable income breakdown: "
-            f"Capital gains: £{capital_gains_taxable:.2f}, "
-            f"Dividends: £{dividend_taxable:.2f}, "
-            f"Currency: £{currency_taxable:.2f}, "
-            f"Total: £{total:.2f}"
+            f"Capital gains (taxable): £{capital_gains_taxable:.2f}, "
+            f"Dividends (net income): £{dividends.total_net_gbp:.2f}, "
+            f"Currency (net gain/loss): £{currency_gains.net_gain_loss:.2f}, "
+            f"Total Taxable Income: £{total:.2f}"
         )
         
         return total

@@ -80,7 +80,7 @@
                     {% for disposal in results.disposals %}
                     <tr>
                         <td>{{ disposal.disposal_date or 'N/A' }}</td>
-                        <td>{{ disposal.symbol or 'Unknown' }}</td>
+                        <td>{{ disposal['security']['name'] }} ({{ disposal['security']['symbol'] }})</td>
                         <td>{{ disposal.quantity }}</td>
                         <td>£{{ disposal.proceeds|float|round(2) }}</td>
                         <td>£{{ disposal.cost|float|round(2) }}</td>
@@ -102,6 +102,32 @@
                 submitting your tax return.
             </p>
         </div>
+
+        {% if results.dividend_income and results.dividend_income.dividends %}
+        <h3 class="mb-3 mt-4">Dividend Details</h3>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Payment Date</th>
+                        <th>Security</th>
+                        <th>Amount (GBP)</th>
+                        <th>Withholding Tax (GBP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dividend in results.dividend_income.dividends %}
+                    <tr>
+                        <td>{{ dividend.payment_date or 'N/A' }}</td>
+                        <td>{{ dividend['security']['name'] }} ({{ dividend['security']['symbol'] }})</td>
+                        <td>£{{ dividend.amount_gbp|float|round(2) }}</td>
+                        <td>£{{ dividend.withholding_tax_gbp|float|round(2) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

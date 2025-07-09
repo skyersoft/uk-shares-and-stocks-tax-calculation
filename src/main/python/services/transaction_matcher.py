@@ -41,7 +41,7 @@ class UKTransactionMatcher(TransactionMatcherInterface):
         matched_disposals = []
         
         for sell_tx in sells:
-            self.logger.info(f"Matching disposal: {sell_tx.transaction_id} - {abs(sell_tx.quantity)} shares of {sell_tx.security.isin}")
+            self.logger.info(f"Matching disposal: {sell_tx.transaction_id} - {abs(sell_tx.quantity)} shares of {sell_tx.security.get_display_name()}")
             
             # Track remaining quantity to match
             remaining_to_match = abs(sell_tx.quantity)

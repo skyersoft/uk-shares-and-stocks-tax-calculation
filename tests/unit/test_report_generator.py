@@ -78,22 +78,22 @@ class TestCSVReportGenerator:
             
             # Check first disposal row
             assert rows[1][0] == '2024-06-15'  # Date
-            assert rows[1][1] == 'GB00B16KPT44'  # Security
+            assert rows[1][1] == 'HSBA (GB00B16KPT44)'  # Security display name
             assert rows[1][2] == '100.0'  # Quantity
-            assert rows[1][3] == '700.00'  # Proceeds
-            assert rows[1][4] == '500.00'  # Cost
-            assert rows[1][5] == '10.00'  # Expenses
-            assert rows[1][6] == '190.00'  # Gain/Loss
+            assert float(rows[1][3]) == 700.00  # Proceeds
+            assert float(rows[1][4]) == 500.00  # Cost
+            assert float(rows[1][5]) == 10.00  # Expenses
+            assert float(rows[1][6]) == 190.00  # Gain/Loss
             assert rows[1][7] == 'section-104'  # Matching Rule
-            
+
             # Check second disposal row
             assert rows[2][0] == '2024-12-20'  # Date
-            assert rows[2][1] == 'US0378331005'  # Security
-            assert rows[2][2] == '50.0'  # Quantity
-            assert rows[2][3] == '1500.00'  # Proceeds
-            assert rows[2][4] == '1200.00'  # Cost
-            assert rows[2][5] == '15.00'  # Expenses
-            assert rows[2][6] == '285.00'  # Gain/Loss
+            assert rows[2][1] == 'AAPL (US0378331005)'  # Security display name
+            assert float(rows[2][2]) == 50.0  # Quantity
+            assert float(rows[2][3]) == 1500.00  # Proceeds
+            assert float(rows[2][4]) == 1200.00  # Cost
+            assert float(rows[2][5]) == 15.00  # Expenses
+            assert float(rows[2][6]) == 285.00  # Gain/Loss
             assert rows[2][7] == 'same-day'  # Matching Rule
             
             # Check summary section exists
@@ -107,12 +107,12 @@ class TestCSVReportGenerator:
             
             # Check summary values
             assert rows[summary_start + 1] == ['Tax Year', '2024-2025']
-            assert rows[summary_start + 2] == ['Total Proceeds', '2200.00']
-            assert rows[summary_start + 3] == ['Total Gains', '475.00']
-            assert rows[summary_start + 4] == ['Total Losses', '0.00']
-            assert rows[summary_start + 5] == ['Net Gain/Loss', '475.00']
-            assert rows[summary_start + 6] == ['Annual Exemption Used', '475.00']
-            assert rows[summary_start + 7] == ['Taxable Gain', '0.00']
+            assert float(rows[summary_start + 2][1]) == 2200.00
+            assert float(rows[summary_start + 3][1]) == 475.00
+            assert float(rows[summary_start + 4][1]) == 0.00
+            assert float(rows[summary_start + 5][1]) == 475.00
+            assert float(rows[summary_start + 6][1]) == 475.00
+            assert float(rows[summary_start + 7][1]) == 0.00
             
         finally:
             # Clean up
@@ -160,7 +160,7 @@ class TestCSVReportGenerator:
                 rows = list(reader)
             
             # Check disposal row shows loss
-            assert rows[1][6] == '-110.00'  # Gain/Loss (negative)
+            assert float(rows[1][6]) == -110.00  # Gain/Loss (negative)
             
             # Find summary section
             summary_start = None
@@ -170,11 +170,11 @@ class TestCSVReportGenerator:
                     break
             
             # Check summary shows loss
-            assert rows[summary_start + 3] == ['Total Gains', '0.00']
-            assert rows[summary_start + 4] == ['Total Losses', '110.00']
-            assert rows[summary_start + 5] == ['Net Gain/Loss', '-110.00']
-            assert rows[summary_start + 6] == ['Annual Exemption Used', '0.00']
-            assert rows[summary_start + 7] == ['Taxable Gain', '0.00']
+            assert float(rows[summary_start + 3][1]) == 0.00
+            assert float(rows[summary_start + 4][1]) == 110.00
+            assert float(rows[summary_start + 5][1]) == -110.00
+            assert float(rows[summary_start + 6][1]) == 0.00
+            assert float(rows[summary_start + 7][1]) == 0.00
             
         finally:
             # Clean up

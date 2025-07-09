@@ -1,14 +1,24 @@
-"""Command-line interface for the capital gains calculator."""
+"""Enhanced capital gains calculator with comprehensive analysis capabilities."""
 import os
 import sys
 import logging
 import typer
-from typing import Optional
+import time
+from typing import Optional, Dict, Any
 from rich.console import Console
 from rich.logging import RichHandler
 
 from .calculator import CapitalGainsTaxCalculator
 from .config.tax_config import TAX_YEARS, BASE_CURRENCY
+from .interfaces.calculator_interfaces import FileParserInterface
+from .services.disposal_calculator import UKDisposalCalculator
+from .services.dividend_processor import DividendProcessor
+from .services.currency_processor import CurrencyExchangeProcessor
+from .services.portfolio_calculator import PortfolioCalculator
+from .services.performance_calculator import PerformanceCalculator
+from .services.tax_year_calculator import EnhancedTaxYearCalculator
+from .services.portfolio_report_generator import PortfolioReportGenerator
+from .services.transaction_matcher import UKTransactionMatcher
 
 
 # Set up logging
@@ -116,6 +126,148 @@ def calculate(
         logger.exception("Error during calculation")
         console.print(f"[bold red]Error:[/] {str(e)}")
         sys.exit(1)
+
+
+class EnhancedCapitalGainsCalculator:
+    """Enhanced calculator with comprehensive tax and portfolio analysis."""
+
+    def __init__(
+        self,
+        parser: FileParserInterface,
+        disposal_calculator: UKDisposalCalculator,
+        dividend_processor: DividendProcessor,
+        currency_processor: CurrencyExchangeProcessor,
+        portfolio_calculator: PortfolioCalculator,
+        performance_calculator: PerformanceCalculator,
+        tax_year_calculator: EnhancedTaxYearCalculator,
+        report_generator: PortfolioReportGenerator
+    ):
+        self.parser = parser
+        self.disposal_calculator = disposal_calculator
+        self.dividend_processor = dividend_processor
+        self.currency_processor = currency_processor
+        self.portfolio_calculator = portfolio_calculator
+        self.performance_calculator = performance_calculator
+        self.tax_year_calculator = tax_year_calculator
+        self.report_generator = report_generator
+        self.logger = logging.getLogger(__name__)
+
+    def calculate_comprehensive_analysis(
+        self,
+        file_path: str,
+        tax_year: str,
+        analysis_type: str = "both"  # "tax", "portfolio", "both"
+    ) -> Dict[str, Any]:
+        """Perform comprehensive tax and portfolio analysis."""
+
+        self.logger.info(f"Starting comprehensive analysis for {tax_year}")
+        start_time = time.time()
+
+        # Parse transactions
+        self.logger.info(f"Parsing transactions from {file_path}")
+        transactions = self.parser.parse(file_path)
+        self.logger.info(f"Parsed {len(transactions)} transactions")
+
+        results = {
+            'file_path': file_path,
+            'tax_year': tax_year,
+            'analysis_type': analysis_type,
+            'transaction_count': len(transactions),
+            'processing_time': 0.0
+        }
+
+        if analysis_type in ["tax", "both"]:
+            self.logger.info("Calculating comprehensive tax summary")
+            tax_summary = self.tax_year_calculator.calculate_comprehensive_tax_summary(
+                transactions, tax_year
+            )
+            results['tax_analysis'] = tax_summary
+
+            # Generate tax report
+            tax_report = self.tax_year_calculator.generate_tax_calculation_report(tax_summary)
+            results['tax_report'] = tax_report
+
+        if analysis_type in ["portfolio", "both"]:
+            self.logger.info("Calculating portfolio holdings and performance")
+
+            # Calculate portfolio holdings
+            holdings = self.portfolio_calculator.calculate_current_holdings(transactions)
+            self.logger.info(f"Calculated {len(holdings)} current holdings")
+
+            if holdings:
+                # Calculate performance metrics
+                dividends = self.dividend_processor.process_dividend_transactions(transactions)
+                for holding in holdings:
+                    self.performance_calculator.calculate_holding_performance(
+                        holding, transactions, dividends
+                    )
+
+                # Group by market and calculate portfolio summary
+                market_summaries = self.portfolio_calculator.group_holdings_by_market(holdings)
+                portfolio_summary = self.portfolio_calculator.calculate_portfolio_totals(market_summaries)
+
+                # Generate portfolio report
+                portfolio_report = self.report_generator.generate_market_grouped_report(portfolio_summary)
+
+                results['portfolio_analysis'] = portfolio_summary
+                results['portfolio_report'] = portfolio_report
+            else:
+                self.logger.info("No current holdings found")
+                results['portfolio_analysis'] = None
+                results['portfolio_report'] = None
+
+        # Calculate processing time
+        end_time = time.time()
+        results['processing_time'] = end_time - start_time
+
+        self.logger.info(f"Comprehensive analysis completed in {results['processing_time']:.2f} seconds")
+
+        return results
+
+
+def create_enhanced_calculator(parser_type: str = "csv") -> EnhancedCapitalGainsCalculator:
+    """Factory function to create enhanced calculator with all dependencies."""
+
+    # Create parser
+    if parser_type.lower() == "csv":
+        from .parsers.csv_parser import CsvParser
+        parser = CsvParser()
+    elif parser_type.lower() == "qfx":
+        from .parsers.qfx_parser import QfxParser
+        parser = QfxParser()
+    else:
+        raise ValueError(f"Unsupported parser type: {parser_type}")
+
+    # Create services
+    disposal_calculator = UKDisposalCalculator()
+    dividend_processor = DividendProcessor()
+    currency_processor = CurrencyExchangeProcessor()
+    portfolio_calculator = PortfolioCalculator()
+    performance_calculator = PerformanceCalculator()
+    transaction_matcher = UKTransactionMatcher()
+
+    # Create enhanced tax year calculator
+    tax_year_calculator = EnhancedTaxYearCalculator(
+        disposal_calculator,
+        dividend_processor,
+        currency_processor,
+        transaction_matcher
+    )
+
+    # Create report generator
+    report_generator = PortfolioReportGenerator()
+
+    # Create enhanced calculator
+    return EnhancedCapitalGainsCalculator(
+        parser=parser,
+        disposal_calculator=disposal_calculator,
+        dividend_processor=dividend_processor,
+        currency_processor=currency_processor,
+        portfolio_calculator=portfolio_calculator,
+        performance_calculator=performance_calculator,
+        tax_year_calculator=tax_year_calculator,
+        report_generator=report_generator
+    )
 
 
 def main():

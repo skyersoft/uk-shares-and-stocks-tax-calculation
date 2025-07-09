@@ -281,17 +281,53 @@ class QfxParser(FileParserInterface):
             
             # Parse as XML
             root = ET.fromstring(ofx_content)
-            
+
+            # First, create a map of security info
+            security_map = {}
+            for sec_info_node in root.findall('.//SECINFO'):
+                secid_node = sec_info_node.find('./SECID')
+                if secid_node is not None:
+                    uniqueid = secid_node.findtext('./UNIQUEID', '')
+                    if uniqueid:
+                        security_map[uniqueid] = {
+                            'name': sec_info_node.findtext('./SECNAME', ''),
+                            'ticker': sec_info_node.findtext('./TICKER', '')
+                        }
+
             # Find buy stock transactions
             for buy_node in root.findall('.//BUYSTOCK'):
-                tx = self._parse_buy_transaction(buy_node)
+                tx = self._parse_buy_transaction(buy_node, security_map)
                 if tx:
                     transactions.append(tx)
             
             # Find sell stock transactions
             for sell_node in root.findall('.//SELLSTOCK'):
-                tx = self._parse_sell_transaction(sell_node)
+                tx = self._parse_sell_transaction(sell_node, security_map)
                 if tx:
+                    transactions.append(tx)
+            
+            # Find dividend transactions and their withholding tax
+            for income_node in root.findall('.//INCOME'):
+                # Get the dividend transaction
+                tx = self._parse_dividend_transaction(income_node, security_map)
+                if tx:
+                    # Find corresponding withholding tax
+                    fitid = income_node.find('./INVTRAN/FITID')
+                    if fitid is not None:
+                        # Extract base transaction ID (before the dot)
+                        base_id = fitid.text.split('.')[0]
+                        # Find withholding tax transaction
+                        for bank_node in root.findall('.//INVBANKTRAN/STMTTRN'):
+                            bank_fitid = bank_node.findtext('FITID', '')
+                            bank_memo = bank_node.findtext('MEMO', '')
+                            if base_id in bank_fitid and 'US TAX' in bank_memo:
+                                tax_node = bank_node
+                                break
+                        else:
+                            tax_node = None
+                        if tax_node is not None:
+                            tax_amount = abs(float(tax_node.findtext('TRNAMT', '0')))
+                            tx.taxes = tax_amount
                     transactions.append(tx)
                     
             return transactions
@@ -300,7 +336,7 @@ class QfxParser(FileParserInterface):
             self.logger.error(f"Error in manual QFX parsing: {e}")
             return transactions
     
-    def _parse_buy_transaction(self, node) -> Optional[Transaction]:
+    def _parse_buy_transaction(self, node, security_map) -> Optional[Transaction]:
         """Parse a buy stock transaction node."""
         try:
             invbuy = node.find('./INVBUY')
@@ -340,8 +376,10 @@ class QfxParser(FileParserInterface):
                 isin = uniqueid
                 security_type = 'ISIN'
 
-            symbol = uniqueid[-6:] if len(uniqueid) > 6 else uniqueid
-            security = Security(isin=isin, symbol=symbol, security_type=security_type)
+            sec_info = security_map.get(uniqueid, {})
+            symbol = sec_info.get('ticker', uniqueid[-6:] if len(uniqueid) > 6 else uniqueid)
+            secname = sec_info.get('name', '')
+            security = Security(isin=isin, symbol=symbol, name=secname, security_type=security_type)
 
             units = float(invbuy.findtext('./UNITS', '0'))
             if units == 0:
@@ -395,7 +433,90 @@ class QfxParser(FileParserInterface):
             self.logger.error(f"Error parsing buy transaction: {e}")
             return None
 
-    def _parse_sell_transaction(self, node) -> Optional[Transaction]:
+    def _parse_dividend_transaction(self, node, security_map) -> Optional[Transaction]:
+        """Parse a dividend transaction node."""
+        try:
+            invtran = node.find('./INVTRAN')
+            if invtran is None:
+                return None
+
+            fitid = invtran.findtext('./FITID', '')
+            date_str = invtran.findtext('./DTTRADE', '')
+
+            if date_str:
+                date_str = date_str.split('.')[0]
+                if len(date_str) > 8:
+                    fmt = '%Y%m%d%H%M%S'
+                else:
+                    fmt = '%Y%m%d'
+                trade_date = datetime.strptime(date_str, fmt)
+            else:
+                trade_date = datetime.now()
+
+            secid = node.find('./SECID')
+            if secid is None:
+                return None
+
+            uniqueid = secid.findtext('./UNIQUEID', '')
+            uniqueidtype = secid.findtext('./UNIQUEIDTYPE', '')
+            if not uniqueid:
+                return None
+
+            if uniqueidtype and uniqueidtype != 'ISIN':
+                isin = f"{uniqueidtype}:{uniqueid}"
+                security_type = uniqueidtype
+            else:
+                isin = uniqueid
+                security_type = 'ISIN'
+
+            sec_info = security_map.get(uniqueid, {})
+            symbol = sec_info.get('ticker', uniqueid[-6:] if len(uniqueid) > 6 else uniqueid)
+            secname = sec_info.get('name', '')
+            security = Security(isin=isin, symbol=symbol, name=secname, security_type=security_type)
+
+            # Get dividend amount
+            total = float(node.findtext('./TOTAL', '0'))
+            if total == 0:
+                return None
+
+            # Get currency information
+            currency_node = node.find('./CURRENCY')
+            currency_code = self.base_currency
+            currency_rate = 1.0
+
+            if currency_node is not None:
+                cur_sym = currency_node.findtext('./CURSYM')
+                if cur_sym:
+                    currency_code = cur_sym
+                rate_str = currency_node.findtext('./CURRATE', '1.0')
+                try:
+                    currency_rate = float(rate_str)
+                except ValueError:
+                    currency_rate = 1.0
+
+            currency = Currency(
+                code=currency_code,
+                rate_to_base=currency_rate
+            )
+
+            # For dividends, we store the amount in the price_per_unit field
+            # and use quantity=1 since it's a single payment
+            return Transaction(
+                transaction_id=fitid,
+                transaction_type=TransactionType.DIVIDEND,
+                security=security,
+                date=trade_date,
+                quantity=1,
+                price_per_unit=total,
+                commission=0,
+                taxes=0,  # This will be updated later when we find the withholding tax
+                currency=currency
+            )
+        except Exception as e:
+            self.logger.error(f"Error parsing dividend transaction: {e}")
+            return None
+
+    def _parse_sell_transaction(self, node, security_map) -> Optional[Transaction]:
         """Parse a sell stock transaction node."""
         try:
             invsell = node.find('./INVSELL')
@@ -435,8 +556,10 @@ class QfxParser(FileParserInterface):
                 isin = uniqueid
                 security_type = 'ISIN'
 
-            symbol = uniqueid[-6:] if len(uniqueid) > 6 else uniqueid
-            security = Security(isin=isin, symbol=symbol, security_type=security_type)
+            sec_info = security_map.get(uniqueid, {})
+            symbol = sec_info.get('ticker', uniqueid[-6:] if len(uniqueid) > 6 else uniqueid)
+            secname = sec_info.get('name', '')
+            security = Security(isin=isin, symbol=symbol, name=secname, security_type=security_type)
 
             units = float(invsell.findtext('./UNITS', '0'))
             if units == 0:

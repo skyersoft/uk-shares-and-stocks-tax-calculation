@@ -96,8 +96,8 @@ class TestEndToEndSystem:
             assert 'Taxable Gain' in content, "CSV should show taxable gain"
             
             # Verify expected securities are present
-            assert 'VS3770' in content or 'JE00B1VS3770' in content, "Should contain first security"
-            assert '871085' in content or 'KYG393871085' in content, "Should contain second security"
+            assert 'PHGP' in content, "Should contain PHGP security"
+            assert 'GFS' in content, "Should contain GFS security"
             
             # Parse CSV data for detailed validation
             lines = content.split('\n')
