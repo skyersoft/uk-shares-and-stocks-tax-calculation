@@ -187,6 +187,10 @@ class EnhancedCapitalGainsCalculator:
             tax_report = self.tax_year_calculator.generate_tax_calculation_report(tax_summary)
             results['tax_report'] = tax_report
 
+            # Calculate commission summary
+            commission_summary = self._calculate_commission_summary(transactions, tax_year)
+            results['commission_summary'] = commission_summary
+
         if analysis_type in ["portfolio", "both"]:
             self.logger.info("Calculating portfolio holdings and performance")
 
@@ -223,6 +227,65 @@ class EnhancedCapitalGainsCalculator:
         self.logger.info(f"Comprehensive analysis completed in {results['processing_time']:.2f} seconds")
 
         return results
+
+    def _calculate_commission_summary(self, transactions, tax_year):
+        """Calculate commission summary for the given transactions and tax year."""
+        # Import the helper function
+        def _is_in_tax_year(date, tax_year):
+            """Check if a date falls within the given tax year."""
+            start_year = int(tax_year.split('-')[0])
+            start_date = f"{start_year}-04-06"
+            end_date = f"{start_year + 1}-04-05"
+
+            from datetime import datetime
+            if isinstance(date, str):
+                date = datetime.fromisoformat(date.replace('Z', '+00:00'))
+            elif hasattr(date, 'date'):
+                date = date.date()
+
+            start = datetime.fromisoformat(start_date).date()
+            end = datetime.fromisoformat(end_date).date()
+
+            if hasattr(date, 'date'):
+                date = date.date()
+
+            return start <= date <= end
+
+        total_commissions = 0.0
+        total_fees = 0.0
+        commission_by_type = {
+            'buy_commissions': 0.0,
+            'sell_commissions': 0.0,
+            'dividend_fees': 0.0,
+            'other_fees': 0.0
+        }
+
+        for transaction in transactions:
+            if _is_in_tax_year(transaction.date, tax_year):
+                commission = getattr(transaction, 'commission_in_base_currency', 0)
+                fees = getattr(transaction, 'taxes_in_base_currency', 0)  # Some fees are in taxes field
+
+                total_commissions += commission
+                total_fees += fees
+
+                # Categorize by transaction type
+                if hasattr(transaction, 'transaction_type'):
+                    if 'buy' in transaction.transaction_type.name.lower():
+                        commission_by_type['buy_commissions'] += commission
+                    elif 'sell' in transaction.transaction_type.name.lower():
+                        commission_by_type['sell_commissions'] += commission
+                    elif 'dividend' in transaction.transaction_type.name.lower():
+                        commission_by_type['dividend_fees'] += commission
+                    else:
+                        commission_by_type['other_fees'] += commission
+
+        return {
+            'total_commissions': total_commissions,
+            'total_fees': total_fees,
+            'total_costs': total_commissions + total_fees,
+            'breakdown': commission_by_type,
+            'transaction_count': len([t for t in transactions if _is_in_tax_year(t.date, tax_year) and (getattr(t, 'commission_in_base_currency', 0) > 0 or getattr(t, 'taxes_in_base_currency', 0) > 0)])
+        }
 
 
 def create_enhanced_calculator(parser_type: str = "csv") -> EnhancedCapitalGainsCalculator:

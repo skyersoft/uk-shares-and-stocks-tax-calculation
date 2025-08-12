@@ -53,6 +53,7 @@ class TestEnhancedCapitalGainsCalculator:
         assert 'portfolio_analysis' in results
         assert 'tax_report' in results
         assert 'portfolio_report' in results
+        assert 'commission_summary' in results
         
         # Verify data
         assert results['analysis_type'] == "both"
@@ -76,7 +77,29 @@ class TestEnhancedCapitalGainsCalculator:
         assert results['tax_report'] is not None
         assert results['portfolio_report'] is not None
         assert 'markets' in results['portfolio_report']
-        
+
+        # Check commission summary
+        commission_summary = results['commission_summary']
+        assert commission_summary is not None
+        assert 'total_commissions' in commission_summary
+        assert 'total_fees' in commission_summary
+        assert 'total_costs' in commission_summary
+        assert 'breakdown' in commission_summary
+        assert 'transaction_count' in commission_summary
+
+        # Verify commission values are reasonable
+        assert commission_summary['total_commissions'] >= 0
+        assert commission_summary['total_fees'] >= 0
+        assert commission_summary['total_costs'] >= 0
+        assert commission_summary['transaction_count'] >= 0
+
+        # Check breakdown structure
+        breakdown = commission_summary['breakdown']
+        assert 'buy_commissions' in breakdown
+        assert 'sell_commissions' in breakdown
+        assert 'dividend_fees' in breakdown
+        assert 'other_fees' in breakdown
+
         os.unlink(sample_sharesight_csv)
 
     def test_tax_only_analysis(self, enhanced_calculator, sample_sharesight_csv):
@@ -89,10 +112,14 @@ class TestEnhancedCapitalGainsCalculator:
         assert 'tax_analysis' in results
         assert 'portfolio_analysis' not in results
         assert results['analysis_type'] == "tax"
-        
+
         # Tax analysis should be present
         assert results['tax_analysis'] is not None
         assert results['tax_report'] is not None
+
+        # Commission summary should be present for tax analysis
+        assert 'commission_summary' in results
+        assert results['commission_summary'] is not None
         
         os.unlink(sample_sharesight_csv)
 
@@ -106,12 +133,63 @@ class TestEnhancedCapitalGainsCalculator:
         assert 'portfolio_analysis' in results
         assert 'tax_analysis' not in results
         assert results['analysis_type'] == "portfolio"
-        
+
         # Portfolio analysis should be present
         assert results['portfolio_analysis'] is not None
         assert results['portfolio_report'] is not None
+
+        # Commission summary should NOT be present for portfolio-only analysis
+        assert 'commission_summary' not in results
         
         os.unlink(sample_sharesight_csv)
+
+    def test_commission_calculation_accuracy(self, enhanced_calculator):
+        """Test that commission calculations are accurate."""
+        # Create CSV with known commission values (dates within 2024-2025 tax year: Apr 6, 2024 - Apr 5, 2025)
+        csv_content = """Date,Symbol,Name,AssetClass,SubCategory,ListingExchange,Exchange,Buy/Sell,Quantity,Price,IBCommission,Taxes,ClosePrice,FXRateToBase,MtmPnl,FifoPnlRealized
+2024-05-15,AAPL,Apple Inc,STK,COMMON,NASDAQ,NASDAQ,BUY,100,150.00,10.00,2.00,150.00,0.75,0.00,0.00
+2024-06-15,AAPL,Apple Inc,STK,COMMON,NASDAQ,NASDAQ,SELL,-50,180.00,5.00,1.00,180.00,0.75,0.00,1500.00
+2024-07-15,MSFT,Microsoft Corp,STK,COMMON,NASDAQ,NASDAQ,BUY,50,200.00,8.00,0.50,200.00,0.75,0.00,0.00"""
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            f.write(csv_content)
+            csv_path = f.name
+
+        try:
+            results = enhanced_calculator.calculate_comprehensive_analysis(
+                csv_path, "2024-2025", "tax"
+            )
+
+            commission_summary = results['commission_summary']
+
+            # Expected values (converted to GBP using FXRateToBase=0.75 for USD transactions)
+            # Buy AAPL: 10.00 * 0.75 = 7.50, fees: 2.00 * 0.75 = 1.50
+            # Sell AAPL: 5.00 * 0.75 = 3.75, fees: 1.00 * 0.75 = 0.75
+            # Buy MSFT: 8.00 * 0.75 = 6.00, fees: 0.50 * 0.75 = 0.375
+            expected_total_commissions = 7.50 + 3.75 + 6.00  # 17.25
+            expected_total_fees = 1.50 + 0.75 + 0.375  # 2.625
+            expected_total_costs = expected_total_commissions + expected_total_fees  # 19.875
+
+            # Check commission values (allow small floating point differences)
+            assert abs(commission_summary['total_commissions'] - expected_total_commissions) < 0.01
+            assert abs(commission_summary['total_fees'] - expected_total_fees) < 0.01
+            assert abs(commission_summary['total_costs'] - expected_total_costs) < 0.01
+
+            # Check breakdown
+            breakdown = commission_summary['breakdown']
+            expected_buy_commissions = 7.50 + 6.00  # 13.50
+            expected_sell_commissions = 3.75
+
+            assert abs(breakdown['buy_commissions'] - expected_buy_commissions) < 0.01
+            assert abs(breakdown['sell_commissions'] - expected_sell_commissions) < 0.01
+            assert breakdown['dividend_fees'] == 0.0
+            assert breakdown['other_fees'] == 0.0
+
+            # Check transaction count (3 transactions with commissions)
+            assert commission_summary['transaction_count'] == 3
+
+        finally:
+            os.unlink(csv_path)
 
     def test_empty_file_handling(self, enhanced_calculator):
         """Test handling of empty CSV file."""

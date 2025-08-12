@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Optional, List, Dict, Any
 from uuid import UUID, uuid4
 
-from src.main.python.models.domain_models import (
+from ..models.domain_models import (
     Transaction, TransactionType, Currency, CurrencyPool,
     CurrencyGainLoss, CurrencyGainLossSummary
 )

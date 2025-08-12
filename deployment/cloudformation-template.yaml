@@ -1,0 +1,193 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'IBKR Tax Calculator - Lambda + API Gateway deployment'
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: ibkr-tax-calculator
+    Description: Name of the project
+
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment stage
+
+  DomainName:
+    Type: String
+    Default: cgttaxtool.uk
+    Description: Custom domain name for the application
+
+  HostedZoneId:
+    Type: String
+    Description: Route 53 Hosted Zone ID for the domain (leave empty to auto-detect)
+    Default: ""
+
+Conditions:
+  HasHostedZoneId: !Not [!Equals [!Ref HostedZoneId, ""]]
+
+Resources:
+  # SSL Certificate for custom domain
+  SSLCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames:
+        - !Sub "www.${DomainName}"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !If
+            - HasHostedZoneId
+            - !Ref HostedZoneId
+            - !Ref HostedZone
+        - DomainName: !Sub "www.${DomainName}"
+          HostedZoneId: !If
+            - HasHostedZoneId
+            - !Ref HostedZoneId
+            - !Ref HostedZone
+
+  # Route 53 Hosted Zone (only if not provided)
+  HostedZone:
+    Type: AWS::Route53::HostedZone
+    Condition: !Not [!Condition HasHostedZoneId]
+    Properties:
+      Name: !Ref DomainName
+      HostedZoneConfig:
+        Comment: !Sub "Hosted zone for ${DomainName}"
+
+  # Lambda Function (using existing service role)
+  TaxCalculatorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-${Stage}'
+      Runtime: python3.10
+      Handler: lambda_handler.lambda_handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/service-role/lambda-basic-execution-role'
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+              return {
+                  'statusCode': 200,
+                  'headers': {
+                      'Content-Type': 'text/html',
+                      'Access-Control-Allow-Origin': '*'
+                  },
+                  'body': '<h1>IBKR Tax Calculator</h1><p>Placeholder - deploy your code</p>'
+              }
+      MemorySize: 1024
+      Timeout: 30
+      Environment:
+        Variables:
+          STAGE: !Ref Stage
+
+  # API Gateway
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub '${ProjectName}-api'
+      Description: API for IBKR Tax Calculator
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Gateway Resource for /calculate
+  CalculateResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: 'calculate'
+
+  # API Gateway Method for /calculate
+  CalculateMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref CalculateResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TaxCalculatorFunction.Arn}/invocations'
+
+  # API Gateway Resource (catch-all)
+  ApiGatewayResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: '{proxy+}'
+
+  # API Gateway Method
+  ApiGatewayMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ApiGatewayResource
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TaxCalculatorFunction.Arn}/invocations'
+
+  # Root method for /
+  ApiGatewayRootMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !GetAtt ApiGateway.RootResourceId
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${TaxCalculatorFunction.Arn}/invocations'
+
+  # Lambda Permission for API Gateway
+  LambdaApiGatewayPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref TaxCalculatorFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*'
+
+  # API Gateway Deployment
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - ApiGatewayMethod
+      - ApiGatewayRootMethod
+      - CalculateMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+      StageName: !Ref Stage
+
+  # Custom Domain (optional)
+  # ApiGatewayDomainName:
+  #   Type: AWS::ApiGateway::DomainName
+  #   Properties:
+  #     DomainName: your-domain.com
+  #     CertificateArn: arn:aws:acm:region:account:certificate/certificate-id
+
+Outputs:
+  ApiUrl:
+    Description: 'API Gateway URL'
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
+    Export:
+      Name: !Sub '${ProjectName}-api-url'
+
+  LambdaFunctionArn:
+    Description: 'Lambda Function ARN'
+    Value: !GetAtt TaxCalculatorFunction.Arn
+    Export:
+      Name: !Sub '${ProjectName}-lambda-arn'
+
+  LambdaFunctionName:
+    Description: 'Lambda Function Name'
+    Value: !Ref TaxCalculatorFunction
+    Export:
+      Name: !Sub '${ProjectName}-lambda-name'

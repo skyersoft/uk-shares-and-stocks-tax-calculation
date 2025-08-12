@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Custom Domain Setup for IBKR Tax Calculator - SSL Certificate, API Gateway Domain, and Route 53 Records'
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: cgttaxtool.uk
+    Description: The custom domain name for the application
+    
+  ApiGatewayId:
+    Type: String
+    Default: qzbkgopzi3
+    Description: The existing API Gateway REST API ID
+    
+  ApiGatewayStageName:
+    Type: String
+    Default: prod
+    Description: The API Gateway stage name
+    
+  HostedZoneId:
+    Type: String
+    Default: Z091347333W0ZM3HD49Q2
+    Description: The Route 53 Hosted Zone ID for the domain
+    
+  Region:
+    Type: String
+    Default: eu-west-1
+    Description: The AWS region where API Gateway is deployed
+
+Resources:
+  # SSL Certificate for the custom domain
+  SSLCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames:
+        - !Sub "www.${DomainName}"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName
+          HostedZoneId: !Ref HostedZoneId
+        - DomainName: !Sub "www.${DomainName}"
+          HostedZoneId: !Ref HostedZoneId
+      Tags:
+        - Key: Name
+          Value: !Sub "${DomainName}-ssl-certificate"
+        - Key: Project
+          Value: ibkr-tax-calculator
+
+  # Custom Domain Name in API Gateway
+  ApiGatewayDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName: !Ref DomainName
+      RegionalCertificateArn: !Ref SSLCertificate
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      SecurityPolicy: TLS_1_2
+      Tags:
+        - Key: Name
+          Value: !Sub "${DomainName}-api-domain"
+        - Key: Project
+          Value: ibkr-tax-calculator
+
+  # Base Path Mapping to connect domain to API Gateway
+  ApiGatewayBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName: !Ref ApiGatewayDomainName
+      RestApiId: !Ref ApiGatewayId
+      Stage: !Ref ApiGatewayStageName
+
+  # Route 53 A Record for root domain
+  Route53RecordRoot:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApiGatewayDomainName.RegionalDomainName
+        HostedZoneId: !GetAtt ApiGatewayDomainName.RegionalHostedZoneId
+        EvaluateTargetHealth: false
+
+  # Route 53 A Record for www subdomain
+  Route53RecordWWW:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Sub "www.${DomainName}"
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt ApiGatewayDomainName.RegionalDomainName
+        HostedZoneId: !GetAtt ApiGatewayDomainName.RegionalHostedZoneId
+        EvaluateTargetHealth: false
+
+Outputs:
+  DomainName:
+    Description: 'Custom domain name'
+    Value: !Ref DomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-domain-name'
+
+  SSLCertificateArn:
+    Description: 'SSL Certificate ARN'
+    Value: !Ref SSLCertificate
+    Export:
+      Name: !Sub '${AWS::StackName}-ssl-certificate-arn'
+
+  ApiGatewayDomainName:
+    Description: 'API Gateway custom domain name'
+    Value: !Ref ApiGatewayDomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-api-domain-name'
+
+  RegionalDomainName:
+    Description: 'Regional domain name for API Gateway'
+    Value: !GetAtt ApiGatewayDomainName.RegionalDomainName
+    Export:
+      Name: !Sub '${AWS::StackName}-regional-domain-name'
+
+  WebsiteURL:
+    Description: 'Website URL'
+    Value: !Sub 'https://${DomainName}'
+    Export:
+      Name: !Sub '${AWS::StackName}-website-url'
+
+  AdsTextURL:
+    Description: 'ads.txt URL'
+    Value: !Sub 'https://${DomainName}/ads.txt'
+    Export:
+      Name: !Sub '${AWS::StackName}-ads-txt-url'

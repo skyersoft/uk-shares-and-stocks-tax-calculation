@@ -1,0 +1,74 @@
+# Serverless Framework configuration for AWS Lambda deployment
+service: ibkr-tax-calculator
+
+provider:
+  name: aws
+  runtime: python3.10
+  region: us-east-1  # Change to your preferred region
+  stage: ${opt:stage, 'prod'}
+  memorySize: 1024
+  timeout: 30
+  environment:
+    STAGE: ${self:provider.stage}
+  
+  # IAM role permissions
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+      Resource: "*"
+
+functions:
+  app:
+    handler: lambda_handler.lambda_handler
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+      - http:
+          path: /{proxy+}
+          method: any
+          cors: true
+    layers:
+      - ${cf:python-deps-layer.PythonDepsLayerExport}
+
+# Custom resources for Lambda Layer
+resources:
+  Resources:
+    PythonDepsLayer:
+      Type: AWS::Lambda::LayerVersion
+      Properties:
+        LayerName: ${self:service}-python-deps
+        Description: Python dependencies for IBKR Tax Calculator
+        Content:
+          S3Bucket: ${self:custom.deploymentBucket}
+          S3Key: layers/python-deps.zip
+        CompatibleRuntimes:
+          - python3.10
+
+  Outputs:
+    PythonDepsLayerExport:
+      Value:
+        Ref: PythonDepsLayer
+      Export:
+        Name: ${self:service}-python-deps-layer
+
+custom:
+  deploymentBucket: ${self:service}-${self:provider.stage}-deployments
+  
+plugins:
+  - serverless-python-requirements
+
+package:
+  exclude:
+    - node_modules/**
+    - tests/**
+    - .git/**
+    - .pytest_cache/**
+    - __pycache__/**
+    - "*.pyc"
+    - .env
+    - README.md
