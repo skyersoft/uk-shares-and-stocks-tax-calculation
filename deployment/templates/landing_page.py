@@ -14,7 +14,7 @@ def get_landing_page_html() -> str:
     <meta name="keywords" content="UK tax calculator, capital gains tax, Interactive Brokers, IBKR, dividend tax, portfolio analysis, HMRC">
     
     <!-- Google AdSense - Replace YOUR_ADSENSE_ID with your actual AdSense ID -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_ADSENSE_ID"
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=pub-2934063890442014"
             crossorigin="anonymous"></script>
     
     <!-- Bootstrap CSS -->
@@ -101,7 +101,7 @@ def get_landing_page_html() -> str:
                         <!-- AdSense Banner Ad -->
                         <ins class="adsbygoogle"
                              style="display:block"
-                             data-ad-client="ca-pub-YOUR_ADSENSE_ID"
+                             data-ad-client="pub-2934063890442014"
                              data-ad-slot="YOUR_BANNER_SLOT_ID"
                              data-ad-format="auto"
                              data-full-width-responsive="true"></ins>
@@ -227,7 +227,7 @@ def get_landing_page_html() -> str:
                         <!-- AdSense Sidebar Ad -->
                         <ins class="adsbygoogle"
                              style="display:block"
-                             data-ad-client="ca-pub-YOUR_ADSENSE_ID"
+                             data-ad-client="pub-2934063890442014"
                              data-ad-slot="YOUR_SIDEBAR_SLOT_ID"
                              data-ad-format="auto"
                              data-full-width-responsive="true"></ins>
@@ -244,24 +244,24 @@ def get_landing_page_html() -> str:
                         <div class="card-body">
                             <!-- Amazon Associates Links -->
                             <div class="mb-3">
-                                <a href="https://amzn.to/YOUR_AFFILIATE_LINK" target="_blank" class="text-decoration-none">
+                                <a href="https://amzn.to/4miLx04" target="_blank" class="text-decoration-none">
                                     <div class="d-flex align-items-center">
                                         <div class="bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 80px; border-radius: 5px;"><i class="fas fa-book"></i></div>
                                         <div>
-                                            <h6 class="mb-1">UK Tax Guide 2024</h6>
-                                            <small class="text-muted">Complete tax planning guide</small>
+                                            <h6 class="mb-1">The Psychology of Money</h6>
+                                            <small class="text-muted">Timeless lessons on wealth, greed, and happiness</small>
                                         </div>
                                     </div>
                                 </a>
                             </div>
                             
                             <div class="mb-3">
-                                <a href="https://amzn.to/YOUR_AFFILIATE_LINK" target="_blank" class="text-decoration-none">
+                                <a href="https://amzn.to/4oySlrO" target="_blank" class="text-decoration-none">
                                     <div class="d-flex align-items-center">
                                         <div class="bg-success text-white d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 80px; border-radius: 5px;"><i class="fas fa-chart-line"></i></div>
                                         <div>
-                                            <h6 class="mb-1">Portfolio Tracker Pro</h6>
-                                            <small class="text-muted">Advanced portfolio management</small>
+                                            <h6 class="mb-1">Trading Game</h6>
+                                            <small class="text-muted">Gary Stevenson</small>
                                         </div>
                                     </div>
                                 </a>

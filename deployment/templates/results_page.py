@@ -49,7 +49,7 @@ def get_results_page_html(results, tax_year):
     <meta name="description" content="Your UK tax calculation results for {tax_year}. Capital gains tax, dividend income, and portfolio analysis.">
     
     <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_ADSENSE_ID"
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=pub-2934063890442014"
             crossorigin="anonymous"></script>
     
     <!-- Bootstrap CSS -->
@@ -127,7 +127,7 @@ def get_results_page_html(results, tax_year):
         <div class="ad-container">
             <ins class="adsbygoogle"
                  style="display:block"
-                 data-ad-client="ca-pub-YOUR_ADSENSE_ID"
+                 data-ad-client="pub-2934063890442014"
                  data-ad-slot="YOUR_RESULTS_BANNER_SLOT_ID"
                  data-ad-format="auto"
                  data-full-width-responsive="true"></ins>
@@ -202,7 +202,7 @@ def get_results_page_html(results, tax_year):
                 <div class="ad-container">
                     <ins class="adsbygoogle"
                          style="display:block"
-                         data-ad-client="ca-pub-YOUR_ADSENSE_ID"
+                         data-ad-client="pub-2934063890442014"
                          data-ad-slot="YOUR_SIDEBAR_SLOT_ID"
                          data-ad-format="auto"
                          data-full-width-responsive="true"></ins>
@@ -241,36 +241,36 @@ def get_results_page_html(results, tax_year):
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <a href="https://amzn.to/YOUR_TAX_GUIDE_LINK" target="_blank" class="text-decoration-none">
+                            <a href="https://amzn.to/3JdQKaM" target="_blank" class="text-decoration-none">
                                 <div class="d-flex align-items-center">
                                     <div class="bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 70px; border-radius: 5px;"><i class="fas fa-book"></i></div>
                                     <div>
-                                        <h6 class="mb-1 small">UK Tax Planning Guide</h6>
-                                        <small class="text-muted">Expert tax strategies</small>
+                                        <h6 class="mb-1 small">TAXTOPIA</h6>
+                                        <small class="text-muted">How I Discovered the Injustices, Scams and Guilty Secrets</small>
                                     </div>
                                 </div>
                             </a>
                         </div>
                         
                         <div class="mb-3">
-                            <a href="https://amzn.to/YOUR_PORTFOLIO_BOOK_LINK" target="_blank" class="text-decoration-none">
+                            <a href="https://amzn.to/3HxSIlP" target="_blank" class="text-decoration-none">
                                 <div class="d-flex align-items-center">
                                     <div class="bg-success text-white d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 70px; border-radius: 5px;"><i class="fas fa-chart-line"></i></div>
                                     <div>
-                                        <h6 class="mb-1 small">Portfolio Management</h6>
-                                        <small class="text-muted">Investment strategies</small>
+                                        <h6 class="mb-1 small">3 Books Collection Set</h6>
+                                        <small class="text-muted">Taxtopia, Tax-free Income For Life, How To Own The World</small>
                                     </div>
                                 </div>
                             </a>
                         </div>
                         
                         <div class="mb-3">
-                            <a href="https://amzn.to/YOUR_SOFTWARE_LINK" target="_blank" class="text-decoration-none">
+                            <a href="https://amzn.to/4myUMZI" target="_blank" class="text-decoration-none">
                                 <div class="d-flex align-items-center">
                                     <div class="bg-info text-white d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 70px; border-radius: 5px;"><i class="fas fa-calculator"></i></div>
                                     <div>
-                                        <h6 class="mb-1 small">Tax Software Pro</h6>
-                                        <small class="text-muted">Professional tax tools</small>
+                                        <h6 class="mb-1 small">How to Day Trade for a Living</h6>
+                                        <small class="text-muted">A Beginner’s Guide to Trading Tools and Tactics, Money Management, Discipline and Trading Psychology</small>
                                     </div>
                                 </div>
                             </a>
