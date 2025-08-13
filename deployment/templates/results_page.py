@@ -28,6 +28,10 @@ def get_results_page_html(results, tax_year):
         elif isinstance(portfolio_analysis, dict):
             total_portfolio_value = portfolio_analysis.get('total_portfolio_value', 0)
 
+
+
+    # Extract return percentage
+    if portfolio_analysis:
         if hasattr(portfolio_analysis, 'total_return_pct'):
             total_return_pct = portfolio_analysis.total_return_pct
         elif hasattr(portfolio_analysis, 'total_return_percentage'):
@@ -183,6 +187,102 @@ def get_results_page_html(results, tax_year):
                     </div>
                 </div>
 
+                <!-- Additional Income & Expenses Section -->
+                <div class="results-section">
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Additional Income & Expenses</h4>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-4">Add any additional income or expenses not captured in your IBKR data to get a more accurate tax calculation.</p>
+
+                            <form id="additionalInputsForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5 class="text-success mb-3"><i class="fas fa-plus"></i> Additional Income</h5>
+
+                                        <div class="mb-3">
+                                            <label for="otherCapitalGains" class="form-label">Capital Gains from Other Sources</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">£</span>
+                                                <input type="number" class="form-control" id="otherCapitalGains" step="0.01" min="0" value="0">
+                                            </div>
+                                            <small class="form-text text-muted">Gains from property, other brokers, etc.</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="otherDividends" class="form-label">Dividends from Other Sources</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">£</span>
+                                                <input type="number" class="form-control" id="otherDividends" step="0.01" min="0" value="0">
+                                            </div>
+                                            <small class="form-text text-muted">Dividends not in IBKR account</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="otherIncome" class="form-label">Other Investment Income</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">£</span>
+                                                <input type="number" class="form-control" id="otherIncome" step="0.01" min="0" value="0">
+                                            </div>
+                                            <small class="form-text text-muted">Interest, rental income, etc.</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <h5 class="text-danger mb-3"><i class="fas fa-minus"></i> Additional Expenses</h5>
+
+                                        <div class="mb-3">
+                                            <label for="otherCapitalLosses" class="form-label">Capital Losses from Other Sources</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">£</span>
+                                                <input type="number" class="form-control" id="otherCapitalLosses" step="0.01" min="0" value="0">
+                                            </div>
+                                            <small class="form-text text-muted">Losses from property, other brokers, etc.</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="additionalTradingCosts" class="form-label">Additional Trading Costs</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">£</span>
+                                                <input type="number" class="form-control" id="additionalTradingCosts" step="0.01" min="0" value="0">
+                                            </div>
+                                            <small class="form-text text-muted">Platform fees, research costs, etc.</small>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="professionalFees" class="form-label">Professional Fees</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">£</span>
+                                                <input type="number" class="form-control" id="professionalFees" step="0.01" min="0" value="0">
+                                            </div>
+                                            <small class="form-text text-muted">Accountant, tax advisor fees</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-center mt-4">
+                                    <button type="button" class="btn btn-primary btn-lg" id="recalculateBtn">
+                                        <i class="fas fa-sync-alt"></i> Recalculate Tax
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Updated Tax Summary (will be populated by JavaScript) -->
+                <div class="results-section" id="updatedTaxSummary" style="display: none;">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h4 class="mb-0"><i class="fas fa-check-circle"></i> Updated Tax Calculation</h4>
+                        </div>
+                        <div class="card-body" id="updatedTaxContent">
+                            <!-- Updated tax calculation will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Portfolio Analysis Section -->
                 <div class="results-section">
                     <div class="card">
@@ -326,6 +426,8 @@ def get_results_page_html(results, tax_year):
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+
 </body>
 </html>
     """

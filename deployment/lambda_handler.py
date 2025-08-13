@@ -99,6 +99,10 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
             return serve_privacy_page()
         elif path == '/terms':
             return serve_terms_page()
+        elif path == '/help':
+            return serve_help_page()
+        elif path == '/cgt-guide':
+            return serve_cgt_guide_page()
         elif path == '/ads.txt':
             return serve_ads_txt()
 
@@ -415,6 +419,34 @@ def serve_terms_page() -> Dict[str, Any]:
             'Access-Control-Allow-Origin': '*'
         },
         'body': get_terms_page_html()
+    }
+
+
+def serve_help_page() -> Dict[str, Any]:
+    """Serve the help page."""
+    from help_page import get_help_page_html
+
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'text/html',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': get_help_page_html()
+    }
+
+
+def serve_cgt_guide_page() -> Dict[str, Any]:
+    """Serve the CGT guide page."""
+    from cgt_guide_page import get_cgt_guide_page_html
+
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'text/html',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': get_cgt_guide_page_html()
     }
 
 

@@ -73,6 +73,12 @@ def get_landing_page_html() -> str:
                         <a class="nav-link" href="/about">About</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/help">Help</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/cgt-guide">CGT Guide</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/privacy">Privacy</a>
                     </li>
                     <li class="nav-item">
@@ -363,6 +369,100 @@ def get_landing_page_html() -> str:
             newFileInput.files = dt.files;
         }
 
+        // Additional inputs functionality
+        function setupAdditionalInputs() {
+            const recalculateBtn = document.getElementById('recalculateBtn');
+            if (!recalculateBtn) {
+                console.log('Recalculate button not found - additional inputs not available');
+                return;
+            }
+
+            console.log('Setting up additional inputs functionality');
+
+            recalculateBtn.addEventListener('click', function() {
+                console.log('Recalculate button clicked');
+
+                // Get additional inputs
+                const otherCapitalGains = parseFloat(document.getElementById('otherCapitalGains').value) || 0;
+                const otherDividends = parseFloat(document.getElementById('otherDividends').value) || 0;
+                const otherIncome = parseFloat(document.getElementById('otherIncome').value) || 0;
+                const otherCapitalLosses = parseFloat(document.getElementById('otherCapitalLosses').value) || 0;
+                const additionalTradingCosts = parseFloat(document.getElementById('additionalTradingCosts').value) || 0;
+                const professionalFees = parseFloat(document.getElementById('professionalFees').value) || 0;
+
+                console.log('Additional inputs:', {
+                    otherCapitalGains, otherDividends, otherIncome,
+                    otherCapitalLosses, additionalTradingCosts, professionalFees
+                });
+
+                // Calculate updated totals (simplified calculation)
+                const cgtAllowance = 3000; // 2024-25 allowance
+                const dividendAllowance = 500; // 2024-25 allowance
+
+                const updatedCapitalGains = otherCapitalGains - otherCapitalLosses;
+                const updatedDividendIncome = otherDividends;
+                const updatedAllowableCosts = additionalTradingCosts + professionalFees;
+                const updatedOtherIncome = otherIncome;
+
+                // Calculate CGT (simplified calculation)
+                const netCapitalGains = Math.max(0, updatedCapitalGains - updatedAllowableCosts);
+                const taxableCapitalGains = Math.max(0, netCapitalGains - cgtAllowance);
+                const cgtTax = taxableCapitalGains * 0.20; // Assuming higher rate
+
+                // Calculate dividend tax (simplified)
+                const taxableDividends = Math.max(0, updatedDividendIncome - dividendAllowance);
+                const dividendTax = taxableDividends * 0.3375; // Assuming higher rate
+
+                // Calculate other income tax (simplified)
+                const otherIncomeTax = updatedOtherIncome * 0.40; // Assuming higher rate
+
+                const totalUpdatedTax = cgtTax + dividendTax + otherIncomeTax;
+
+                // Display updated calculation
+                const updatedContent = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary">Updated Income Summary</h5>
+                            <table class="table table-sm">
+                                <tr><td>Capital Gains (Net):</td><td>£${netCapitalGains.toFixed(2)}</td></tr>
+                                <tr><td>Dividend Income:</td><td>£${updatedDividendIncome.toFixed(2)}</td></tr>
+                                <tr><td>Other Income:</td><td>£${updatedOtherIncome.toFixed(2)}</td></tr>
+                                <tr><td>Total Allowable Costs:</td><td>£${updatedAllowableCosts.toFixed(2)}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="text-danger">Updated Tax Calculation</h5>
+                            <table class="table table-sm">
+                                <tr><td>Capital Gains Tax:</td><td>£${cgtTax.toFixed(2)}</td></tr>
+                                <tr><td>Dividend Tax:</td><td>£${dividendTax.toFixed(2)}</td></tr>
+                                <tr><td>Other Income Tax:</td><td>£${otherIncomeTax.toFixed(2)}</td></tr>
+                                <tr class="table-warning"><td><strong>Total Tax Due:</strong></td><td><strong>£${totalUpdatedTax.toFixed(2)}</strong></td></tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <strong>Note:</strong> This is a simplified calculation using standard rates and allowances.
+                        Actual tax calculations may vary based on your total income, tax band, and other factors.
+                        Please consult a tax advisor for accurate calculations.
+                    </div>
+                `;
+
+                const updatedTaxContent = document.getElementById('updatedTaxContent');
+                const updatedTaxSummary = document.getElementById('updatedTaxSummary');
+
+                if (updatedTaxContent && updatedTaxSummary) {
+                    updatedTaxContent.innerHTML = updatedContent;
+                    updatedTaxSummary.style.display = 'block';
+
+                    // Scroll to updated summary
+                    updatedTaxSummary.scrollIntoView({ behavior: 'smooth' });
+                    console.log('Updated tax calculation displayed');
+                } else {
+                    console.error('Updated tax summary elements not found');
+                }
+            });
+        }
+
         // Form submission
         form.addEventListener('submit', async (e) => {
             console.log('Form submit event triggered');
@@ -413,6 +513,9 @@ def get_landing_page_html() -> str:
                     const result = await response.text();
                     console.log('Results received, updating page');
                     document.body.innerHTML = result;
+
+                    // Set up additional inputs functionality after results are loaded
+                    setupAdditionalInputs();
                 } else {
                     throw new Error('Calculation failed');
                 }
