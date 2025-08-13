@@ -103,6 +103,8 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
             return serve_help_page()
         elif path == '/cgt-guide':
             return serve_cgt_guide_page()
+        elif path == '/blog':
+            return serve_blog_page()
         elif path == '/ads.txt':
             return serve_ads_txt()
 
@@ -447,6 +449,20 @@ def serve_cgt_guide_page() -> Dict[str, Any]:
             'Access-Control-Allow-Origin': '*'
         },
         'body': get_cgt_guide_page_html()
+    }
+
+
+def serve_blog_page() -> Dict[str, Any]:
+    """Serve the blog page."""
+    from blog_page import get_blog_page_html
+
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'text/html',
+            'Cache-Control': 'public, max-age=3600'
+        },
+        'body': get_blog_page_html()
     }
 
 

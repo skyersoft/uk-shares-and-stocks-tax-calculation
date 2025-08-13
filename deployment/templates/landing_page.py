@@ -79,6 +79,9 @@ def get_landing_page_html() -> str:
                         <a class="nav-link" href="/cgt-guide">CGT Guide</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="/blog">Blog</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/privacy">Privacy</a>
                     </li>
                     <li class="nav-item">
@@ -170,8 +173,95 @@ def get_landing_page_html() -> str:
         </div>
     </section>
 
+    <!-- Educational Content Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <h2 class="text-center mb-5">Understanding UK Tax on International Investments</h2>
+
+                    <div class="content-rich-section">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h3 class="h4 mb-3">Why You Need This Calculator</h3>
+                                <p class="mb-4">
+                                    If you're a UK resident trading international stocks, ETFs, or other securities through Interactive Brokers,
+                                    you're required to report and pay UK taxes on your gains and dividend income. The complexity of currency
+                                    conversions, Section 104 pooling rules, and varying tax rates makes manual calculation extremely challenging
+                                    and error-prone.
+                                </p>
+
+                                <p class="mb-4">
+                                    Our calculator automates these complex calculations, ensuring compliance with HMRC requirements while
+                                    saving you hours of manual work. Whether you're dealing with US stocks, European ETFs, or global
+                                    diversified portfolios, this tool handles the intricacies of UK tax law for international investments.
+                                </p>
+
+                                <h3 class="h4 mb-3">Capital Gains Tax: What You Need to Know</h3>
+                                <p class="mb-4">
+                                    Capital Gains Tax (CGT) is charged on the profit you make when you sell investments for more than you paid.
+                                    For the 2024-25 tax year, the annual exempt amount is £3,000, meaning you only pay tax on gains above this threshold.
+                                    The rates vary depending on your income level and the type of asset sold.
+                                </p>
+
+                                <div class="alert alert-warning mb-4">
+                                    <h5 class="alert-heading">Important: 2024-25 Rate Changes</h5>
+                                    <p class="mb-2">CGT rates for shares and securities increased significantly on 30 October 2024:</p>
+                                    <ul class="mb-0">
+                                        <li><strong>Before 30 Oct 2024:</strong> 10% (basic rate) / 20% (higher rate)</li>
+                                        <li><strong>After 30 Oct 2024:</strong> 18% (basic rate) / 24% (higher rate)</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h3 class="h4 mb-3">Dividend Taxation for UK Residents</h3>
+                                <p class="mb-4">
+                                    Dividends from international shares are subject to UK income tax, with a dividend allowance of £500 for 2024-25.
+                                    Dividends above this threshold are taxed at 8.75% for basic rate taxpayers, 33.75% for higher rate taxpayers,
+                                    and 39.35% for additional rate taxpayers. Foreign withholding taxes may be creditable against your UK tax liability.
+                                </p>
+
+                                <h3 class="h4 mb-3">Section 104 Pooling: The UK Method</h3>
+                                <p class="mb-4">
+                                    The UK uses Section 104 pooling for calculating capital gains on shares. This means all shares of the same
+                                    class in the same company are treated as a single asset, with an average cost basis. When you sell shares,
+                                    the gain or loss is calculated using this pooled average cost, not the specific shares you intended to sell
+                                    (unlike the US FIFO method).
+                                </p>
+
+                                <h3 class="h4 mb-3">Currency Conversion Requirements</h3>
+                                <p class="mb-4">
+                                    All transactions must be converted to GBP using HMRC's published exchange rates for the transaction dates.
+                                    This includes purchase prices, sale proceeds, and dividend payments. Our calculator automatically handles
+                                    these conversions using the appropriate historical exchange rates, ensuring accuracy and compliance.
+                                </p>
+
+                                <h3 class="h4 mb-3">Reporting Obligations and Deadlines</h3>
+                                <p class="mb-4">
+                                    You must report capital gains if your total gains exceed the annual exempt amount (£3,000 for 2024-25) or
+                                    if your total proceeds from all disposals exceed four times the annual exempt amount (£12,000 for 2024-25).
+                                    The deadline for Self Assessment is 31 January following the end of the tax year.
+                                </p>
+
+                                <div class="alert alert-info mb-4">
+                                    <h5 class="alert-heading">Professional Advice Recommended</h5>
+                                    <p class="mb-0">
+                                        While this calculator provides accurate estimates based on standard tax rules, individual circumstances
+                                        can vary significantly. Complex situations involving options, futures, or significant trading activity
+                                        may require professional tax advice. Always consult with a qualified tax advisor for personalized guidance.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Calculator Section -->
-    <section id="calculator" class="py-5 bg-light">
+    <section id="calculator" class="py-5">
         <div class="container">
             <div class="row">
                 <div class="col-lg-8 mx-auto">
@@ -276,6 +366,217 @@ def get_landing_page_html() -> str:
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Comprehensive FAQ Section -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <h2 class="text-center mb-5">Frequently Asked Questions</h2>
+
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faq1">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                                    What file formats does the calculator accept?
+                                </button>
+                            </h3>
+                            <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <p>The calculator accepts both QFX (Quicken Financial Exchange) and CSV (Comma Separated Values) files exported from Interactive Brokers. QFX files are recommended as they contain more detailed transaction information, including currency data and transaction types.</p>
+                                    <p><strong>To export from IBKR:</strong></p>
+                                    <ol>
+                                        <li>Log into your IBKR Client Portal</li>
+                                        <li>Go to Reports → Flex Queries or Activity Statements</li>
+                                        <li>Select the appropriate date range for your tax year</li>
+                                        <li>Choose QFX format for best results</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faq2">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                                    How accurate are the tax calculations?
+                                </button>
+                            </h3>
+                            <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <p>Our calculator uses HMRC-compliant methodologies including Section 104 pooling for share calculations and official exchange rates for currency conversions. The calculations are designed to match HMRC requirements for Self Assessment reporting.</p>
+                                    <p><strong>Key features ensuring accuracy:</strong></p>
+                                    <ul>
+                                        <li>Section 104 pooling for same-class shares</li>
+                                        <li>Historical exchange rates from HMRC data</li>
+                                        <li>Proper handling of dividend withholding taxes</li>
+                                        <li>Current tax rates and allowances for each tax year</li>
+                                    </ul>
+                                    <p><em>Note: Complex situations involving options, futures, or corporate actions may require professional review.</em></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faq3">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                                    What about data privacy and security?
+                                </button>
+                            </h3>
+                            <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <p>Your financial data is processed securely and never stored permanently. All calculations are performed server-side with enterprise-grade security measures.</p>
+                                    <p><strong>Security measures:</strong></p>
+                                    <ul>
+                                        <li>HTTPS encryption for all data transmission</li>
+                                        <li>No permanent storage of uploaded files</li>
+                                        <li>Processing in secure, isolated environments</li>
+                                        <li>No sharing of data with third parties</li>
+                                    </ul>
+                                    <p>Files are automatically deleted after processing, and no personal financial information is retained.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faq4">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+                                    Do I need to report small gains to HMRC?
+                                </button>
+                            </h3>
+                            <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <p>You must report capital gains to HMRC if either of these conditions apply:</p>
+                                    <ul>
+                                        <li>Your total capital gains for the tax year exceed the annual exempt amount (£3,000 for 2024-25)</li>
+                                        <li>Your total proceeds from all disposals exceed four times the annual exempt amount (£12,000 for 2024-25)</li>
+                                    </ul>
+                                    <p>Even if you don't owe tax due to the annual exemption, you may still need to report if your proceeds exceed the threshold. Dividend income above £500 (2024-25 allowance) must also be reported.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faq5">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">
+                                    How does currency conversion work?
+                                </button>
+                            </h3>
+                            <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <p>All foreign currency transactions must be converted to GBP using HMRC's published exchange rates for the specific transaction dates. This applies to:</p>
+                                    <ul>
+                                        <li>Purchase costs (acquisition value)</li>
+                                        <li>Sale proceeds (disposal value)</li>
+                                        <li>Dividend payments</li>
+                                        <li>Commission and fees</li>
+                                    </ul>
+                                    <p>Our calculator automatically retrieves and applies the correct historical exchange rates, ensuring compliance with HMRC requirements. You cannot use average rates or rates from different dates.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h3 class="accordion-header" id="faq6">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6">
+                                    What if I have losses from previous years?
+                                </button>
+                            </h3>
+                            <div id="collapse6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    <p>Capital losses can be carried forward indefinitely to offset future gains. However, you must use losses in a specific order:</p>
+                                    <ol>
+                                        <li>Current year losses offset current year gains</li>
+                                        <li>Use annual exempt amount</li>
+                                        <li>Apply brought-forward losses from previous years</li>
+                                    </ol>
+                                    <p>Our calculator focuses on current year calculations. For brought-forward losses, you'll need to manually adjust the results or use the additional inputs feature to account for previous year losses.</p>
+                                    <p><strong>Important:</strong> You must claim losses within four years of the end of the tax year in which they occurred, or they will be lost forever.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tax Planning Tips Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <h2 class="text-center mb-5">Tax Planning Strategies for International Investors</h2>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h4 class="card-title text-primary">Timing Your Disposals</h4>
+                                    <p class="card-text">
+                                        Strategic timing of share sales can significantly impact your tax liability. Consider spreading large disposals across tax years to make use of multiple annual exemptions. With the 2024-25 exemption at just £3,000, this strategy becomes even more important.
+                                    </p>
+                                    <p class="card-text">
+                                        <strong>Example:</strong> If you have £10,000 of gains, selling £3,000 worth in March 2025 and £7,000 in April 2025 could save you tax by using two annual exemptions.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h4 class="card-title text-primary">Harvesting Tax Losses</h4>
+                                    <p class="card-text">
+                                        Realizing losses to offset gains is a powerful tax strategy. You can sell losing positions to crystallize losses, then potentially repurchase after 30 days to avoid the "bed and breakfasting" rules.
+                                    </p>
+                                    <p class="card-text">
+                                        <strong>Remember:</strong> Losses must be realized in the same tax year as gains to offset them, or they can be carried forward to future years.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h4 class="card-title text-primary">ISA and SIPP Utilization</h4>
+                                    <p class="card-text">
+                                        Maximize your ISA allowance (£20,000 for 2024-25) and pension contributions to shelter investments from capital gains tax. While you can't transfer existing IBKR holdings into an ISA, you can sell and repurchase within the ISA wrapper.
+                                    </p>
+                                    <p class="card-text">
+                                        <strong>Note:</strong> Be aware of the 30-day rule when transferring between taxable and ISA accounts to avoid being caught by anti-avoidance provisions.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h4 class="card-title text-primary">Spouse/Civil Partner Transfers</h4>
+                                    <p class="card-text">
+                                        Transfers between spouses or civil partners are generally tax-free and can be used to optimize the use of both partners' annual exemptions and tax bands. This is particularly valuable when one partner is a basic rate taxpayer and the other pays higher rate tax.
+                                    </p>
+                                    <p class="card-text">
+                                        <strong>Strategy:</strong> Transfer assets to the lower-rate taxpayer before disposal to benefit from lower CGT rates.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="bg-primary text-white py-5">
+        <div class="container text-center">
+            <h2>Ready to Calculate Your UK Tax Liability?</h2>
+            <p class="lead">Upload your IBKR file and get instant, accurate tax calculations</p>
+            <a href="#calculator" class="btn btn-light btn-lg">Start Now</a>
         </div>
     </section>
 
