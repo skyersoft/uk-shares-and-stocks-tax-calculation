@@ -175,6 +175,9 @@ def get_results_page_html(results, tax_year):
         <div class="row">
             <!-- Main Results Column -->
             <div class="col-lg-8">
+                <!-- CGT Rate Change Warning for 2024-25 -->
+                {get_cgt_rate_warning(tax_year)}
+
                 <!-- Tax Analysis Section -->
                 <div class="results-section">
                     <div class="card">
@@ -792,3 +795,75 @@ def generate_portfolio_analysis_content(portfolio_analysis, portfolio_report):
         """
 
     return content
+
+
+def get_cgt_rate_warning(tax_year):
+    """Generate CGT rate change warning for 2024-25 tax year."""
+    if tax_year != "2024-2025":
+        return ""
+
+    return """
+    <div class="results-section">
+        <div class="alert alert-warning border-warning">
+            <div class="d-flex align-items-start">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning me-3 mt-1"></i>
+                <div>
+                    <h5 class="alert-heading mb-3">
+                        <strong>⚠️ IMPORTANT: CGT Rate Changes in 2024-25</strong>
+                    </h5>
+                    <p class="mb-3">
+                        <strong>Capital Gains Tax rates for shares and ETFs changed significantly during the 2024-25 tax year.</strong>
+                        You may need to split your data by disposal dates for accurate calculations:
+                    </p>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0 mb-3">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title text-primary mb-2">
+                                        <i class="fas fa-calendar"></i> 6 April - 29 October 2024
+                                    </h6>
+                                    <ul class="mb-0 small">
+                                        <li><strong>Shares/ETFs:</strong> 10% / 20%</li>
+                                        <li><strong>Property:</strong> 18% / 24%</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light border-0 mb-3">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title text-danger mb-2">
+                                        <i class="fas fa-calendar"></i> 30 October 2024 - 5 April 2025
+                                    </h6>
+                                    <ul class="mb-0 small">
+                                        <li><strong>Shares/ETFs:</strong> 18% / 24% <span class="badge bg-danger">INCREASED</span></li>
+                                        <li><strong>Property:</strong> 18% / 24%</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mb-3">
+                        <h6 class="mb-2"><i class="fas fa-lightbulb"></i> Recommendation:</h6>
+                        <p class="mb-2">For the most accurate tax calculation, consider exporting your IBKR data in two separate files:</p>
+                        <ol class="mb-0 small">
+                            <li><strong>Period 1:</strong> 6 April 2024 to 29 October 2024</li>
+                            <li><strong>Period 2:</strong> 30 October 2024 to 5 April 2025</li>
+                        </ol>
+                    </div>
+
+                    <p class="mb-0 small">
+                        <strong>Note:</strong> This calculator uses simplified rate assumptions.
+                        For transactions spanning both periods, consult a tax advisor or use HMRC's official guidance.
+                        <br>
+                        <a href="/cgt-guide" class="text-decoration-none">
+                            <i class="fas fa-external-link-alt"></i> Learn more about CGT calculations
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    """

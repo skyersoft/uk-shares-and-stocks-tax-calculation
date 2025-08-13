@@ -140,6 +140,72 @@ def get_cgt_guide_page_html() -> str:
             <p>You only pay CGT if your total gains for the tax year exceed this allowance.</p>
         </section>
 
+        <!-- CGT Rate Changes Warning for 2024-25 -->
+        <section class="mb-5">
+            <div class="alert alert-warning border-warning">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-exclamation-triangle fa-2x text-warning me-3 mt-1"></i>
+                    <div>
+                        <h4 class="alert-heading mb-3">
+                            <strong>⚠️ CRITICAL: CGT Rate Changes in 2024-25</strong>
+                        </h4>
+                        <p class="mb-3">
+                            <strong>Capital Gains Tax rates for shares and ETFs changed significantly during the 2024-25 tax year.</strong>
+                            This affects how you should calculate your tax liability:
+                        </p>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-light border-0 mb-3">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title text-primary mb-2">
+                                            <i class="fas fa-calendar"></i> 6 April - 29 October 2024
+                                        </h6>
+                                        <ul class="mb-0">
+                                            <li><strong>Shares/ETFs (Basic Rate):</strong> 10%</li>
+                                            <li><strong>Shares/ETFs (Higher Rate):</strong> 20%</li>
+                                            <li><strong>Residential Property:</strong> 18% / 24%</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light border-0 mb-3">
+                                    <div class="card-body p-3">
+                                        <h6 class="card-title text-danger mb-2">
+                                            <i class="fas fa-calendar"></i> 30 October 2024 - 5 April 2025
+                                        </h6>
+                                        <ul class="mb-0">
+                                            <li><strong>Shares/ETFs (Basic Rate):</strong> 18% <span class="badge bg-danger">+8%</span></li>
+                                            <li><strong>Shares/ETFs (Higher Rate):</strong> 24% <span class="badge bg-danger">+4%</span></li>
+                                            <li><strong>Residential Property:</strong> 18% / 24% (unchanged)</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mb-3">
+                            <h6 class="mb-2"><i class="fas fa-lightbulb"></i> Important for IBKR Users:</h6>
+                            <p class="mb-2">When exporting your IBKR data, consider splitting by disposal dates:</p>
+                            <ol class="mb-0">
+                                <li><strong>Period 1:</strong> 6 April 2024 to 29 October 2024 (lower rates)</li>
+                                <li><strong>Period 2:</strong> 30 October 2024 to 5 April 2025 (higher rates)</li>
+                            </ol>
+                        </div>
+
+                        <p class="mb-0">
+                            <strong>Source:</strong>
+                            <a href="https://www.gov.uk/guidance/capital-gains-tax-rates-and-allowances#rates-for-capital-gains-tax"
+                               target="_blank" class="text-decoration-none">
+                                HMRC Official Guidance <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- CGT Rates -->
         <section class="mb-5">
             <h2>CGT Tax Rates</h2>
