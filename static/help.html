@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How to Export Data from IBKR - IBKR Tax Calculator</title>
+    <meta name="description" content="Step-by-step guide to export transaction data from Interactive Brokers for UK tax calculations.">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        .step-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 2rem;
+        }
+        .step-number {
+            background: #007bff;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        .screenshot-placeholder {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            margin: 1rem 0;
+        }
+        .file-format-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .pros-cons {
+            font-size: 0.9rem;
+        }
+        .pros {
+            color: #28a745;
+        }
+        .cons {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">IBKR Tax Calculator</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="help.html">Help</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cgt-guide.html">CGT Guide</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="blog.html">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="privacy.html">Privacy</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="terms.html">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <div class="bg-primary text-white py-5">
+        <div class="container">
+            <h1 class="display-4">How to Export Data from Interactive Brokers</h1>
+            <p class="lead">Step-by-step guide to get your transaction data for UK tax calculations</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container py-5">
+        
+        <!-- File Format Comparison -->
+        <section class="mb-5">
+            <h2 class="mb-4">Choose Your File Format</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="file-format-card">
+                        <h4 class="text-primary"><i class="fas fa-file-alt"></i> QFX Format (Recommended)</h4>
+                        <p>Quicken Financial Exchange format - most comprehensive data</p>
+                        <div class="pros-cons">
+                            <div class="pros mb-2">
+                                <strong>✅ Pros:</strong>
+                                <ul class="mb-0">
+                                    <li>Includes commission and fee data</li>
+                                    <li>More detailed transaction information</li>
+                                    <li>Better for accurate tax calculations</li>
+                                    <li>Includes currency exchange rates</li>
+                                </ul>
+                            </div>
+                            <div class="cons">
+                                <strong>⚠️ Cons:</strong>
+                                <ul class="mb-0">
+                                    <li>Slightly more complex to export</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="file-format-card">
+                        <h4 class="text-success"><i class="fas fa-file-csv"></i> CSV Format</h4>
+                        <p>Comma-separated values - simple and widely supported</p>
+                        <div class="pros-cons">
+                            <div class="pros mb-2">
+                                <strong>✅ Pros:</strong>
+                                <ul class="mb-0">
+                                    <li>Easy to export and view</li>
+                                    <li>Can be opened in Excel</li>
+                                    <li>Simple format</li>
+                                </ul>
+                            </div>
+                            <div class="cons">
+                                <strong>⚠️ Cons:</strong>
+                                <ul class="mb-0">
+                                    <li>May lack commission details</li>
+                                    <li>Less comprehensive than QFX</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- QFX Export Instructions -->
+        <section class="mb-5">
+            <h2 class="mb-4">Method 1: Export QFX File (Recommended)</h2>
+            
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">1</div>
+                        <div class="flex-grow-1">
+                            <h5>Log into IBKR Client Portal</h5>
+                            <p>Go to <a href="https://www.interactivebrokers.com/portal" target="_blank">https://www.interactivebrokers.com/portal</a> and log in with your credentials.</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: IBKR Login Page</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">2</div>
+                        <div class="flex-grow-1">
+                            <h5>Navigate to Performance & Reports</h5>
+                            <p>Click on "Performance & Reports" in the main menu, then select "Statements".</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Performance & Reports Menu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">3</div>
+                        <div class="flex-grow-1">
+                            <h5>Select Activity Statements</h5>
+                            <p>Choose "Activity Statements" from the statements menu.</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Activity Statements Selection</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">4</div>
+                        <div class="flex-grow-1">
+                            <h5>Configure Date Range</h5>
+                            <p>Set the date range for your tax year:</p>
+                            <ul>
+                                <li><strong>2024-25 Tax Year:</strong> April 6, 2024 to April 5, 2025</li>
+                                <li><strong>2023-24 Tax Year:</strong> April 6, 2023 to April 5, 2024</li>
+                                <li><strong>2022-23 Tax Year:</strong> April 6, 2022 to April 5, 2023</li>
+                            </ul>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Date Range Selection</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">5</div>
+                        <div class="flex-grow-1">
+                            <h5>Select QFX Format</h5>
+                            <p>Choose "QFX" as the file format. This format includes the most comprehensive transaction data including commissions and fees.</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: QFX Format Selection</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">6</div>
+                        <div class="flex-grow-1">
+                            <h5>Download the File</h5>
+                            <p>Click "Run" to generate the report, then download the QFX file when it's ready.</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Download QFX File</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CSV Export Instructions -->
+        <section class="mb-5">
+            <h2 class="mb-4">Method 2: Export CSV File</h2>
+            
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">1</div>
+                        <div class="flex-grow-1">
+                            <h5>Access Flex Queries</h5>
+                            <p>In IBKR Client Portal, go to "Performance & Reports" → "Flex Queries".</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Flex Queries Menu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">2</div>
+                        <div class="flex-grow-1">
+                            <h5>Create New Query</h5>
+                            <p>Click "Create" to create a new Flex Query for transaction data.</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Create New Query</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">3</div>
+                        <div class="flex-grow-1">
+                            <h5>Configure Query Settings</h5>
+                            <p>Select the following sections:</p>
+                            <ul>
+                                <li>✅ Trades</li>
+                                <li>✅ Dividends</li>
+                                <li>✅ Corporate Actions</li>
+                                <li>✅ Cash Transactions</li>
+                            </ul>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Query Configuration</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">4</div>
+                        <div class="flex-grow-1">
+                            <h5>Set Date Range and Format</h5>
+                            <p>Set your tax year date range and choose CSV as the output format.</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Date Range and CSV Format</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">5</div>
+                        <div class="flex-grow-1">
+                            <h5>Run and Download</h5>
+                            <p>Save the query and run it to generate your CSV file.</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Run Query and Download CSV</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Important Notes -->
+        <section class="mb-5">
+            <div class="alert alert-info">
+                <h4><i class="fas fa-info-circle"></i> Important Notes</h4>
+                <ul class="mb-0">
+                    <li><strong>Tax Year Dates:</strong> UK tax year runs from April 6 to April 5 of the following year</li>
+                    <li><strong>File Size:</strong> Large files may take time to generate - be patient</li>
+                    <li><strong>Data Privacy:</strong> Your data is processed locally and not stored on our servers</li>
+                    <li><strong>Multiple Accounts:</strong> Export data separately for each IBKR account</li>
+                    <li><strong>Currency:</strong> The calculator handles multi-currency transactions automatically</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Troubleshooting -->
+        <section class="mb-5">
+            <h2 class="mb-4">Troubleshooting</h2>
+            <div class="accordion" id="troubleshootingAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                            File is too large or export fails
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                        <div class="accordion-body">
+                            Try exporting smaller date ranges (e.g., quarterly) and upload them separately to our calculator.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                            Missing commission data in CSV
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                        <div class="accordion-body">
+                            Use QFX format instead, or manually add commission costs in the results page after calculation.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingThree">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                            Calculator shows errors
+                        </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+                        <div class="accordion-body">
+                            Ensure your file covers the complete tax year and includes all transaction types. Contact support if issues persist.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Next Steps -->
+        <section class="text-center">
+            <h2 class="mb-4">Ready to Calculate Your Taxes?</h2>
+            <a href="index.html" class="btn btn-primary btn-lg">
+                <i class="fas fa-calculator"></i> Start Tax Calculation
+            </a>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2024 IBKR Tax Calculator. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="privacy.html" class="text-white me-3">Privacy Policy</a>
+                    <a href="terms.html" class="text-white">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

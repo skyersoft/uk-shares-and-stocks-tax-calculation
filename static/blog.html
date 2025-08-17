@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - IBKR Tax Calculator</title>
+    <meta name="description" content="Latest news and insights about UK tax calculations, IBKR updates, and tax planning strategies for international investors.">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">IBKR Tax Calculator</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="about.html">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="help.html">Help</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="cgt-guide.html">CGT Guide</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="blog.html">Blog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="privacy.html">Privacy</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="terms.html">Terms</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold mb-4">Tax & Investment Blog</h1>
+            <p class="lead">Latest insights on UK tax and investment strategies</p>
+        </div>
+    </section>
+
+    <!-- Content -->
+    <div class="container py-5">
+        <!-- Blog Header -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 mb-3">Tax Insights & Strategies</h1>
+            <p class="lead text-muted">Expert guidance for UK investors using Interactive Brokers</p>
+            <p class="text-muted">Stay informed about the latest UK tax changes, investment strategies, and IBKR-specific guidance to optimize your tax efficiency.</p>
+        </div>
+
+        <!-- Critical Tax Changes Alert -->
+        <div class="alert alert-warning border-warning mb-5">
+            <div class="d-flex align-items-start">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning me-3 mt-1"></i>
+                <div>
+                    <h4 class="alert-heading mb-3">⚠️ URGENT: Major CGT Rate Changes in 2024-25</h4>
+                    <p class="mb-3">
+                        <strong>Capital Gains Tax rates for shares and ETFs increased significantly from 30 October 2024.</strong>
+                        This affects all IBKR users with share disposals after this date.
+                    </p>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Before 30 Oct 2024:</strong><br>
+                            Basic rate: 10% | Higher rate: 20%
+                        </div>
+                        <div class="col-md-6">
+                            <strong>From 30 Oct 2024:</strong><br>
+                            Basic rate: 18% (+8%) | Higher rate: 24% (+4%)
+                        </div>
+                    </div>
+                    <a href="cgt-guide.html" class="btn btn-warning btn-sm">
+                        <i class="fas fa-info-circle"></i> Read Full CGT Guide
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Featured Articles -->
+        <div class="row mb-5">
+            <!-- Main Featured Article -->
+            <div class="col-lg-8 mb-4">
+                <article class="card shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="badge bg-danger mb-3">URGENT UPDATE</div>
+                        <h2 class="h3 mb-3">CGT Rate Changes October 2024: What IBKR Users Need to Know</h2>
+                        <p class="text-muted mb-3">Published on October 30, 2024 • 8 min read</p>
+                        
+                        <p class="mb-3">
+                            The UK government has implemented the most significant changes to Capital Gains Tax rates in recent years, 
+                            with immediate effect for disposals from 30 October 2024. Here's what you need to know:
+                        </p>
+
+                        <h5>Key Changes:</h5>
+                        <ul class="mb-3">
+                            <li><strong>Basic Rate Taxpayers:</strong> CGT on shares increased from 10% to 18% (+8%)</li>
+                            <li><strong>Higher Rate Taxpayers:</strong> CGT on shares increased from 20% to 24% (+4%)</li>
+                            <li><strong>Timing:</strong> Changes apply to disposals from 30 October 2024 onwards</li>
+                            <li><strong>Scope:</strong> Affects shares, ETFs, and unit trusts (not residential property)</li>
+                        </ul>
+
+                        <div class="alert alert-info mb-3">
+                            <h6><i class="fas fa-lightbulb"></i> IBKR Strategy Tip:</h6>
+                            <p class="mb-0">Consider splitting your IBKR exports by disposal date to accurately apply the correct tax rates for each period.</p>
+                        </div>
+
+                        <a href="#cgt-changes-full" class="btn btn-primary" data-bs-toggle="collapse">
+                            <i class="fas fa-chevron-down"></i> Read Full Analysis
+                        </a>
+                        
+                        <div class="collapse mt-3" id="cgt-changes-full">
+                            <div class="border-top pt-3">
+                                <h6>Impact Analysis:</h6>
+                                <p>
+                                    For a basic rate taxpayer realizing £10,000 in gains post-October 30th, 
+                                    the tax liability increased from £700 to £1,260 (assuming gains exceed the annual allowance).
+                                </p>
+                                
+                                <h6>Planning Opportunities:</h6>
+                                <ul>
+                                    <li>Review your portfolio for potential loss harvesting</li>
+                                    <li>Consider timing of future disposals</li>
+                                    <li>Evaluate ISA vs. taxable account allocations</li>
+                                    <li>Assess spousal transfer opportunities</li>
+                                </ul>
+
+                                <h6>IBKR Export Considerations:</h6>
+                                <p>
+                                    When using our calculator, ensure your IBKR Activity Statement covers the correct 
+                                    period and consider running separate calculations for pre and post-October 30th disposals.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Side Featured Article -->
+            <div class="col-lg-4 mb-4">
+                <article class="card shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="badge bg-success mb-3">STRATEGY GUIDE</div>
+                        <h4 class="mb-3">Section 104 Pooling: The UK Advantage</h4>
+                        <p class="text-muted mb-3">March 15, 2024 • 5 min read</p>
+                        
+                        <p class="mb-3">
+                            Unlike the US FIFO system, the UK's Section 104 pooling rules can work in your favor 
+                            when calculating capital gains from IBKR trades.
+                        </p>
+
+                        <h6>How It Works:</h6>
+                        <ul class="small mb-3">
+                            <li>All shares of the same company are pooled together</li>
+                            <li>Average cost basis is calculated automatically</li>
+                            <li>No need to track specific share lots</li>
+                            <li>Simplifies calculations for frequent traders</li>
+                        </ul>
+
+                        <div class="p-3 bg-light rounded mb-3">
+                            <h6 class="small">Example:</h6>
+                            <p class="small mb-1">Buy 100 AAPL @ $150 = $15,000</p>
+                            <p class="small mb-1">Buy 50 AAPL @ $160 = $8,000</p>
+                            <p class="small mb-1">Average cost: $23,000 ÷ 150 = $153.33</p>
+                            <p class="small mb-0">Sell 75 shares @ $170 = Gain based on $153.33 avg cost</p>
+                        </div>
+
+                        <a href="#section-104-guide" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse">
+                            Learn More
+                        </a>
+                        
+                        <div class="collapse mt-3" id="section-104-guide">
+                            <div class="border-top pt-3">
+                                <h6 class="small">Advanced Tips:</h6>
+                                <ul class="small">
+                                    <li>Different share classes are pooled separately</li>
+                                    <li>Rights issues and bonus shares have special rules</li>
+                                    <li>Currency conversions use transaction date rates</li>
+                                    <li>Spin-offs require careful cost basis allocation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <!-- Article Grid -->
+        <div class="row g-4 mb-5">
+            <!-- Dividend Strategy Article -->
+            <div class="col-md-6 col-lg-4">
+                <article class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="badge bg-info mb-3">TAX STRATEGY</div>
+                        <h5 class="card-title">Dividend Allowance: Maximize Your £500</h5>
+                        <p class="text-muted small mb-3">March 5, 2024 • 4 min read</p>
+                        <p class="card-text">
+                            The UK dividend allowance dropped from £2,000 to £500 in 2024-25. 
+                            Here's how to optimize your IBKR dividend strategy.
+                        </p>
+                        
+                        <a href="#dividend-strategy" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse">
+                            Read More
+                        </a>
+                        
+                        <div class="collapse mt-3" id="dividend-strategy">
+                            <div class="border-top pt-3">
+                                <h6 class="small">Key Points:</h6>
+                                <ul class="small">
+                                    <li><strong>2024-25 Allowance:</strong> £500 (down from £1,000)</li>
+                                    <li><strong>Tax Rates:</strong> 8.75% basic, 33.75% higher, 39.35% additional</li>
+                                    <li><strong>IBKR Reporting:</strong> Dividends shown in Activity Statement</li>
+                                    <li><strong>US Withholding:</strong> Consider W-8BEN form impact</li>
+                                </ul>
+                                
+                                <h6 class="small">Optimization Strategies:</h6>
+                                <ul class="small">
+                                    <li>Prioritize growth stocks over dividend stocks</li>
+                                    <li>Use ISA allowance for high-dividend investments</li>
+                                    <li>Consider accumulating vs. distributing ETFs</li>
+                                    <li>Time dividend receipts across tax years</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- IBKR Export Guide -->
+            <div class="col-md-6 col-lg-4">
+                <article class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="badge bg-primary mb-3">HOW-TO GUIDE</div>
+                        <h5 class="card-title">IBKR Export: Complete Step-by-Step Guide</h5>
+                        <p class="text-muted small mb-3">February 28, 2024 • 6 min read</p>
+                        <p class="card-text">
+                            Master the art of exporting your trading data from Interactive Brokers 
+                            for UK tax calculations with our comprehensive guide.
+                        </p>
+                        
+                        <a href="#ibkr-export-guide" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse">
+                            Read Guide
+                        </a>
+                        
+                        <div class="collapse mt-3" id="ibkr-export-guide">
+                            <div class="border-top pt-3">
+                                <h6 class="small">Export Steps:</h6>
+                                <ol class="small">
+                                    <li>Log into IBKR Client Portal</li>
+                                    <li>Navigate to Reports → Activity Statement</li>
+                                    <li>Select date range (tax year: 6 Apr - 5 Apr)</li>
+                                    <li>Choose format: CSV for our calculator</li>
+                                    <li>Include: Trades, Corporate Actions, Dividends</li>
+                                    <li>Download and verify data completeness</li>
+                                </ol>
+                                
+                                <div class="alert alert-warning p-2 mt-2">
+                                    <small><strong>Pro Tip:</strong> Export in segments if you have high trading volume to ensure all transactions are captured.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Currency Impact Article -->
+            <div class="col-md-6 col-lg-4">
+                <article class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="badge bg-warning mb-3">ADVANCED</div>
+                        <h5 class="card-title">Currency Gains: The Hidden Tax Trap</h5>
+                        <p class="text-muted small mb-3">February 20, 2024 • 7 min read</p>
+                        <p class="card-text">
+                            Trading US stocks through IBKR? Currency fluctuations can create 
+                            unexpected CGT liabilities even on losing trades.
+                        </p>
+                        
+                        <a href="#currency-gains" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse">
+                            Learn More
+                        </a>
+                        
+                        <div class="collapse mt-3" id="currency-gains">
+                            <div class="border-top pt-3">
+                                <h6 class="small">Key Concepts:</h6>
+                                <ul class="small">
+                                    <li><strong>Double Taxation:</strong> Currency and share gains calculated separately</li>
+                                    <li><strong>£500 Exemption:</strong> Small currency gains are exempt</li>
+                                    <li><strong>Exchange Rates:</strong> Use HMRC rates or actual rates paid</li>
+                                    <li><strong>Timing:</strong> Currency gain/loss crystallizes on disposal</li>
+                                </ul>
+                                
+                                <div class="p-2 bg-light rounded mt-2">
+                                    <h6 class="small">Example Scenario:</h6>
+                                    <p class="small mb-1">Buy: $10,000 @ 1.25 = £8,000</p>
+                                    <p class="small mb-1">Sell: $9,500 @ 1.35 = £7,037</p>
+                                    <p class="small mb-1">Share loss: £963</p>
+                                    <p class="small mb-0">Currency gain: £300 (may be taxable!)</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Loss Harvesting Strategy -->
+            <div class="col-md-6 col-lg-4">
+                <article class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="badge bg-secondary mb-3">STRATEGY</div>
+                        <h5 class="card-title">Tax Loss Harvesting with IBKR</h5>
+                        <p class="text-muted small mb-3">February 15, 2024 • 5 min read</p>
+                        <p class="card-text">
+                            Optimize your tax efficiency by strategically realizing losses 
+                            to offset gains, especially important with higher CGT rates.
+                        </p>
+                        
+                        <a href="#loss-harvesting" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse">
+                            Read Strategy
+                        </a>
+                        
+                        <div class="collapse mt-3" id="loss-harvesting">
+                            <div class="border-top pt-3">
+                                <h6 class="small">Key Rules:</h6>
+                                <ul class="small">
+                                    <li>Losses offset gains in same tax year first</li>
+                                    <li>Unused losses carry forward indefinitely</li>
+                                    <li>Use annual allowance before applying losses</li>
+                                    <li>No "wash sale" rules in UK (unlike US)</li>
+                                </ul>
+                                
+                                <h6 class="small">Timing Strategies:</h6>
+                                <ul class="small">
+                                    <li>Review positions before tax year end (5 April)</li>
+                                    <li>Consider "bed and breakfast" transactions</li>
+                                    <li>Coordinate with spouse's allowances</li>
+                                    <li>Factor in new higher CGT rates for timing</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- ISA vs Taxable -->
+            <div class="col-md-6 col-lg-4">
+                <article class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="badge bg-success mb-3">PLANNING</div>
+                        <h5 class="card-title">ISA vs. IBKR: Asset Allocation Strategy</h5>
+                        <p class="text-muted small mb-3">February 10, 2024 • 6 min read</p>
+                        <p class="card-text">
+                            With £20,000 ISA allowance and higher CGT rates, strategic asset 
+                            allocation between ISA and IBKR accounts is crucial.
+                        </p>
+                        
+                        <a href="#isa-strategy" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse">
+                            Read Strategy
+                        </a>
+                        
+                        <div class="collapse mt-3" id="isa-strategy">
+                            <div class="border-top pt-3">
+                                <h6 class="small">Optimization Framework:</h6>
+                                <ul class="small">
+                                    <li><strong>ISA Priority:</strong> High-growth, high-dividend assets</li>
+                                    <li><strong>IBKR Priority:</strong> Index funds, lower volatility</li>
+                                    <li><strong>Tax Efficiency:</strong> Accumulating ETFs in taxable accounts</li>
+                                    <li><strong>Flexibility:</strong> IBKR for options, margin, global access</li>
+                                </ul>
+                                
+                                <div class="alert alert-info p-2 mt-2">
+                                    <small><strong>2024-25 Update:</strong> Higher CGT rates make ISA wrapper even more valuable for active trading strategies.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Record Keeping -->
+            <div class="col-md-6 col-lg-4">
+                <article class="card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="badge bg-dark mb-3">COMPLIANCE</div>
+                        <h5 class="card-title">Record Keeping: HMRC Requirements</h5>
+                        <p class="text-muted small mb-3">February 5, 2024 • 4 min read</p>
+                        <p class="card-text">
+                            Stay compliant with HMRC record-keeping requirements for your 
+                            IBKR trading activities and investment records.
+                        </p>
+                        
+                        <a href="#record-keeping" class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse">
+                            Read Requirements
+                        </a>
+                        
+                        <div class="collapse mt-3" id="record-keeping">
+                            <div class="border-top pt-3">
+                                <h6 class="small">Required Records:</h6>
+                                <ul class="small">
+                                    <li>Purchase and sale dates</li>
+                                    <li>Number of shares and prices</li>
+                                    <li>Costs of acquisition and disposal</li>
+                                    <li>Evidence of market values</li>
+                                    <li>Currency conversion rates used</li>
+                                    <li>Corporate action details</li>
+                                </ul>
+                                
+                                <h6 class="small">Retention Period:</h6>
+                                <p class="small">Keep records for 5 years after the 31 January submission deadline of the relevant tax year.</p>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <!-- Tax Year Reminder -->
+        <div class="alert alert-info mb-5">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h5 class="mb-2"><i class="fas fa-calendar-alt"></i> UK Tax Year Reminder</h5>
+                    <p class="mb-0">
+                        The UK tax year runs from 6 April to 5 April. Ensure your IBKR exports 
+                        cover the correct period when calculating your capital gains tax.
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <strong>2024-25 Tax Year:</strong><br>
+                    <span class="text-muted">6 April 2024 - 5 April 2025</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Newsletter Signup -->
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center p-4">
+                        <h3 class="mb-3"><i class="fas fa-envelope"></i> Stay Updated on Tax Changes</h3>
+                        <p class="mb-4">
+                            Get the latest insights on UK tax rule changes, CGT rate updates, 
+                            and IBKR trading strategies delivered to your inbox. 
+                            <strong>Free monthly newsletter with actionable tax tips.</strong>
+                        </p>
+                        <form class="row g-3 justify-content-center">
+                            <div class="col-md-6">
+                                <input type="email" class="form-control form-control-lg" 
+                                       placeholder="Enter your email address" required>
+                            </div>
+                            <div class="col-auto">
+                                <button type="submit" class="btn btn-light btn-lg">
+                                    <i class="fas fa-paper-plane"></i> Subscribe
+                                </button>
+                            </div>
+                        </form>
+                        <small class="d-block mt-3 opacity-75">
+                            <i class="fas fa-shield-alt"></i> We respect your privacy. Unsubscribe anytime.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2025 IBKR Tax Calculator. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="privacy.html" class="text-white me-3">Privacy Policy</a>
+                    <a href="terms.html" class="text-white">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

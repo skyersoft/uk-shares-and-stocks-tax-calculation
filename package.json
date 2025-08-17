@@ -1,0 +1,16 @@
+{
+  "name": "ibkr-tax-calculator",
+  "version": "1.0.0",
+  "description": "This application calculates UK capital gains tax for stocks and shares based on transactions from QFX (Quicken Exchange Format) or CSV files, typically exported from trading platforms like Interactive Brokers or Sharesight.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
