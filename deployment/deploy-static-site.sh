@@ -54,7 +54,7 @@ fi
 # Deploy CloudFormation stack
 echo -e "${YELLOW}🚀 Deploying CloudFormation stack...${NC}"
 aws cloudformation deploy \
-    --template-file deployment/s3-cloudfront-template.yaml \
+    --template-file deployment/single-region-complete.yaml \
     --stack-name $STACK_NAME \
     --parameter-overrides ProjectName=$PROJECT_NAME \
     --capabilities CAPABILITY_NAMED_IAM \

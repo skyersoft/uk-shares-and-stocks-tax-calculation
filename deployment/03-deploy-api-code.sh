@@ -47,6 +47,13 @@ aws lambda update-function-code \
     --profile $AWS_PROFILE \
     --output table
 
+# Wait for the function code update to complete before changing configuration
+echo -e "${YELLOW}⏳ Waiting for function code update to complete...${NC}"
+aws lambda wait function-updated \
+    --function-name $LAMBDA_NAME \
+    --region $REGION \
+    --profile $AWS_PROFILE
+
 # Update function configuration for API-only handler
 echo -e "${YELLOW}⚙️ Updating Lambda function configuration...${NC}"
 aws lambda update-function-configuration \
@@ -72,7 +79,7 @@ echo -e "${GREEN}✅ Lambda function updated successfully!${NC}"
 echo -e "${YELLOW}🧪 Testing API Lambda function...${NC}"
 TEST_RESULT=$(aws lambda invoke \
     --function-name $LAMBDA_NAME \
-    --payload '{"httpMethod":"GET","path":"/health","headers":{},"queryStringParameters":null,"body":null}' \
+    --payload fileb://test-payload.json \
     --region $REGION \
     --profile $AWS_PROFILE \
     response.json \

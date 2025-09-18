@@ -93,6 +93,18 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
     if method == 'GET':
         if path == '/' or path == '/index.html':
             return serve_landing_page()
+        elif path == '/health':
+            # Lightweight health/status endpoint for ALB/API Gateway monitoring
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+                },
+                'body': json.dumps({'status': 'ok'})
+            }
         elif path == '/about':
             return serve_about_page()
         elif path == '/privacy':
@@ -184,16 +196,17 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 temp_file_path, tax_year, analysis_type
             )
             
-            # Generate HTML report
-            html_report = generate_results_page(results, tax_year)
+            # Serialize results to JSON
+            # This is the main fix: returning JSON instead of HTML
+            json_results = serialize_results(results)
             
             return {
                 'statusCode': 200,
                 'headers': {
-                    'Content-Type': 'text/html',
+                    'Content-Type': 'application/json',
                     'Access-Control-Allow-Origin': '*'
                 },
-                'body': html_report
+                'body': json.dumps(json_results)
             }
             
         finally:
@@ -352,20 +365,24 @@ def parse_multipart_data_simple(body: str) -> tuple:
 
 
 def serialize_results(results: Dict[str, Any]) -> Dict[str, Any]:
-    """Serialize results for JSON response."""
-    # Convert complex objects to dictionaries
-    serialized = {}
+    """Serialize results for JSON response, handling complex types."""
     
-    for key, value in results.items():
-        if hasattr(value, '__dict__'):
-            # Convert dataclass/object to dict
-            serialized[key] = value.__dict__ if hasattr(value, '__dict__') else str(value)
-        elif isinstance(value, dict):
-            serialized[key] = value
-        else:
-            serialized[key] = str(value)
-    
-    return serialized
+    class CustomJSONEncoder(json.JSONEncoder):
+        def default(self, obj):
+            from decimal import Decimal
+            if isinstance(obj, Decimal):
+                return float(obj)
+            if hasattr(obj, 'to_dict'):
+                return obj.to_dict()
+            if hasattr(obj, '__dict__'):
+                return obj.__dict__
+            try:
+                return super().default(obj)
+            except TypeError:
+                return str(obj)
+
+    # The dumps/loads cycle ensures all nested objects are serialized
+    return json.loads(json.dumps(results, cls=CustomJSONEncoder))
 
 
 def serve_landing_page() -> Dict[str, Any]:

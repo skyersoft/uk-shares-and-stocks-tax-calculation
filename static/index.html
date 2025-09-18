@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IBKR Tax Calculator - UK Capital Gains & Portfolio Analysis</title>
-    <meta name="description" content="Free UK tax calculator for Interactive Brokers transactions. Calculate capital gains tax, dividend income, and portfolio performance for HMRC compliance.">
-    <meta name="keywords" content="UK tax calculator, capital gains tax, Interactive Brokers, IBKR, dividend tax, portfolio analysis, HMRC">
+    <meta name="description" content="Free UK tax calculator for Interactive Brokers transactions. Blog, guides, and resources for UK investors. Calculate capital gains tax, dividend income, and portfolio performance for HMRC compliance.">
+    <meta name="keywords" content="UK tax calculator, capital gains tax, Interactive Brokers, IBKR, dividend tax, portfolio analysis, HMRC, CGT, UK shares, UK investments, 2024 CGT rates, blog, guide">
+    <link rel="canonical" href="https://cgttaxtool.uk/">
     
     <!-- Google AdSense - Replace YOUR_ADSENSE_ID with your actual AdSense ID -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=pub-2934063890442014"
@@ -19,6 +20,41 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Modern UI/UX Enhancements -->
+    <style>
+        .feature-card, .card, .alert, .accordion-item {
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+        .navbar {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .btn-primary, .btn-light {
+            font-weight: 600;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover, .btn-light:hover {
+            background: #0056b3;
+            color: #fff;
+        }
+        .ad-container {
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 12px;
+            background: #f8f9fa;
+        }
+        .card-title, h1, h2, h3, h4, h5 {
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+        }
+        .alert-warning {
+            background: linear-gradient(90deg, #fffbe6 0%, #fff3cd 100%);
+        }
+        .alert-info {
+            background: linear-gradient(90deg, #e3f6ff 0%, #d1ecf1 100%);
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -64,7 +100,7 @@
                     <h1 class="display-4 fw-bold mb-4">UK Tax Calculator for Interactive Brokers</h1>
                     <p class="lead mb-4">Calculate your UK capital gains tax, dividend income, and portfolio performance from IBKR transactions. HMRC compliant calculations with detailed reporting.</p>
                     <div class="d-flex gap-3">
-                        <a href="#calculator" class="btn btn-light btn-lg">Start Calculation</a>
+                        <a href="calculate.html" class="btn btn-light btn-lg">Start Calculation</a>
                         <a href="about.html" class="btn btn-outline-light btn-lg">Learn More</a>
                     </div>
                 </div>
@@ -137,125 +173,83 @@
         </div>
     </section>
 
-    <!-- Calculator Section -->
-    <section id="calculator" class="py-5">
+    <!-- Blog/Resource Hub Section -->
+    <section class="py-5">
         <div class="container">
             <div class="row">
-                <div class="col-lg-8 mx-auto">
-                    <div class="card shadow">
-                        <div class="card-header bg-primary text-white">
-                            <h3 class="card-title mb-0">Upload Your IBKR Transaction File</h3>
-                        </div>
-                        <div class="card-body">
-                            <form id="calculatorForm" enctype="multipart/form-data">
-                                <div class="mb-4">
-                                    <label for="fileInput" class="upload-area" style="cursor: pointer; display: block;">
-                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
-                                        <h5>Drag & Drop your CSV or QFX file here</h5>
-                                        <p class="text-muted">or click to browse</p>
-                                    </label>
-                                    <input type="file" id="fileInput" name="file" accept=".csv,.qfx,.ofx" style="display: none;">
-                                    <small class="form-text text-muted mt-2">
-                                        Upload your Interactive Brokers transaction file (CSV or QFX format)
-                                    </small>
+                <div class="col-lg-10 mx-auto">
+                    <h1 class="display-4 fw-bold mb-4">Tax & Investment Blog</h1>
+                    <p class="lead">Latest insights on UK tax and investment strategies</p>
+                    <div class="alert alert-warning border-warning mb-5">
+                        <div class="d-flex align-items-start">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning me-3 mt-1" aria-label="Tax Alert"></i>
+                            <div>
+                                <h4 class="alert-heading mb-3">⚠️ URGENT: Major CGT Rate Changes in 2024-25</h4>
+                                <p class="mb-3"><strong>Capital Gains Tax rates for shares and ETFs increased significantly from 30 October 2024.</strong> This affects all IBKR users with share disposals after this date.</p>
+                                <div class="row mb-3">
+                                    <div class="col-md-6"><strong>Before 30 Oct 2024:</strong><br>Basic rate: 10% | Higher rate: 20%</div>
+                                    <div class="col-md-6"><strong>From 30 Oct 2024:</strong><br>Basic rate: 18% (+8%) | Higher rate: 24% (+4%)</div>
                                 </div>
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="taxYear" class="form-label">Tax Year</label>
-                                            <select class="form-select" id="taxYear" name="tax_year" required>
-                                                <option value="2024-2025" selected>2024-2025</option>
-                                                <option value="2023-2024">2023-2024</option>
-                                                <option value="2022-2023">2022-2023</option>
-                                                <option value="2021-2022">2021-2022</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="analysisType" class="form-label">Analysis Type</label>
-                                            <select class="form-select" id="analysisType" name="analysis_type" required>
-                                                <option value="both" selected>Tax & Portfolio Analysis</option>
-                                                <option value="tax">Tax Analysis Only</option>
-                                                <option value="portfolio">Portfolio Analysis Only</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg" id="calculateBtn">
-                                        <i class="fas fa-calculator me-2"></i>Calculate Tax & Portfolio
-                                    </button>
-                                </div>
-                            </form>
+                                <a href="cgt-guide.html" class="btn btn-warning btn-sm"><i class="fas fa-info-circle"></i> Read Full CGT Guide</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Sidebar Ad -->
-                <div class="col-lg-4">
-                    <div class="ad-container">
-                        <!-- AdSense Sidebar Ad -->
-                        <ins class="adsbygoogle"
-                             style="display:block"
-                             data-ad-client="pub-2934063890442014"
-                             data-ad-slot="YOUR_SIDEBAR_SLOT_ID"
-                             data-ad-format="auto"
-                             data-full-width-responsive="true"></ins>
-                        <script>
-                             (adsbygoogle = window.adsbygoogle || []).push({});
-                        </script>
-                    </div>
-                    
-                    <!-- Amazon Associates Recommendations -->
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h6 class="mb-0">Recommended Resources</h6>
+                    <div class="row mb-5">
+                        <div class="col-lg-8 mb-4">
+                            <article class="card shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <div class="badge bg-danger mb-3">URGENT UPDATE</div>
+                                    <h2 class="h3 mb-3">CGT Rate Changes October 2024: What IBKR Users Need to Know</h2>
+                                    <p class="text-muted mb-3">Published on October 30, 2024 • 8 min read</p>
+                                    <p class="mb-3">The UK government has implemented the most significant changes to Capital Gains Tax rates in recent years, with immediate effect for disposals from 30 October 2024. Here's what you need to know:</p>
+                                    <h5>Key Changes:</h5>
+                                    <ul class="mb-3">
+                                        <li><strong>Basic Rate Taxpayers:</strong> CGT on shares increased from 10% to 18% (+8%)</li>
+                                        <li><strong>Higher Rate Taxpayers:</strong> CGT on shares increased from 20% to 24% (+4%)</li>
+                                        <li><strong>Timing:</strong> Changes apply to disposals from 30 October 2024 onwards</li>
+                                        <li><strong>Scope:</strong> Affects shares, ETFs, and unit trusts (not residential property)</li>
+                                    </ul>
+                                    <a href="cgt-guide.html" class="btn btn-outline-danger btn-sm">Read More</a>
+                                </div>
+                            </article>
                         </div>
-                        <div class="card-body">
-                            <!-- Amazon Associates Links -->
-                            <div class="mb-3">
-                                <a href="https://amzn.to/4miLx04" target="_blank" class="text-decoration-none">
-                                    <div class="d-flex align-items-center">
-                                        <div class="me-3" style="width: 60px; height: 80px; border-radius: 5px; overflow: hidden;">
-                                            <img src="https://m.media-amazon.com/images/I/81wZXiu4OiL._SY522_.jpg" alt="The Psychology of Money" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div class="col-lg-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title">Featured Resource</h5>
+                                    <a href="https://amzn.to/4miLx04" target="_blank" class="text-decoration-none">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3" style="width: 60px; height: 80px; border-radius: 5px; overflow: hidden;">
+                                                <img src="https://m.media-amazon.com/images/I/81wZXiu4OiL._SY522_.jpg" alt="The Psychology of Money book cover" style="width: 100%; height: 100%; object-fit: cover;">
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1">The Psychology of Money</h6>
+                                                <small class="text-muted">Timeless lessons on wealth, greed, and happiness</small>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h6 class="mb-1">The Psychology of Money</h6>
-                                            <small class="text-muted">Timeless lessons on wealth, greed, and happiness</small>
-                                        </div>
-                                    </div>
-                                </a>
+                                    </a>
+                                </div>
                             </div>
-                            
-                            <div class="mb-3">
-                                <a href="https://amzn.to/4oySlrO" target="_blank" class="text-decoration-none">
-                                    <div class="d-flex align-items-center">
-                                        <div class="me-3" style="width: 60px; height: 80px; border-radius: 5px; overflow: hidden;">
-                                            <img src="https://m.media-amazon.com/images/I/81fRkJYlEHL._SY522_.jpg" alt="Trading Game" style="width: 100%; height: 100%; object-fit: cover;">
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1">Trading Game</h6>
-                                            <small class="text-muted">Gary Stevenson</small>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="mb-3">
-                                <a href="https://amzn.to/3JdQKaM" target="_blank" class="text-decoration-none">
-                                    <div class="d-flex align-items-center">
-                                        <div class="me-3" style="width: 60px; height: 80px; border-radius: 5px; overflow: hidden;">
-                                            <img src="https://m.media-amazon.com/images/I/71T8JRnMU8L._SY522_.jpg" alt="TAXTOPIA" style="width: 100%; height: 100%; object-fit: cover;">
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1">TAXTOPIA</h6>
-                                            <small class="text-muted">How I Discovered the Injustices, Scams and Guilty Secrets of the Tax Evasion Game</small>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-5">
+                        <div class="col-lg-6 mb-4">
+                            <article class="card shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <h2 class="h4 mb-3">How to Calculate CGT in the UK</h2>
+                                    <p>Step-by-step guide for IBKR users to calculate capital gains tax, including Section 104 pooling, currency conversion, and reporting requirements.</p>
+                                    <a href="cgt-guide.html" class="btn btn-outline-primary btn-sm">Read CGT Guide</a>
+                                </div>
+                            </article>
+                        </div>
+                        <div class="col-lg-6 mb-4">
+                            <article class="card shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <h2 class="h4 mb-3">Money-Saving Strategies</h2>
+                                    <p>Learn how to use your CGT allowance, harvest tax losses, and optimize your portfolio for UK tax efficiency.</p>
+                                    <a href="blog.html" class="btn btn-outline-success btn-sm">More Articles</a>
+                                </div>
+                            </article>
                         </div>
                     </div>
                 </div>
@@ -557,7 +551,7 @@
         <div class="container text-center">
             <h2>Ready to Calculate Your UK Tax Liability?</h2>
             <p class="lead">Upload your IBKR file and get instant, accurate tax calculations</p>
-            <a href="#calculator" class="btn btn-light btn-lg">Start Now</a>
+            <a href="calculate.html" class="btn btn-light btn-lg">Start Now</a>
         </div>
     </section>
                         <ins class="adsbygoogle"
@@ -571,54 +565,57 @@
                         </script>
                     </div>
                     
-                    <!-- Amazon Associates Recommendations -->
-                    <div class="card mt-4">
-                        <div class="card-header">
-                            <h6 class="mb-0">Recommended Resources</h6>
-                        </div>
-                        <div class="card-body">
-                            <!-- Amazon Associates Links -->
-                            <div class="mb-3">
-                                <a href="https://amzn.to/4miLx04" target="_blank" class="text-decoration-none">
-                                    <div class="d-flex align-items-center">
-                                        <div class="bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 80px; border-radius: 5px;"><i class="fas fa-book"></i></div>
-                                        <div>
-                                            <h6 class="mb-1">The Psychology of Money</h6>
-                                            <small class="text-muted">Timeless lessons on wealth, greed, and happiness</small>
-                                        </div>
-                                    </div>
-                                </a>
+                    <!-- Recommended Resources -->
+                    <div class="row mb-5">
+    <div class="col-lg-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">Recommended Books</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <a href="https://amzn.to/4miLx04" target="_blank" rel="nofollow sponsored" class="text-decoration-none">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3" style="width: 60px; height: 80px; border-radius: 5px; overflow: hidden;">
+                                <img src="https://m.media-amazon.com/images/I/81wZXiu4OiL._SY522_.jpg" alt="The Psychology of Money book cover" style="width: 100%; height: 100%; object-fit: cover;">
                             </div>
-                            
-                            <div class="mb-3">
-                                <a href="https://amzn.to/4miLx04" target="_blank" class="text-decoration-none">
-                                    <div class="d-flex align-items-center">
-                                        <div class="me-3" style="width: 60px; height: 80px; border-radius: 5px; overflow: hidden;">
-                                            <img src="https://m.media-amazon.com/images/I/71g2UpUuTfL._SY466_.jpg" alt="The Psychology of Money" style="width: 100%; height: 100%; object-fit: cover;">
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1">The Psychology of Money</h6>
-                                            <small class="text-muted">Timeless lessons on wealth, greed, and happiness</small>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <a href="https://amzn.to/4oySlrO" target="_blank" class="text-decoration-none">
-                                    <div class="d-flex align-items-center">
-                                        <div class="me-3" style="width: 60px; height: 80px; border-radius: 5px; overflow: hidden;">
-                                            <img src="https://m.media-amazon.com/images/I/816zKOe3LdL._SY466_.jpg" alt="Trading Game" style="width: 100%; height: 100%; object-fit: cover;">
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1">Trading Game</h6>
-                                            <small class="text-muted">Gary Stevenson</small>
-                                        </div>
-                                    </div>
-                                </a>
+                            <div>
+                                <h6 class="mb-1">The Psychology of Money</h6>
+                                <small class="text-muted">Timeless lessons on wealth, greed, and happiness</small>
                             </div>
                         </div>
-                    </div>
+                    </a>
+                </div>
+                <div class="mb-3">
+                    <a href="https://amzn.to/4oySlrO" target="_blank" rel="nofollow sponsored" class="text-decoration-none">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3" style="width: 60px; height: 80px; border-radius: 5px; overflow: hidden;">
+                                <img src="https://m.media-amazon.com/images/I/81fRkJYlEHL._SY522_.jpg" alt="Trading Game book cover" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <div>
+                                <h6 class="mb-1">Trading Game</h6>
+                                <small class="text-muted">Gary Stevenson</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="mb-3">
+                    <a href="https://amzn.to/3JdQKaM" target="_blank" rel="nofollow sponsored" class="text-decoration-none">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3" style="width: 60px; height: 80px; border-radius: 5px; overflow: hidden;">
+                                <img src="https://m.media-amazon.com/images/I/71T8JRnMU8L._SY522_.jpg" alt="TAXTOPIA book cover" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <div>
+                                <h6 class="mb-1">TAXTOPIA</h6>
+                                <small class="text-muted">How I Discovered the Injustices, Scams and Guilty Secrets of the Tax Evasion Game</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                 </div>
             </div>
         </div>
@@ -632,7 +629,7 @@
         <div class="container text-center">
             <h2>Ready to Calculate Your UK Tax Liability?</h2>
             <p class="lead">Upload your IBKR file and get instant, accurate tax calculations</p>
-            <a href="#calculator" class="btn btn-light btn-lg">Start Now</a>
+            <a href="calculate.html" class="btn btn-light btn-lg">Start Now</a>
         </div>
     </section>
 
@@ -655,6 +652,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Custom JavaScript -->
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=1.1"></script>
 </body>
 </html>

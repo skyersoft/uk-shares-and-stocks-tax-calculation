@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tax Calculation Results - IBKR Tax Calculator</title>
     <meta name="description" content="Your UK tax calculation results from Interactive Brokers transactions">
+    <meta name="keywords" content="UK tax calculation, capital gains tax, IBKR results, portfolio analysis">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,203 +14,394 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/styles.css">
-    
-    <style>
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .metric-value {
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        .alert {
-            border-radius: 10px;
-        }
-        .table-responsive {
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .card-header {
-            border-radius: 10px 10px 0 0 !important;
-        }
-        
-        /* Sidebar Styles */
-        .ad-container {
-            margin-bottom: 1.5rem;
-        }
-        
-        .tax-tips .tip-item {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .tax-tips .tip-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .tip-details {
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .book-item {
-            transition: all 0.3s ease;
-            padding: 10px;
-            border-radius: 8px;
-        }
-        
-        .book-item:hover {
-            background-color: #f8f9fa;
-            transform: translateY(-2px);
-        }
-        
-        .book-cover {
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .book-title a {
-            color: #495057;
-            font-weight: 600;
-        }
-        
-        .book-title a:hover {
-            color: #007bff;
-        }
-        
-        /* Responsive adjustments for sidebar */
-        @media (max-width: 991.98px) {
-            .col-lg-4 {
-                margin-top: 2rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="css/styles.css?v=1.1">
+    <link rel="stylesheet" href="css/results.css?v=1.1">
 </head>
 <body>
+    <!-- SPA Mount (Progressive Enhancement) -->
+    <div id="spa-root" style="display:none"></div>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="/">IBKR Tax Calculator</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-calculator me-2"></i>IBKR Tax Calculator
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="about.html">About</a>
+                        <a class="nav-link" href="calculate.html">
+                            <i class="fas fa-calculator me-1"></i>Calculator
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="help.html">Help</a>
+                        <a class="nav-link" href="about.html">
+                            <i class="fas fa-info-circle me-1"></i>About
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="cgt-guide.html">CGT Guide</a>
+                        <a class="nav-link" href="help.html">
+                            <i class="fas fa-question-circle me-1"></i>Help
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="blog.html">Blog</a>
+                        <a class="nav-link" href="cgt-guide.html">
+                            <i class="fas fa-book me-1"></i>CGT Guide
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="privacy.html">Privacy</a>
+                        <a class="nav-link" href="blog.html">
+                            <i class="fas fa-blog me-1"></i>Blog
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="terms.html">Terms</a>
+                        <a class="nav-link" href="privacy.html">
+                            <i class="fas fa-shield-alt me-1"></i>Privacy
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="terms.html">
+                            <i class="fas fa-file-contract me-1"></i>Terms
+                        </a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="loading-container">
+        <div class="loading-content">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h4 class="mt-3">Loading Your Tax Results...</h4>
+            <p class="text-muted">Processing your calculation data</p>
+        </div>
+    </div>
+
+    <!-- Error Display -->
+    <div id="errorDisplay" class="container mt-5" style="display: none;">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="alert alert-danger">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                        <div>
+                            <h4 class="mb-2">Error Loading Results</h4>
+                            <p class="mb-3">We couldn't load your calculation results. Please try again or return to the calculator.</p>
+                            <div class="d-flex gap-2">
+                                <a href="calculate.html" class="btn btn-primary">
+                                    <i class="fas fa-calculator me-2"></i>Return to Calculator
+                                </a>
+                                <button class="btn btn-outline-primary" onclick="location.reload()">
+                                    <i class="fas fa-refresh me-2"></i>Retry
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Results Header -->
-    <section class="bg-primary text-white py-4" id="resultsHeader" style="display: none;">
+    <header id="resultsHeader" class="results-header" style="display: none;">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h1 class="display-6 mb-0">Tax Calculation Results</h1>
+                    <h1 class="display-6 mb-2">
+                        <i class="fas fa-chart-line me-2"></i>Tax Calculation Results
+                    </h1>
                     <p class="lead mb-0" id="taxYearDisplay">Tax Year: 2024-2025</p>
                 </div>
                 <div class="col-md-4 text-end">
-                    <button class="btn btn-light btn-lg" onclick="window.print()">
-                        <i class="fas fa-print me-2"></i>Print Results
-                    </button>
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button class="btn btn-light btn-lg" onclick="window.print()" title="Print Results">
+                            <i class="fas fa-print me-2"></i>Print
+                        </button>
+                        <button class="btn btn-outline-light btn-lg" onclick="navigator.share ? navigator.share({title: 'Tax Calculation Results', url: window.location.href}) : null" title="Share Results">
+                            <i class="fas fa-share me-2"></i>Share
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- Results Section -->
-    <section class="py-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-12">
-                    <!-- Loading indicator -->
-                    <div id="loadingIndicator" class="text-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading results...</span>
+    <!-- Main Results Content -->
+    <main id="resultsContent" class="container mt-4" style="display: none;">
+        <!-- Summary Metrics Section -->
+        <section class="metrics-section mb-5">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="metric-card tax-liability">
+                        <div class="metric-icon">
+                            <i class="fas fa-receipt"></i>
                         </div>
-                        <p class="mt-3">Processing your tax calculation results...</p>
+                        <div class="metric-content">
+                            <h5 class="metric-label">Total Tax Liability</h5>
+                            <div class="metric-value" id="totalTaxLiability">£0.00</div>
+                            <small class="metric-subtitle">Capital Gains & Dividend Tax</small>
+                        </div>
                     </div>
-                    
-                    <!-- Results content will be inserted here -->
-                    <div id="resultsContent" style="display: none;">
-                        <!-- Results will be dynamically populated -->
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card portfolio-value">
+                        <div class="metric-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h5 class="metric-label">Portfolio Value</h5>
+                            <div class="metric-value" id="portfolioValue">£0.00</div>
+                            <small class="metric-subtitle">Current Market Value</small>
+                        </div>
                     </div>
-                    
-                    <!-- Error display -->
-                    <div id="errorDisplay" style="display: none;" class="alert alert-danger">
-                        <h4>Error Loading Results</h4>
-                        <p>We couldn't load your tax calculation results. Please try calculating again.</p>
-                        <a href="/" class="btn btn-primary">Return to Calculator</a>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card total-return">
+                        <div class="metric-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h5 class="metric-label">Total Return</h5>
+                            <div class="metric-value" id="totalReturn">0.00%</div>
+                            <small class="metric-subtitle">Overall Performance</small>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Call to Action -->
-    <section class="bg-light py-5" id="callToAction" style="display: none;">
-        <div class="container text-center">
-            <h3>Need Another Calculation?</h3>
-            <p class="lead">Calculate taxes for different years or update your portfolio analysis</p>
-            <a href="/" class="btn btn-primary btn-lg me-3">New Calculation</a>
-            <a href="about.html" class="btn btn-outline-primary btn-lg">Learn More</a>
+        <!-- CGT Rate Warning for 2024-2025 -->
+        <section id="cgtWarning" class="alert alert-warning mb-4" style="display: none;">
+            <div class="d-flex align-items-start">
+                <i class="fas fa-exclamation-triangle fa-2x me-3 text-warning"></i>
+                <div>
+                    <h5 class="mb-2">Important: 2024-2025 CGT Rate Changes</h5>
+                    <p class="mb-2"><strong>New Capital Gains Tax rates effective from 6 April 2024:</strong></p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><strong>Basic rate taxpayers:</strong> 10% (unchanged)</li>
+                                <li><strong>Higher rate taxpayers:</strong> 20% (unchanged)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><strong>Annual exempt amount:</strong> £6,000 (reduced from £12,300)</li>
+                                <li><strong>Additional rate taxpayers:</strong> 20% (unchanged)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">This calculator uses the latest rates. Always consult HMRC guidance for official information.</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Tables Section -->
+        <section class="tables-section">
+            <!-- Disposals Table -->
+            <div class="table-card mb-4">
+                <div class="table-card-header disposals">
+                    <h3 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>Share Disposals
+                        <span class="badge bg-light text-dark ms-2" id="disposals-count">0</span>
+                    </h3>
+                    <p class="mb-0">Capital gains and losses from share sales</p>
+                </div>
+                <div class="table-card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar me-1"></i>Date
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-tag me-1"></i>Symbol
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-sort-numeric-up me-1"></i>Quantity
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-money-bill me-1"></i>Proceeds
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-coins me-1"></i>Cost Basis
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-chart-line me-1"></i>Gain/Loss
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="disposals-table-body">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dividends Table -->
+            <div class="table-card mb-4">
+                <div class="table-card-header dividends">
+                    <h3 class="mb-0">
+                        <i class="fas fa-coins me-2"></i>Dividend Income
+                        <span class="badge bg-light text-dark ms-2" id="dividends-count">0</span>
+                    </h3>
+                    <p class="mb-0">Dividend payments received during the tax year</p>
+                </div>
+                <div class="table-card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-calendar me-1"></i>Payment Date
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-building me-1"></i>Security
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-money-bill me-1"></i>Gross Amount
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-percentage me-1"></i>Withholding Tax
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-hand-holding-usd me-1"></i>Net Amount
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="dividends-table-body">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portfolio Holdings Table -->
+            <div class="table-card mb-4">
+                <div class="table-card-header portfolio">
+                    <h3 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Current Portfolio Holdings
+                        <span class="badge bg-light text-dark ms-2" id="portfolio-count">0</span>
+                    </h3>
+                    <p class="mb-0">Your current investment positions and performance</p>
+                </div>
+                <div class="table-card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">
+                                        <i class="fas fa-tag me-1"></i>Symbol
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-sort-numeric-up me-1"></i>Quantity
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-calculator me-1"></i>Avg Cost
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-money-bill me-1"></i>Current Value
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-chart-line me-1"></i>Unrealized Gain/Loss
+                                    </th>
+                                    <th scope="col">
+                                        <i class="fas fa-percentage me-1"></i>Return %
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="portfolio-table-body">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Call to Action Section -->
+    <section id="callToAction" class="cta-section" style="display: none;">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h3 class="mb-3">Need Another Calculation?</h3>
+                    <p class="lead mb-4">Calculate taxes for different years or update your portfolio analysis</p>
+                    <div class="d-flex gap-3 justify-content-center">
+                        <a href="calculate.html" class="btn btn-primary btn-lg">
+                            <i class="fas fa-calculator me-2"></i>New Calculation
+                        </a>
+                        <a href="about.html" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-info-circle me-2"></i>Learn More
+                        </a>
+                        <a href="help.html" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-question-circle me-2"></i>Get Help
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
+    <footer class="site-footer">
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <p>&copy; 2025 IBKR Tax Calculator. All rights reserved.</p>
-                    <small class="text-muted">This tool provides estimates only. Consult a tax professional for advice.</small>
+                    <div class="footer-brand">
+                        <i class="fas fa-calculator me-2"></i>IBKR Tax Calculator
+                    </div>
+                    <p class="footer-description">
+                        Professional UK tax calculations for Interactive Brokers users. 
+                        Calculate capital gains tax, dividend income, and portfolio performance with HMRC-compliant results.
+                    </p>
+                    <small class="text-muted">
+                        This tool provides estimates only. Consult a qualified tax professional for official advice.
+                    </small>
+                </div>
+                <div class="col-md-6">
+                    <div class="footer-links">
+                        <div class="row">
+                            <div class="col-6">
+                                <h6>Resources</h6>
+                                <ul class="list-unstyled">
+                                    <li><a href="cgt-guide.html">CGT Guide</a></li>
+                                    <li><a href="help.html">Help & FAQ</a></li>
+                                    <li><a href="blog.html">Tax Blog</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-6">
+                                <h6>Legal</h6>
+                                <ul class="list-unstyled">
+                                    <li><a href="privacy.html">Privacy Policy</a></li>
+                                    <li><a href="terms.html">Terms of Service</a></li>
+                                    <li><a href="about.html">About Us</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 IBKR Tax Calculator. All rights reserved.</p>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="privacy.html" class="text-white me-3">Privacy Policy</a>
-                    <a href="terms.html" class="text-white">Terms of Service</a>
+                    <small class="text-muted">Last updated: <span id="lastUpdated"></span></small>
                 </div>
             </div>
         </div>
@@ -218,1044 +410,25 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Custom JS for results page -->
+    <!-- Results Page JavaScript -->
+    <script src="js/results.js?v=3"></script>
+        <!-- Load experimental React SPA bundle (non-blocking) -->
+        <script>
+            (function(){
+                var s=document.createElement('script');
+                s.type='module';
+                s.src='spa/assets/index-CN_G3n_n.js';
+                s.onload=function(){
+                    var root=document.getElementById('spa-root');
+                    if(root) root.style.display='block';
+                };
+                s.onerror=function(){console.warn('[SPA] Failed to load React bundle');};
+                document.body.appendChild(s);
+            })();
+        </script>
+    
+    <!-- Initialize last updated date -->
     <script>
-        // Load and display results when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            loadResults();
-        });
-
-        function loadResults() {
-            // Get results from sessionStorage or localStorage
-            const results = sessionStorage.getItem('calculationResults') || localStorage.getItem('calculationResults');
-            
-            if (!results) {
-                showError();
-                return;
-            }
-            
-            try {
-                const data = JSON.parse(results);
-                displayResults(data);
-            } catch (error) {
-                console.error('Error parsing results:', error);
-                showError();
-            }
-        }
-
-        function showError() {
-            document.getElementById('loadingIndicator').style.display = 'none';
-            document.getElementById('errorDisplay').style.display = 'block';
-        }
-
-        function displayResults(data) {
-            // Show and update the header
-            const taxYear = data.tax_year || '2024-2025';
-            document.getElementById('taxYearDisplay').textContent = `Tax Year: ${taxYear}`;
-            document.getElementById('resultsHeader').style.display = 'block';
-            
-            // Generate and display results content
-            const resultsHtml = generateResultsHTML(data);
-            document.getElementById('resultsContent').innerHTML = resultsHtml;
-            
-            // Now populate the dynamic content sections
-            const taxReport = data.tax_report || {};
-            const portfolioReport = data.portfolio_report || {};
-            
-            // Populate tax analysis content
-            const taxAnalysisContent = generateTaxAnalysisContent(taxReport, data);
-            const taxAnalysisElement = document.getElementById('taxAnalysisContent');
-            if (taxAnalysisElement) {
-                taxAnalysisElement.innerHTML = taxAnalysisContent;
-            }
-            
-            // Populate portfolio analysis content
-            const portfolioAnalysisContent = generatePortfolioAnalysisContent(portfolioReport, data);
-            const portfolioAnalysisElement = document.getElementById('portfolioAnalysisContent');
-            if (portfolioAnalysisElement) {
-                portfolioAnalysisElement.innerHTML = portfolioAnalysisContent;
-            }
-            
-            // Populate commission section
-            const commissionSectionContent = generateCommissionSection(data.commission_summary);
-            const commissionSectionElement = document.getElementById('commissionSection');
-            if (commissionSectionElement) {
-                commissionSectionElement.innerHTML = commissionSectionContent;
-            }
-            
-            // Populate sidebar content
-            const sidebarContent = generateSidebarContent();
-            const sidebarElement = document.getElementById('sidebarContent');
-            if (sidebarElement) {
-                sidebarElement.innerHTML = sidebarContent;
-            }
-            
-            document.getElementById('loadingIndicator').style.display = 'none';
-            document.getElementById('resultsContent').style.display = 'block';
-            
-            // Show call to action
-            document.getElementById('callToAction').style.display = 'block';
-            
-            // Initialize additional income form if present
-            initializeAdditionalIncomeForm(data);
-        }
-
-        function generateResultsHTML(data) {
-            console.log('Generating results HTML for data:', data);
-            
-            // Use the actual API response structure
-            const taxReport = data.tax_report || {};
-            const portfolioReport = data.portfolio_report || {};
-            const taxYear = data.tax_year || '2024-2025';
-            
-            return `
-                <!-- CGT Rate Warning for 2024-25 -->
-                ${getCGTRateWarning(taxYear)}
-                
-                <!-- Key Metrics Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="metric-card text-center">
-                            <h5>Total Tax Liability</h5>
-                            <div class="metric-value">£${(taxReport.summary?.estimated_tax_liability?.total_estimated_tax || 0).toFixed(2)}</div>
-                            <small>Estimated tax due</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="metric-card text-center">
-                            <h5>Portfolio Value</h5>
-                            <div class="metric-value">£${(portfolioReport.grand_total?.total_value || 0).toLocaleString()}</div>
-                            <small>Current holdings value</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="metric-card text-center">
-                            <h5>Total Return</h5>
-                            <div class="metric-value">${(portfolioReport.grand_total?.total_return_pct || 0) >= 0 ? '+' : ''}${(portfolioReport.grand_total?.total_return_pct || 0).toFixed(2)}%</div>
-                            <small>Portfolio performance</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Content with Sidebar Layout -->
-                <div class="row">
-                    <!-- Main Results Column -->
-                    <div class="col-lg-8">
-                        <!-- Tax Analysis Section -->
-                        <div class="card mb-4">
-                            <div class="card-header bg-primary text-white">
-                                <h4 class="mb-0">Tax Analysis - ${taxYear}</h4>
-                            </div>
-                            <div class="card-body" id="taxAnalysisContent">
-                                <!-- Tax analysis content will be populated by JavaScript -->
-                            </div>
-                        </div>
-
-                        <!-- Additional Income & Expenses Section -->
-                        <div class="card mb-4">
-                            <div class="card-header bg-info text-white">
-                                <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Additional Income & Expenses</h4>
-                            </div>
-                            <div class="card-body">
-                                <p class="text-muted mb-4">Add any additional income or expenses not captured in your IBKR data to get a more accurate tax calculation.</p>
-
-                                <form id="additionalInputsForm">
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <h5 class="text-success mb-3"><i class="fas fa-plus"></i> Additional Income</h5>
-
-                                            <div class="mb-3">
-                                                <label for="otherCapitalGains" class="form-label">Capital Gains from Other Sources</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">£</span>
-                                                    <input type="number" class="form-control" id="otherCapitalGains" step="0.01" min="0" value="0">
-                                                </div>
-                                                <small class="form-text text-muted">Gains from property, other brokers, etc.</small>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label for="otherDividends" class="form-label">Dividends from Other Sources</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">£</span>
-                                                    <input type="number" class="form-control" id="otherDividends" step="0.01" min="0" value="0">
-                                                </div>
-                                                <small class="form-text text-muted">Dividends not in IBKR account</small>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label for="otherIncome" class="form-label">Other Investment Income</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">£</span>
-                                                    <input type="number" class="form-control" id="otherIncome" step="0.01" min="0" value="0">
-                                                </div>
-                                                <small class="form-text text-muted">Interest, rental income, etc.</small>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <h5 class="text-danger mb-3"><i class="fas fa-minus"></i> Additional Expenses</h5>
-
-                                            <div class="mb-3">
-                                                <label for="otherCapitalLosses" class="form-label">Capital Losses from Other Sources</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">£</span>
-                                                    <input type="number" class="form-control" id="otherCapitalLosses" step="0.01" min="0" value="0">
-                                                </div>
-                                                <small class="form-text text-muted">Losses from property, other brokers, etc.</small>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label for="additionalTradingCosts" class="form-label">Additional Trading Costs</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">£</span>
-                                                    <input type="number" class="form-control" id="additionalTradingCosts" step="0.01" min="0" value="0">
-                                                </div>
-                                                <small class="form-text text-muted">Platform fees, research costs, etc.</small>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label for="professionalFees" class="form-label">Professional Fees</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">£</span>
-                                                    <input type="number" class="form-control" id="professionalFees" step="0.01" min="0" value="0">
-                                                </div>
-                                                <small class="form-text text-muted">Accountant, tax advisor fees</small>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="text-center mt-4">
-                                        <button type="button" class="btn btn-primary btn-lg" id="recalculateBtn">
-                                            <i class="fas fa-sync-alt"></i> Recalculate Tax
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Updated Tax Summary (will be populated by JavaScript) -->
-                        <div class="card mb-4" id="updatedTaxSummary" style="display: none;">
-                            <div class="card-header bg-success text-white">
-                                <h4 class="mb-0"><i class="fas fa-check-circle"></i> Updated Tax Calculation</h4>
-                            </div>
-                            <div class="card-body" id="updatedTaxContent">
-                                <!-- Updated tax calculation will be inserted here -->
-                            </div>
-                        </div>
-
-                        <!-- Portfolio Analysis Section -->
-                        <div class="card mb-4">
-                            <div class="card-header bg-success text-white">
-                                <h4 class="mb-0">Portfolio Analysis</h4>
-                            </div>
-                            <div class="card-body" id="portfolioAnalysisContent">
-                                <!-- Portfolio analysis content will be populated by JavaScript -->
-                            </div>
-                        </div>
-
-                        <!-- Commission & Fees Section -->
-                        <div id="commissionSection">
-                            <!-- Commission section will be populated by JavaScript -->
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="d-flex gap-3">
-                                    <button type="button" class="btn btn-primary" onclick="downloadReport()">
-                                        <i class="fas fa-download me-2"></i>Download Detailed Report
-                                    </button>
-                                    <button type="button" class="btn btn-secondary" onclick="calculateAnother()">
-                                        <i class="fas fa-calculator me-2"></i>Calculate Another File
-                                    </button>
-                                    <button type="button" class="btn btn-success" onclick="shareResults()">
-                                        <i class="fas fa-share me-2"></i>Share Results
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Sidebar with Ads and Recommendations -->
-                    <div class="col-lg-4" id="sidebarContent">
-                        <!-- Sidebar content will be populated by JavaScript -->
-                    </div>
-                </div>
-            `;
-        }
-
-        function generateSidebarContent() {
-            return `
-                <!-- Google AdSense - Top Banner -->
-                <div class="ad-container mb-4">
-                    <div class="card border-0 bg-light">
-                        <div class="card-body text-center p-4">
-                            <small class="text-muted d-block mb-2">Advertisement Space</small>
-                            <div class="bg-secondary text-white py-4 rounded">
-                                <i class="fas fa-ad fa-2x mb-2"></i>
-                                <p class="mb-0 small">
-                                    <strong>Google AdSense Integration Ready</strong><br>
-                                    Replace this section with your AdSense code
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tax Planning Tips Card -->
-                <div class="card mb-4">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Tax Planning Tips</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="tax-tips">
-                            <div class="tip-item mb-3 p-3 bg-light rounded">
-                                <h6 class="tip-title text-primary mb-2">
-                                    <i class="fas fa-chart-line"></i> Optimize Your CGT Timing
-                                </h6>
-                                <p class="tip-text small mb-2">
-                                    Consider the timing of your sales. You can realize losses before 5 April to offset gains, 
-                                    or defer gains to the next tax year.
-                                </p>
-                                <button class="btn btn-sm btn-outline-primary tip-expand" onclick="toggleTip(this)">
-                                    Learn More <i class="fas fa-chevron-down"></i>
-                                </button>
-                                <div class="tip-details mt-2" style="display: none;">
-                                    <ul class="small mb-0">
-                                        <li>Harvest tax losses by selling underperforming stocks</li>
-                                        <li>Use the bed & breakfast rule wisely (30-day rule)</li>
-                                        <li>Consider spouse transfers to use both CGT allowances</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div class="tip-item mb-3 p-3 bg-light rounded">
-                                <h6 class="tip-title text-success mb-2">
-                                    <i class="fas fa-piggy-bank"></i> Maximize Your Allowances
-                                </h6>
-                                <p class="tip-text small mb-2">
-                                    Use your annual CGT allowance (£3,000 for 2024-25) and dividend allowance (£500) effectively.
-                                </p>
-                                <button class="btn btn-sm btn-outline-success tip-expand" onclick="toggleTip(this)">
-                                    Learn More <i class="fas fa-chevron-down"></i>
-                                </button>
-                                <div class="tip-details mt-2" style="display: none;">
-                                    <ul class="small mb-0">
-                                        <li>Take profits up to your CGT allowance each year</li>
-                                        <li>Consider dividend-paying stocks for your allowance</li>
-                                        <li>Plan multi-year strategies for large positions</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <div class="tip-item mb-3 p-3 bg-light rounded">
-                                <h6 class="tip-title text-info mb-2">
-                                    <i class="fas fa-shield-alt"></i> ISA & Pension Planning
-                                </h6>
-                                <p class="tip-text small mb-2">
-                                    Maximize tax-efficient wrappers like ISAs and SIPPs to reduce future tax liabilities.
-                                </p>
-                                <button class="btn btn-sm btn-outline-info tip-expand" onclick="toggleTip(this)">
-                                    Learn More <i class="fas fa-chevron-down"></i>
-                                </button>
-                                <div class="tip-details mt-2" style="display: none;">
-                                    <ul class="small mb-0">
-                                        <li>Use your £20,000 ISA allowance annually</li>
-                                        <li>Consider pension contributions for tax relief</li>
-                                        <li>Transfer existing holdings into ISAs when possible</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Amazon Associates Recommendations -->
-                <div class="card mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="mb-0"><i class="fas fa-book"></i> Recommended Reading</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="book-recommendations">
-                            <div class="book-item d-flex mb-3">
-                                <div class="book-cover me-3" style="width: 60px; height: 80px; border-radius: 4px; overflow: hidden;">
-                                    <a href="https://amzn.to/3JdQKaM" target="_blank">
-                                        <img src="https://m.media-amazon.com/images/I/71T8JRnMU8L._SY522_.jpg" alt="TAXTOPIA Book Cover" style="width: 100%; height: 100%; object-fit: cover;">
-                                    </a>
-                                </div>
-                                <div class="book-details flex-grow-1">
-                                    <h6 class="book-title mb-1 small">
-                                        <a href="https://amzn.to/3JdQKaM" target="_blank" class="text-decoration-none">
-                                            TAXTOPIA
-                                        </a>
-                                    </h6>
-                                    <p class="book-author small text-muted mb-1">How I Discovered the Injustices, Scams and Guilty Secrets</p>
-                                    <div class="book-rating mb-1">
-                                        <span class="text-warning">★★★★★</span>
-                                        <small class="text-muted">(4.5/5)</small>
-                                    </div>
-                                    <small class="text-muted">Essential insights into UK tax system</small>
-                                </div>
-                            </div>
-
-                            <div class="book-item d-flex mb-3">
-                                <div class="book-cover me-3" style="width: 60px; height: 80px; border-radius: 4px; overflow: hidden;">
-                                    <a href="https://amzn.to/3HxSIlP" target="_blank">
-                                        <img src="https://m.media-amazon.com/images/I/61NI1Q2X-ML._SY522_.jpg" alt="3 Books Collection Set Cover" style="width: 100%; height: 100%; object-fit: cover;">
-                                    </a>
-                                </div>
-                                <div class="book-details flex-grow-1">
-                                    <h6 class="book-title mb-1 small">
-                                        <a href="https://amzn.to/3HxSIlP" target="_blank" class="text-decoration-none">
-                                            3 Books Collection Set
-                                        </a>
-                                    </h6>
-                                    <p class="book-author small text-muted mb-1">Taxtopia, Tax-free Income For Life, How To Own The World</p>
-                                    <div class="book-rating mb-1">
-                                        <span class="text-warning">★★★★☆</span>
-                                        <small class="text-muted">(4.3/5)</small>
-                                    </div>
-                                    <small class="text-muted">Complete tax and investment strategy collection</small>
-                                </div>
-                            </div>
-
-                            <div class="book-item d-flex mb-3">
-                                <div class="book-cover me-3" style="width: 60px; height: 80px; border-radius: 4px; overflow: hidden;">
-                                    <a href="https://amzn.to/4myUMZI" target="_blank">
-                                        <img src="https://m.media-amazon.com/images/I/61NpZ7Rj6pL._SY522_.jpg" alt="How to Day Trade for a Living Book Cover" style="width: 100%; height: 100%; object-fit: cover;">
-                                    </a>
-                                </div>
-                                <div class="book-details flex-grow-1">
-                                    <h6 class="book-title mb-1 small">
-                                        <a href="https://amzn.to/4myUMZI" target="_blank" class="text-decoration-none">
-                                            How to Day Trade for a Living
-                                        </a>
-                                    </h6>
-                                    <p class="book-author small text-muted mb-1">A Beginner's Guide to Trading Tools and Tactics</p>
-                                    <div class="book-rating mb-1">
-                                        <span class="text-warning">★★★★☆</span>
-                                        <small class="text-muted">(4.2/5)</small>
-                                    </div>
-                                    <small class="text-muted">Money Management, Discipline and Trading Psychology</small>
-                                </div>
-                            </div>
-
-                            <div class="text-center mt-3">
-                                <a href="https://amazon.co.uk/s?k=uk+tax+guide&tag=cgttaxtool-21" target="_blank" class="btn btn-sm btn-outline-secondary">
-                                    <i class="fas fa-external-link-alt"></i> View All Tax Books
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="disclaimer mt-3 pt-3 border-top">
-                            <small class="text-muted">
-                                <i class="fas fa-info-circle"></i> 
-                                As an Amazon Associate, we earn from qualifying purchases. This helps support our free tax calculator.
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Google AdSense - Sidebar -->
-                <div class="ad-container mb-4">
-                    <div class="card border-0 bg-light">
-                        <div class="card-body text-center p-3">
-                            <small class="text-muted d-block mb-2">Advertisement Space</small>
-                            <div class="bg-secondary text-white py-3 rounded">
-                                <i class="fas fa-rectangle-ad fa-lg mb-2"></i>
-                                <p class="mb-0 small">
-                                    <strong>Sidebar Ad Space</strong><br>
-                                    300x250 Rectangle Format
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Links -->
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-link"></i> Quick Links</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="https://www.gov.uk/capital-gains-tax" target="_blank" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-external-link-alt"></i> HMRC CGT Guide
-                            </a>
-                            <a href="https://www.gov.uk/tax-on-dividends" target="_blank" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-external-link-alt"></i> HMRC Dividend Tax
-                            </a>
-                            <a href="/" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-calculator"></i> Calculate Another File
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function getCGTRateWarning(taxYear) {
-            if (taxYear !== "2024-2025") return "";
-            
-            return `
-                <div class="alert alert-warning border-warning mb-4">
-                    <div class="d-flex align-items-start">
-                        <i class="fas fa-exclamation-triangle fa-2x text-warning me-3 mt-1"></i>
-                        <div>
-                            <h5 class="alert-heading mb-3">
-                                <strong>⚠️ IMPORTANT: CGT Rate Changes in 2024-25</strong>
-                            </h5>
-                            <p class="mb-3">
-                                <strong>Capital Gains Tax rates for shares and ETFs changed significantly during the 2024-25 tax year.</strong>
-                            </p>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="card bg-light border-0 mb-3">
-                                        <div class="card-body p-3">
-                                            <h6 class="card-title text-primary mb-2">
-                                                <i class="fas fa-calendar"></i> 6 April - 29 October 2024
-                                            </h6>
-                                            <ul class="mb-0 small">
-                                                <li><strong>Shares/ETFs:</strong> 10% / 20%</li>
-                                                <li><strong>Property:</strong> 18% / 24%</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card bg-light border-0 mb-3">
-                                        <div class="card-body p-3">
-                                            <h6 class="card-title text-danger mb-2">
-                                                <i class="fas fa-calendar"></i> 30 October 2024 - 5 April 2025
-                                            </h6>
-                                            <ul class="mb-0 small">
-                                                <li><strong>Shares/ETFs:</strong> 18% / 24% <span class="badge bg-danger">INCREASED</span></li>
-                                                <li><strong>Property:</strong> 18% / 24%</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function generateTaxAnalysisContent(taxReport, data) {
-            const capitalGains = taxReport.capital_gains || {};
-            const dividendIncome = taxReport.dividend_income || {};
-            const currencyGains = taxReport.currency_gains || {};
-            const taxLiability = taxReport.summary?.estimated_tax_liability || {};
-
-            let content = `
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h5>Capital Gains Summary</h5>
-                        <table class="table table-sm">
-                            <tr><td>Total Gains:</td><td>£${(capitalGains.total_gains || 0).toFixed(2)}</td></tr>
-                            <tr><td>Total Losses:</td><td>£${(capitalGains.total_losses || 0).toFixed(2)}</td></tr>
-                            <tr><td>Net Gain:</td><td>£${(capitalGains.total_gain || 0).toFixed(2)}</td></tr>
-                            <tr><td>CGT Allowance Used:</td><td>£${(capitalGains.annual_exemption_used || 0).toFixed(2)}</td></tr>
-                            <tr><td><strong>Taxable Gain:</strong></td><td><strong>£${(capitalGains.taxable_gain || 0).toFixed(2)}</strong></td></tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Dividend Income Summary</h5>
-                        <table class="table table-sm">
-                            <tr><td>Total Dividend Income (Gross):</td><td>£${(dividendIncome.total_gross || 0).toFixed(2)}</td></tr>
-                            <tr><td>Total Dividend Income (Net):</td><td>£${(dividendIncome.total_net || 0).toFixed(2)}</td></tr>
-                            <tr><td>Dividend Allowance Used:</td><td>£${(dividendIncome.dividend_allowance_used || 0).toFixed(2)}</td></tr>
-                            <tr><td>Taxable Dividend Income:</td><td>£${(dividendIncome.taxable_dividend_income || 0).toFixed(2)}</td></tr>
-                            <tr><td>Withholding Tax:</td><td>£${(dividendIncome.withholding_tax || 0).toFixed(2)}</td></tr>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <h5>Tax Breakdown</h5>
-                        <table class="table table-sm">
-                            <tr><td>Capital Gains Tax:</td><td>£${(taxLiability.capital_gains_tax || 0).toFixed(2)}</td></tr>
-                            <tr><td>Dividend Tax:</td><td>£${(taxLiability.dividend_tax || 0).toFixed(2)}</td></tr>
-                            <tr><td>Currency Gains Tax:</td><td>£${(taxLiability.currency_gains_tax || 0).toFixed(2)}</td></tr>
-                            <tr><td><strong>Total Tax Liability:</strong></td><td><strong>£${(taxLiability.total_estimated_tax || 0).toFixed(2)}</strong></td></tr>
-                        </table>
-                    </div>
-                </div>
-            `;
-
-            // Add disposal details if available
-            if (data.disposals && data.disposals.length > 0) {
-                content += `
-                    <hr class="my-4">
-                    <h5 class="mb-3">Recent Disposals (Top 10)</h5>
-                    <div class="table-responsive mb-4">
-                        <table class="table table-striped disposal-table">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Security</th>
-                                    <th>Quantity</th>
-                                    <th>Proceeds</th>
-                                    <th>Cost</th>
-                                    <th>Gain/Loss</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                data.disposals.slice(0, 10).forEach(disposal => {
-                    const gainLoss = (disposal.proceeds || 0) - (disposal.cost_basis || 0);
-                    const disposalDate = disposal.disposal_date ? new Date(disposal.disposal_date).toLocaleDateString('en-GB') : 'N/A';
-                    content += `
-                        <tr>
-                            <td>${disposalDate}</td>
-                            <td>
-                                <strong>${disposal.symbol || 'N/A'}</strong>
-                                ${disposal.description ? '<br><small class="text-muted">' + disposal.description + '</small>' : ''}
-                            </td>
-                            <td>${(disposal.quantity || 0).toLocaleString()}</td>
-                            <td>£${(disposal.proceeds || 0).toFixed(2)}</td>
-                            <td>£${(disposal.cost_basis || 0).toFixed(2)}</td>
-                            <td class="${gainLoss >= 0 ? 'text-success' : 'text-danger'}">
-                                ${gainLoss >= 0 ? '+' : ''}£${gainLoss.toFixed(2)}
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                content += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }
-
-            // Add dividend details if available
-            if (data.dividends && data.dividends.length > 0) {
-                content += `
-                    <hr class="my-4">
-                    <h5 class="mb-3">Recent Dividends (Top 10)</h5>
-                    <div class="table-responsive mb-4">
-                        <table class="table table-striped dividend-table">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Payment Date</th>
-                                    <th>Security</th>
-                                    <th>Gross Amount (GBP)</th>
-                                    <th>Withholding Tax (GBP)</th>
-                                    <th>Net Amount (GBP)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                data.dividends.slice(0, 10).forEach(dividend => {
-                    const netAmount = (dividend.amount_gbp || 0) - (dividend.withholding_tax_gbp || 0);
-                    const paymentDate = dividend.payment_date ? new Date(dividend.payment_date).toLocaleDateString('en-GB') : 'N/A';
-                    content += `
-                        <tr>
-                            <td>${paymentDate}</td>
-                            <td>
-                                <strong>${dividend.symbol || 'N/A'}</strong>
-                                ${dividend.description ? '<br><small class="text-muted">' + dividend.description + '</small>' : ''}
-                            </td>
-                            <td>£${(dividend.amount_gbp || 0).toFixed(2)}</td>
-                            <td>£${(dividend.withholding_tax_gbp || 0).toFixed(2)}</td>
-                            <td>£${netAmount.toFixed(2)}</td>
-                        </tr>
-                    `;
-                });
-                
-                content += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }
-
-            return content;
-        }
-
-        function generatePortfolioAnalysisContent(portfolioReport, data) {
-            const grandTotal = portfolioReport.grand_total || {};
-            const marketSummaries = portfolioReport.market_summaries || {};
-
-            let content = `
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h5>Portfolio Summary</h5>
-                        <table class="table table-sm">
-                            <tr><td>Total Value:</td><td>£${(grandTotal.total_value || 0).toLocaleString()}</td></tr>
-                            <tr><td>Total Cost:</td><td>£${(grandTotal.total_cost || 0).toLocaleString()}</td></tr>
-                            <tr><td>Unrealized P&L:</td><td class="${(grandTotal.total_unrealized_gain_loss || 0) >= 0 ? 'text-success' : 'text-danger'}">£${(grandTotal.total_unrealized_gain_loss || 0).toLocaleString()}</td></tr>
-                            <tr><td>Return %:</td><td class="${(grandTotal.total_return_pct || 0) >= 0 ? 'text-success' : 'text-danger'}">${(grandTotal.total_return_pct || 0) >= 0 ? '+' : ''}${(grandTotal.total_return_pct || 0).toFixed(2)}%</td></tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Holdings Count</h5>
-                        <table class="table table-sm">
-                            <tr><td>Total Positions:</td><td>${grandTotal.number_of_holdings || 0}</td></tr>
-                            <tr><td>Number of Markets:</td><td>${Object.keys(marketSummaries).length || 0}</td></tr>
-                            <tr><td>Transaction Count:</td><td>${data.transaction_count || 0}</td></tr>
-                        </table>
-                    </div>
-                </div>
-            `;
-
-            // Add market breakdown
-            if (Object.keys(marketSummaries).length > 0) {
-                content += `
-                    <hr class="my-4">
-                    <h5 class="mb-3">Holdings by Market</h5>
-                    <div class="table-responsive mb-4">
-                        <table class="table table-striped market-table">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Market</th>
-                                    <th>Holdings</th>
-                                    <th>Value</th>
-                                    <th>Weight</th>
-                                    <th>Return</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                Object.entries(marketSummaries).forEach(([market, summary]) => {
-                    const returnPct = (summary.total_cost > 0) ? (summary.total_unrealized_gain_loss / summary.total_cost * 100) : 0;
-                    content += `
-                        <tr>
-                            <td><strong>${market}</strong></td>
-                            <td>${summary.number_of_holdings || 0}</td>
-                            <td>£${(summary.total_value || 0).toLocaleString()}</td>
-                            <td>${(summary.weight_in_portfolio || 0).toFixed(1)}%</td>
-                            <td class="${returnPct >= 0 ? 'text-success' : 'text-danger'}">${returnPct >= 0 ? '+' : ''}${returnPct.toFixed(2)}%</td>
-                        </tr>
-                    `;
-                });
-                
-                content += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }
-
-            // Add top holdings if available
-            if (data.top_holdings && data.top_holdings.length > 0) {
-                content += `
-                    <hr class="my-4">
-                    <h5 class="mb-3">Top Holdings</h5>
-                    <div class="table-responsive mb-4">
-                        <table class="table table-striped holdings-table">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>Symbol</th>
-                                    <th>Quantity</th>
-                                    <th>Avg Cost</th>
-                                    <th>Current Value</th>
-                                    <th>Unrealized P&L</th>
-                                    <th>Return %</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                data.top_holdings.slice(0, 10).forEach(holding => {
-                    const returnPct = (holding.total_cost > 0) ? (holding.unrealized_gain_loss / holding.total_cost * 100) : 0;
-                    content += `
-                        <tr>
-                            <td><strong>${holding.symbol || 'N/A'}</strong></td>
-                            <td>${(holding.quantity || 0).toLocaleString()}</td>
-                            <td>£${(holding.average_cost || 0).toLocaleString()}</td>
-                            <td>£${(holding.current_value || 0).toLocaleString()}</td>
-                            <td class="${(holding.unrealized_gain_loss || 0) >= 0 ? 'text-success' : 'text-danger'}">
-                                ${(holding.unrealized_gain_loss || 0) >= 0 ? '+' : ''}£${(holding.unrealized_gain_loss || 0).toLocaleString()}
-                            </td>
-                            <td class="${returnPct >= 0 ? 'text-success' : 'text-danger'}">${returnPct >= 0 ? '+' : ''}${returnPct.toFixed(2)}%</td>
-                        </tr>
-                    `;
-                });
-                content += `
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }
-
-            return content;
-        }
-
-        function generateCommissionSection(commissionSummary) {
-            if (!commissionSummary) return '';
-
-            return `
-                <div class="card mb-4">
-                    <div class="card-header bg-warning text-dark">
-                        <h4 class="mb-0">Commission & Fees Summary</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <table class="table table-sm">
-                                    <tr><td>Total Commissions:</td><td>£${(commissionSummary.total_commissions || 0).toFixed(2)}</td></tr>
-                                    <tr><td>Total Fees:</td><td>£${(commissionSummary.total_fees || 0).toFixed(2)}</td></tr>
-                                    <tr><td><strong>Total Trading Costs:</strong></td><td><strong>£${(commissionSummary.total_costs || 0).toFixed(2)}</strong></td></tr>
-                                </table>
-                            </div>
-                            <div class="col-md-6">
-                                <table class="table table-sm">
-                                    <tr><td>Buy Commissions:</td><td>£${(commissionSummary.breakdown?.buy_commissions || 0).toFixed(2)}</td></tr>
-                                    <tr><td>Sell Commissions:</td><td>£${(commissionSummary.breakdown?.sell_commissions || 0).toFixed(2)}</td></tr>
-                                    <tr><td>Transactions with Costs:</td><td>${commissionSummary.transaction_count || 0}</td></tr>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function downloadReport() {
-            // Implement download functionality
-            alert('Download functionality will be implemented');
-        }
-
-        function calculateAnother() {
-            // Clear results and return to main page
-            sessionStorage.removeItem('calculationResults');
-            localStorage.removeItem('calculationResults');
-            window.location.href = '/';
-        }
-
-        function shareResults() {
-            // Implement share functionality
-            alert('Share functionality will be implemented');
-        }
-
-        // Tip toggle functionality for tax planning tips
-        function toggleTip(button) {
-            const tipDetails = button.nextElementSibling;
-            const icon = button.querySelector('i.fa-chevron-down, i.fa-chevron-up');
-            
-            if (tipDetails.style.display === 'none') {
-                tipDetails.style.display = 'block';
-                icon.className = icon.className.replace('fa-chevron-down', 'fa-chevron-up');
-                button.innerHTML = 'Show Less <i class="fas fa-chevron-up"></i>';
-            } else {
-                tipDetails.style.display = 'none';
-                icon.className = icon.className.replace('fa-chevron-up', 'fa-chevron-down');
-                button.innerHTML = 'Learn More <i class="fas fa-chevron-down"></i>';
-            }
-        }
-
-        function initializeAdditionalIncomeForm(originalData) {
-            // Store original calculation data
-            window.originalCalculationData = originalData;
-            
-            // Add event listener for recalculate button
-            const recalculateBtn = document.getElementById('recalculateBtn');
-            if (recalculateBtn) {
-                recalculateBtn.addEventListener('click', handleRecalculation);
-            }
-        }
-
-        function handleRecalculation() {
-            const recalculateBtn = document.getElementById('recalculateBtn');
-            const updatedTaxSummary = document.getElementById('updatedTaxSummary');
-            
-            // Show loading state
-            recalculateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Recalculating...';
-            recalculateBtn.disabled = true;
-            
-            // Gather additional data
-            const additionalData = {
-                otherCapitalGains: parseFloat(document.getElementById('otherCapitalGains').value) || 0,
-                otherDividends: parseFloat(document.getElementById('otherDividends').value) || 0,
-                otherIncome: parseFloat(document.getElementById('otherIncome').value) || 0,
-                otherCapitalLosses: parseFloat(document.getElementById('otherCapitalLosses').value) || 0,
-                additionalTradingCosts: parseFloat(document.getElementById('additionalTradingCosts').value) || 0,
-                professionalFees: parseFloat(document.getElementById('professionalFees').value) || 0
-            };
-
-            // Calculate updated tax estimates
-            const updatedEstimates = calculateUpdatedTaxEstimates(window.originalCalculationData, additionalData);
-            
-            // Display updated results
-            displayUpdatedTaxSummary(updatedEstimates, additionalData);
-            
-            // Show the updated tax summary section
-            updatedTaxSummary.style.display = 'block';
-            updatedTaxSummary.scrollIntoView({ behavior: 'smooth' });
-            
-            // Reset button state
-            recalculateBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Recalculate Tax';
-            recalculateBtn.disabled = false;
-        }
-
-        function calculateUpdatedTaxEstimates(originalData, additionalData) {
-            const taxReport = originalData.tax_report || {};
-            const originalTax = taxReport.summary?.estimated_tax_liability || {};
-            
-            // Calculate adjusted capital gains
-            const originalCapitalGains = taxReport.capital_gains?.total_gain || 0;
-            const adjustedCapitalGains = originalCapitalGains + additionalData.otherCapitalGains - additionalData.otherCapitalLosses;
-            
-            // Calculate adjusted dividend income
-            const originalDividends = taxReport.dividend_income?.total_net || 0;
-            const adjustedDividends = originalDividends + additionalData.otherDividends;
-            
-            // Calculate additional trading costs
-            const originalCosts = originalData.commission_summary?.total_costs || 0;
-            const totalAdditionalCosts = additionalData.additionalTradingCosts + additionalData.professionalFees;
-            
-            // Simple tax calculations (basic estimates)
-            const cgtAllowance = 6000; // 2024-25 CGT allowance
-            const dividendAllowance = 1000; // 2024-25 dividend allowance
-            
-            const taxableCapitalGains = Math.max(0, adjustedCapitalGains - cgtAllowance);
-            const taxableDividends = Math.max(0, adjustedDividends - dividendAllowance);
-            
-            // Basic rate estimates (10% CGT, 8.75% dividend tax)
-            const estimatedCGT = taxableCapitalGains * 0.10;
-            const estimatedDividendTax = taxableDividends * 0.0875;
-            const totalEstimatedTax = estimatedCGT + estimatedDividendTax;
-            
-            return {
-                adjustedCapitalGains,
-                adjustedDividends,
-                totalAdditionalCosts,
-                taxableCapitalGains,
-                taxableDividends,
-                estimatedCGT,
-                estimatedDividendTax,
-                totalEstimatedTax,
-                originalTax: originalTax.total_estimated_tax || 0
-            };
-        }
-
-        function displayUpdatedTaxSummary(estimates, additionalData) {
-            const content = `
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h5>Adjusted Income Summary</h5>
-                        <table class="table table-sm">
-                            <tr><td>IBKR Capital Gains:</td><td>£${(window.originalCalculationData.tax_report?.capital_gains?.total_gain || 0).toFixed(2)}</td></tr>
-                            <tr><td>Additional Capital Gains:</td><td class="text-success">+£${additionalData.otherCapitalGains.toFixed(2)}</td></tr>
-                            <tr><td>Additional Capital Losses:</td><td class="text-danger">-£${additionalData.otherCapitalLosses.toFixed(2)}</td></tr>
-                            <tr><td><strong>Adjusted Capital Gains:</strong></td><td><strong>£${estimates.adjustedCapitalGains.toFixed(2)}</strong></td></tr>
-                            <tr><td colspan="2"><hr></td></tr>
-                            <tr><td>IBKR Dividends:</td><td>£${(window.originalCalculationData.tax_report?.dividend_income?.total_net || 0).toFixed(2)}</td></tr>
-                            <tr><td>Additional Dividends:</td><td class="text-success">+£${additionalData.otherDividends.toFixed(2)}</td></tr>
-                            <tr><td><strong>Adjusted Dividends:</strong></td><td><strong>£${estimates.adjustedDividends.toFixed(2)}</strong></td></tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Updated Tax Calculation</h5>
-                        <table class="table table-sm">
-                            <tr><td>Taxable Capital Gains:</td><td>£${estimates.taxableCapitalGains.toFixed(2)}</td></tr>
-                            <tr><td>Capital Gains Tax (10%):</td><td>£${estimates.estimatedCGT.toFixed(2)}</td></tr>
-                            <tr><td colspan="2"><hr></td></tr>
-                            <tr><td>Taxable Dividends:</td><td>£${estimates.taxableDividends.toFixed(2)}</td></tr>
-                            <tr><td>Dividend Tax (8.75%):</td><td>£${estimates.estimatedDividendTax.toFixed(2)}</td></tr>
-                            <tr><td colspan="2"><hr></td></tr>
-                            <tr><td><strong>Original Tax Estimate:</strong></td><td><strong>£${estimates.originalTax.toFixed(2)}</strong></td></tr>
-                            <tr><td><strong>Updated Tax Estimate:</strong></td><td><strong>£${estimates.totalEstimatedTax.toFixed(2)}</strong></td></tr>
-                            <tr><td><strong>Difference:</strong></td><td class="${(estimates.totalEstimatedTax - estimates.originalTax) >= 0 ? 'text-danger' : 'text-success'}"><strong>${(estimates.totalEstimatedTax - estimates.originalTax) >= 0 ? '+' : ''}£${(estimates.totalEstimatedTax - estimates.originalTax).toFixed(2)}</strong></td></tr>
-                        </table>
-                    </div>
-                </div>
-                
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle"></i> Important Notes:</h6>
-                    <ul class="mb-0">
-                        <li>This is a simplified calculation using basic tax rates (10% CGT, 8.75% dividend tax)</li>
-                        <li>Actual tax may vary based on your total income and tax band</li>
-                        <li>Consider consulting a tax professional for complex situations</li>
-                        <li>Additional costs of £${estimates.totalAdditionalCosts.toFixed(2)} are noted but may be deductible</li>
-                    </ul>
-                </div>
-            `;
-            
-            document.getElementById('updatedTaxContent').innerHTML = content;
-        }
-    </script>
-
-    <!-- Bottom Advertisement Section -->
-    <section class="bg-light py-4 mt-5">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="text-center mb-3">
-                        <small class="text-muted">Advertisement</small>
-                    </div>
-                    
-                    <!-- Google AdSense - Bottom Banner -->
-                    <div class="ad-container text-center">
-                        <div class="bg-secondary text-white py-4 rounded">
-                            <i class="fas fa-rectangle-ad fa-2x mb-2"></i>
-                            <p class="mb-0">
-                                <strong>Bottom Banner Ad Space</strong><br>
-                                <small>728x90 Leaderboard Format</small>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-4">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>IBKR Tax Calculator</h5>
-                    <p>Free UK tax calculation for Interactive Brokers accounts.</p>
-                    <div class="disclaimer">
-                        <small class="text-muted">
-                            <strong>Disclaimer:</strong> This tool provides estimates only. 
-                            Always consult with a qualified tax advisor for professional advice.
-                        </small>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <h6>Quick Links</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="/" class="text-light text-decoration-none">Home</a></li>
-                        <li><a href="https://www.gov.uk/capital-gains-tax" target="_blank" class="text-light text-decoration-none">HMRC CGT Guide</a></li>
-                        <li><a href="https://www.gov.uk/tax-on-dividends" target="_blank" class="text-light text-decoration-none">HMRC Dividend Tax</a></li>
-                    </ul>
-                    
-                    <div class="mt-3">
-                        <small class="text-muted">
-                            © 2024 IBKR Tax Calculator. Built with ❤️ for UK investors.
-                        </small>
-                    </div>
-                </div>
-            </div>
-            
-            <hr class="my-4">
-            
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <small class="text-muted">
-                        This site uses Google AdSense and Amazon Associates to support free access to our tax calculator. 
-                        We may earn from qualifying purchases.
-                    </small>
-                </div>
-                <div class="col-md-4 text-end">
-                    <small class="text-muted">
-                        Last updated: <span id="lastUpdated"></span>
-                    </small>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script>
-        // Set last updated date
         document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('en-GB');
     </script>
 </body>

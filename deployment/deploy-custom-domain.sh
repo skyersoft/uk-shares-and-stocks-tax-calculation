@@ -8,12 +8,12 @@ set -e
 # Configuration
 STACK_NAME="ibkr-tax-calculator-custom-domain"
 TEMPLATE_FILE="deployment/custom-domain-cloudformation.yaml"
-REGION="eu-west-1"
+REGION="us-east-1"
 PROFILE="goker"
 
 # Domain configuration
 DOMAIN_NAME="cgttaxtool.uk"
-API_GATEWAY_ID="qzbkgopzi3"
+API_GATEWAY_ID="zncz8kmatj"
 STAGE_NAME="prod"
 HOSTED_ZONE_ID="Z091347333W0ZM3HD49Q2"
 
@@ -44,7 +44,6 @@ aws cloudformation deploy \
         ApiGatewayId=$API_GATEWAY_ID \
         ApiGatewayStageName=$STAGE_NAME \
         HostedZoneId=$HOSTED_ZONE_ID \
-        Region=$REGION \
     --capabilities CAPABILITY_IAM \
     --region $REGION \
     --profile $PROFILE

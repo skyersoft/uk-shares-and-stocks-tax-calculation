@@ -103,6 +103,7 @@ Resources:
   LambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
+      Description: "Main function for the IBKR Tax Calculator API"
       FunctionName: !Sub 'ibkr-tax-calculator-prod-${AWS::Region}'
       Runtime: python3.10
       Handler: lambda_handler.lambda_handler
@@ -294,8 +295,11 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
           CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
           ResponseHeadersPolicyId: 5cc3b908-e619-4b99-88e5-2cf7f45965bd
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt WwwRedirectFunction.FunctionMetadata.FunctionARN
         CacheBehaviors:
-          - PathPattern: '/api/*'
+          - PathPattern: '/prod/*'
             TargetOriginId: APIGateway
             ViewerProtocolPolicy: redirect-to-https
             AllowedMethods: [GET, HEAD, OPTIONS, PUT, POST, PATCH, DELETE]
@@ -336,26 +340,34 @@ Resources:
           SslSupportMethod: sni-only
           MinimumProtocolVersion: TLSv1.2_2021
 
-  # DNS Records - Direct domain aliases to CloudFront
-  DNSRecord:
-    Type: AWS::Route53::RecordSet
+  # CloudFront Function for www -> apex redirect
+  WwwRedirectFunction:
+    Type: AWS::CloudFront::Function
     Properties:
-      HostedZoneId: Z091347333W0ZM3HD49Q2
-      Name: !Ref DomainName
-      Type: A
-      AliasTarget:
-        DNSName: !GetAtt CloudFrontDistribution.DomainName
-        HostedZoneId: Z2FDTNDATAQYW2
-
-  WWWDNSRecord:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: Z091347333W0ZM3HD49Q2
-      Name: !Sub 'www.${DomainName}'
-      Type: A
-      AliasTarget:
-        DNSName: !GetAtt CloudFrontDistribution.DomainName
-        HostedZoneId: Z2FDTNDATAQYW2
+      Name: !Sub 'ibkr-www-redirect-${AWS::StackName}'
+      AutoPublish: true
+      FunctionCode: !Sub |
+        function handler(event) {
+          var request = event.request;
+          var host = request.headers.host.value;
+          var apex = '${DomainName}';
+          // If host starts with www. and matches apex after stripping
+            if (host === 'www.' + apex) {
+              var redirectUrl = 'https://' + apex + request.uri;
+              if (request.querystring && request.querystring.length > 0) {
+                redirectUrl += '?' + request.querystring;
+              }
+              return {
+                statusCode: 301,
+                statusDescription: 'Moved Permanently',
+                headers: { 'location': { value: redirectUrl } }
+              };
+            }
+          return request; // no change
+        }
+      FunctionConfig:
+        Comment: 'Redirect www to apex domain'
+        Runtime: cloudfront-js-1.0
 
 Outputs:
   WebsiteBucketName:

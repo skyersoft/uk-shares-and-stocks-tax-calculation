@@ -68,32 +68,23 @@ This is configured in `deployment/lambda_handler.py` and will be available at:
 ## 🔧 Pre-Deployment Configuration
 
 ### 1. Update Advertisement IDs
-Replace placeholders in all template files:
+Replace placeholders in the relevant template files with your actual advertisement IDs.
 
 **In `deployment/templates/landing_page.py`:**
-```python
-# Replace these placeholders:
-YOUR_ADSENSE_ID → your-actual-adsense-id
-YOUR_BANNER_SLOT_ID → your-banner-ad-slot-id
-YOUR_SIDEBAR_SLOT_ID → your-sidebar-ad-slot-id
-YOUR_FONTAWESOME_KIT → your-fontawesome-kit-id
-```
+- Replace `YOUR_ADSENSE_ID` with your AdSense publisher ID.
+- Replace `YOUR_BANNER_SLOT_ID` with your banner ad slot ID.
+- Replace `YOUR_SIDEBAR_SLOT_ID` with your sidebar ad slot ID.
+- Replace `YOUR_FONTAWESOME_KIT` with your Font Awesome kit ID.
 
 **In `deployment/templates/results_page.py`:**
-```python
-# Replace these placeholders:
-YOUR_ADSENSE_ID → your-actual-adsense-id
-YOUR_RESULTS_BANNER_SLOT_ID → your-results-banner-slot-id
-YOUR_SIDEBAR_SLOT_ID → your-sidebar-ad-slot-id
-YOUR_FONTAWESOME_KIT → your-fontawesome-kit-id
-```
+- Replace `YOUR_ADSENSE_ID` with your AdSense publisher ID.
+- Replace `YOUR_RESULTS_BANNER_SLOT_ID` with your results banner ad slot ID.
+- Replace `YOUR_SIDEBAR_SLOT_ID` with your sidebar ad slot ID.
+- Replace `YOUR_FONTAWESOME_KIT` with your Font Awesome kit ID.
 
 **In `deployment/templates/about_page.py`:**
-```python
-# Replace these placeholders:
-YOUR_ADSENSE_ID → your-actual-adsense-id
-YOUR_SIDEBAR_SLOT_ID → your-sidebar-ad-slot-id
-```
+- Replace `YOUR_ADSENSE_ID` with your AdSense publisher ID.
+- Replace `YOUR_SIDEBAR_SLOT_ID` with your sidebar ad slot ID.
 
 ### 2. Update Amazon Affiliate Links
 Replace placeholder affiliate links:

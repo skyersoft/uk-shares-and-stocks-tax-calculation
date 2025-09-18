@@ -1,13 +1,15 @@
 version: '3.8'
 
 services:
-  web:
-    build: .
+  localstack:
+    image: localstack/localstack:latest
     ports:
-      - "8080:8080"
+      - "4566:4566"  # All-in-one gateway
     environment:
-      - SECRET_KEY=changeme_in_production
-      - PORT=8080
+      - SERVICES=s3,lambda,apigateway,cloudfront,iam,sts,route53,acm
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
-      - ./data:/app/data
-    restart: unless-stopped
+      - "./.localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"

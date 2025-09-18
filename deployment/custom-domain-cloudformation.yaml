@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Custom Domain Setup for IBKR Tax Calculator - SSL Certificate, API Gateway Domain, and Route 53 Records'
+Description: 'Custom Domain Setup for IBKR Tax Calculator - SSL Certificate, API Gateway Domain'
 
 Parameters:
   DomainName:
@@ -9,7 +9,6 @@ Parameters:
     
   ApiGatewayId:
     Type: String
-    Default: qzbkgopzi3
     Description: The existing API Gateway REST API ID
     
   ApiGatewayStageName:
@@ -21,11 +20,6 @@ Parameters:
     Type: String
     Default: Z091347333W0ZM3HD49Q2
     Description: The Route 53 Hosted Zone ID for the domain
-    
-  Region:
-    Type: String
-    Default: eu-west-1
-    Description: The AWS region where API Gateway is deployed
 
 Resources:
   # SSL Certificate for the custom domain
@@ -41,11 +35,6 @@ Resources:
           HostedZoneId: !Ref HostedZoneId
         - DomainName: !Sub "www.${DomainName}"
           HostedZoneId: !Ref HostedZoneId
-      Tags:
-        - Key: Name
-          Value: !Sub "${DomainName}-ssl-certificate"
-        - Key: Project
-          Value: ibkr-tax-calculator
 
   # Custom Domain Name in API Gateway
   ApiGatewayDomainName:
@@ -57,11 +46,6 @@ Resources:
         Types:
           - REGIONAL
       SecurityPolicy: TLS_1_2
-      Tags:
-        - Key: Name
-          Value: !Sub "${DomainName}-api-domain"
-        - Key: Project
-          Value: ibkr-tax-calculator
 
   # Base Path Mapping to connect domain to API Gateway
   ApiGatewayBasePathMapping:
@@ -70,30 +54,6 @@ Resources:
       DomainName: !Ref ApiGatewayDomainName
       RestApiId: !Ref ApiGatewayId
       Stage: !Ref ApiGatewayStageName
-
-  # Route 53 A Record for root domain
-  Route53RecordRoot:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref HostedZoneId
-      Name: !Ref DomainName
-      Type: A
-      AliasTarget:
-        DNSName: !GetAtt ApiGatewayDomainName.RegionalDomainName
-        HostedZoneId: !GetAtt ApiGatewayDomainName.RegionalHostedZoneId
-        EvaluateTargetHealth: false
-
-  # Route 53 A Record for www subdomain
-  Route53RecordWWW:
-    Type: AWS::Route53::RecordSet
-    Properties:
-      HostedZoneId: !Ref HostedZoneId
-      Name: !Sub "www.${DomainName}"
-      Type: A
-      AliasTarget:
-        DNSName: !GetAtt ApiGatewayDomainName.RegionalDomainName
-        HostedZoneId: !GetAtt ApiGatewayDomainName.RegionalHostedZoneId
-        EvaluateTargetHealth: false
 
 Outputs:
   DomainName:
@@ -119,15 +79,3 @@ Outputs:
     Value: !GetAtt ApiGatewayDomainName.RegionalDomainName
     Export:
       Name: !Sub '${AWS::StackName}-regional-domain-name'
-
-  WebsiteURL:
-    Description: 'Website URL'
-    Value: !Sub 'https://${DomainName}'
-    Export:
-      Name: !Sub '${AWS::StackName}-website-url'
-
-  AdsTextURL:
-    Description: 'ads.txt URL'
-    Value: !Sub 'https://${DomainName}/ads.txt'
-    Export:
-      Name: !Sub '${AWS::StackName}-ads-txt-url'

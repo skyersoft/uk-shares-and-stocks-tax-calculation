@@ -8,7 +8,7 @@ set -e
 STACK_NAME="ibkr-tax-useast1-complete"
 PROFILE="goker"
 DOMAIN_NAME="cgttaxtool.uk"
-TEMPLATE_FILE="single-region-complete.yaml"
+TEMPLATE_FILE="deployment/single-region-complete.yaml"
 REGION="us-east-1"
 
 # Colors for output
@@ -55,7 +55,7 @@ if stack_exists "$STACK_NAME" "$REGION"; then
         --stack-name "$STACK_NAME" \
         --template-body file://"$TEMPLATE_FILE" \
         --parameters ParameterKey=DomainName,ParameterValue="$DOMAIN_NAME" \
-        --capabilities CAPABILITY_IAM \
+        --capabilities CAPABILITY_NAMED_IAM \
         --region "$REGION" \
         --profile "$PROFILE"
     
@@ -66,9 +66,10 @@ else
         --stack-name "$STACK_NAME" \
         --template-body file://"$TEMPLATE_FILE" \
         --parameters ParameterKey=DomainName,ParameterValue="$DOMAIN_NAME" \
-        --capabilities CAPABILITY_IAM \
+        --capabilities CAPABILITY_NAMED_IAM \
         --region "$REGION" \
-        --profile "$PROFILE"
+        --profile "$PROFILE" \
+        --disable-rollback
     
     wait_for_stack "$STACK_NAME" "$REGION" "create"
 fi
@@ -106,9 +107,9 @@ WEBSITE_URL=$(aws cloudformation describe-stacks \
 
 # Upload static files
 echo -e "${BLUE}Uploading static files to S3...${NC}"
-if [ -d "web_app/static" ]; then
+if [ -d "static" ]; then
     echo "Uploading files to S3 bucket: $S3_BUCKET"
-    aws s3 sync web_app/static/ s3://"$S3_BUCKET"/ \
+    aws s3 sync static/ s3://"$S3_BUCKET"/ \
         --profile "$PROFILE" \
         --cache-control "max-age=86400" \
         --delete
@@ -134,7 +135,7 @@ fi
 
 # Test CloudFront
 echo "Testing CloudFront distribution..."
-CF_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$CLOUDFRONT_URL" 2>/dev/null || echo "000")
+CF_STATUS=$(curl -s -o /dev/null -w \"%{http_code}\" "https://$CLOUDFRONT_URL" 2>/dev/null || echo "000")
 if [ "$CF_STATUS" = "200" ]; then
     echo -e "${GREEN}✅ CloudFront distribution working${NC}"
 else

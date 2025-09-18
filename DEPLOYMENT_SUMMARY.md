@@ -97,7 +97,7 @@ aws lambda update-function-code \
 
 ### **1. Advertisement Setup (REQUIRED)**
 - [ ] **Google AdSense Account**: Apply and get approved
-- [ ] **AdSense Publisher ID**: Replace `YOUR_ADSENSE_ID` in templates
+- [ ] **AdSense Publisher ID**: Replace the placeholder for the AdSense ID in the templates.
 - [ ] **Ad Slot IDs**: Create ad units and replace slot IDs
 - [ ] **Amazon Associates**: Join program and get affiliate ID
 - [ ] **Affiliate Links**: Replace placeholder links with real ones
