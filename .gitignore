@@ -1,3 +1,148 @@
-**/__pycache__
-.pytest_cache
-data
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Environment & Configuration
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# AWS & Security - DO NOT COMMIT
+.aws/
+aws-credentials.json
+deployment/stack-outputs.env
+deployment/dns-update.json
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*secrets*
+*credentials*
+*config.json
+.awsprofile
+
+# Private Data Files - DO NOT COMMIT
+data/
+uploads/
+*.csv
+*.qfx
+*.xlsx
+*.json
+*.txt
+!requirements.txt
+!web_requirements.txt
+!package.json
+!README.txt
+!LICENSE.txt
+
+# Build & Distribution
+*.zip
+*.tar.gz
+*.tgz
+lambda-deployment.zip
+api-lambda-deployment.zip
+dist/
+build/
+
+# Logs
+*.log
+logs/
+webapp_debug.log
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# IDE & OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# Images & Media (except icons/logos)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+!static/images/logo*
+!static/favicon.ico
+
+# Test artifacts & responses
+tests/responses/*.png
+tests/responses/*.json
+tests/responses/*.csv
+tests/e2e/artifacts/
+debug_*.py
+test_*.csv
+test_*.json
+test_output.*
+
+# Local development
+.localstack/
+localstack_*
+.playwright-mcp/
+
+# Miscellaneous
+.cache/
+*.pid
+*.seed
+*.out
+*.gz
