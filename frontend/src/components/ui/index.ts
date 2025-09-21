@@ -13,6 +13,7 @@ export { Table, HoldingsTable, DividendsTable, DisposalsTable } from './Table';
 export { Card } from './Card';
 export { Accordion } from './Accordion';
 export { Tabs } from './Tabs';
+export { Badge } from './Badge';
 
 // Export types
 export type { 
@@ -49,3 +50,5 @@ export type {
   TabsProps,
   TabItem
 } from '../../types';
+
+export type { BadgeProps } from './Badge';

@@ -14,10 +14,14 @@ const mockDispatch = jest.fn();
 const mockState = { status: 'idle', error: null, result: null };
 
 jest.mock('../context/CalculationContext', () => ({
+  __esModule: true,
   useCalculation: () => ({
     state: mockState,
     dispatch: mockDispatch,
   }),
+  CalculationProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="mock-calculation-provider">{children}</div>
+  ),
 }));
 
 describe('CalculatorPage', () => {
@@ -29,8 +33,8 @@ describe('CalculatorPage', () => {
     it('renders calculator page with main heading', () => {
       renderWithProviders(<CalculatorPage />);
       
-      expect(screen.getByText(/React Calculator/i)).toBeInTheDocument();
-      expect(screen.getByText(/Modern SPA/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /🧮 UK Tax Calculator/i })).toBeInTheDocument();
+      expect(screen.getByText(/Calculate your UK Capital Gains Tax and analyze your portfolio/i)).toBeInTheDocument();
     });
 
     it('renders file input with correct attributes', () => {
@@ -50,11 +54,12 @@ describe('CalculatorPage', () => {
       expect(submitButton).toBeDisabled(); // Initially disabled when no file
     });
 
-    it('shows current form state', () => {
+    it('shows enhanced page features', () => {
       renderWithProviders(<CalculatorPage />);
       
-      expect(screen.getByText(/Status:/)).toBeInTheDocument();
-      expect(screen.getByText(/File:/)).toBeInTheDocument();
+      expect(screen.getByText(/Why Choose Our Tax Calculator?/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /HMRC Compliant/i })).toBeInTheDocument();
+      expect(screen.getByText(/Frequently Asked Questions/i)).toBeInTheDocument();
     });
   });
 });

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { configureAxe, toHaveNoViolations } from 'jest-axe';
-import { ToastProvider } from '../../components/ui/ToastContext';
+// import { ToastProvider } from '../../components/ui/ToastContext';
 import { CalculationProvider } from '../../context/CalculationContext';
 
 // Extend jest matchers for accessibility testing
@@ -16,12 +16,40 @@ const axe = configureAxe({
   },
 });
 
+// Error boundary for test debugging
+class TestErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Test Error Boundary caught error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div data-testid="error-boundary">Test Error: {this.state.error?.message}</div>;
+    }
+    return this.props.children;
+  }
+}
+
 // Test providers wrapper
 const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <CalculationProvider>
-      {children}
-    </CalculationProvider>
+    <TestErrorBoundary>
+      <CalculationProvider>
+        {children}
+      </CalculationProvider>
+    </TestErrorBoundary>
   );
 };
 
