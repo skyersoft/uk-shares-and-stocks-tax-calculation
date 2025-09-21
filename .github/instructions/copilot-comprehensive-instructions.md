@@ -5,7 +5,20 @@ applyTo: '**'
 # IBKR Tax Calculator - Copilot System Instructions
 
 ## 🎯 Project Context
-This is a UK Capital Gains Tax Calculator for stocks and shares, processing QFX/CSV files from trading platforms like Interactive Brokers. It's a Python-based financial application with a Flask web interface and AWS Lambda deployment.
+This is a UK Capital Gains Tax Calculator for stocks and shares, processing QFX/CSV files from trading platforms like Interactive Brokers and Sharesight. It provides accurate UK capital gains tax calculations ensuring HMRC compliance and comprehensive portfolio analysis.
+
+### Live Production Information
+- **Website**: https://cgttaxtool.uk (Active and deployed)
+- **Domain**: Custom domain with SSL certificate
+- **Status**: Production-ready with Google AdSense monetization
+- **Last Updated**: 2025-09-21
+
+### Key Features
+- Processes QFX (Quicken Exchange Format) and CSV transaction files
+- HMRC-compliant UK capital gains tax calculations
+- Both CLI and web application interfaces
+- Real-time portfolio analysis and tax reporting
+- Google AdSense integration for revenue generation
 
 ## 🏗️ Architecture & Technology Stack
 
@@ -23,8 +36,17 @@ This is a UK Capital Gains Tax Calculator for stocks and shares, processing QFX/
 
 ### Infrastructure
 - **Deployment**: AWS Lambda + API Gateway with CloudFront CDN
-- **Local Development**: Docker Compose with LocalStack for AWS simulation
+- **Local Development**: Docker Compose with LocalStack for AWS simulation  
 - **CI/CD**: Automated testing and deployment pipeline
+- **Static Hosting**: S3 bucket with CloudFront distribution
+- **Domain**: Custom domain (cgttaxtool.uk) with ACM SSL certificate
+
+### AWS Production Infrastructure (Reference: AWS_DEPLOYMENT_REFERENCE.md)
+- **S3 Bucket**: `ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo`
+- **CloudFront ID**: `E3CPZK9XL7GR6Q`
+- **API Gateway**: `https://d1tr8kb7oh.execute-api.us-east-1.amazonaws.com/prod`
+- **Lambda Function**: `ibkr-tax-calculator-prod-us-east-1`
+- **AWS Profile**: `goker` (Account: 286154443186)
 
 ## 🧱 SOLID Principles & Design Patterns
 
@@ -111,6 +133,16 @@ Use dedicated markdown files for task tracking:
 - **Main Tasks**: `/tasks.md` (project-level tasks)
 - **Feature Tasks**: `/ui_tasks.md`, `/enhancement_tasks.md` etc.
 - **Sprint Tasks**: Reference existing `/PROJECT_PLAN.md` structure
+
+### Current Project Status (Reference: tasks.md)
+- **Live Production**: https://cgttaxtool.uk with Google AdSense
+- **Critical Bug Fixed**: Duplicate file upload causing data aggregation (Jan 2025)
+- **Test Infrastructure**: Comprehensive Playwright E2E + Jest unit tests
+- **Active Priority**: Complete React SPA migration (`frontend/` directory)
+- **Recent Achievements**: 
+  - Fixed duplicate FormData.append() in `static/js/app.js`
+  - Organized test files into proper `tests/` structure
+  - Enhanced JavaScript testing for regression prevention
 
 ### Task File Format
 ```markdown
@@ -241,17 +273,50 @@ pytest --cov=src tests/
 # Run UI tests (Playwright)
 playwright test
 
+# Run JavaScript unit tests (Jest)
+cd static && npm test
+
 # Run web tests specifically
 pytest tests/web/
+
+# Makefile shortcuts (available)
+make test          # Run all Python tests
+make verify-fix    # Specific verification tests
+make test-all      # Comprehensive test suite
 ```
+
+### Critical Bug Prevention (Reference: JAVASCRIPT_UNIT_TESTS_SUMMARY.md)
+**Duplicate File Upload Bug Fixed**: JavaScript was appending files to FormData twice:
+1. Once from HTML form constructor: `new FormData(calculatorForm)`
+2. Once manually: `formData.append('file', uploadedFile)` ← REMOVED
+
+**Solution**: Use only HTML form's FormData, synchronize with DataTransfer API
+**Tests**: `static/js/__tests__/duplicate-file-fix.test.js` prevents regression
+**Verification**: Portfolio shows individual securities (not aggregated data)
 
 ## 🌐 Web Development Guidelines
 
 ### Frontend Structure
-- **Static Files**: `/static/` directory for CSS, JS, images
+- **Static Files**: `/static/` directory for CSS, JS, images (current production)
+- **React SPA**: `/frontend/` directory for new React components (in development)
 - **Templates**: Flask Jinja2 templates for server-side rendering  
 - **React Components**: Modern React patterns with hooks
 - **Build Process**: Vite for development and production builds
+
+### CLI Usage Patterns (Reference: GEMINI.md)
+```bash
+# Ensure Python environment
+conda activate ibkr-tax  # Default environment
+
+# Traditional CLI (positional arguments)
+python -m src.main.python.cli data/trades.qfx 2024-2025
+
+# Modern CLI (named arguments)  
+python run_calculator.py --input data/trades.qfx --tax-year 2024-2025
+
+# Install dependencies
+pip install -r requirements.txt
+```
 
 ### JavaScript/React Standards
 ```javascript
@@ -315,22 +380,30 @@ def test_file_upload_functionality(page):
 - **LocalStack**: Use Docker Compose for local AWS simulation
 - **Environment**: All AWS services available at `http://localhost:4566`
 - **AWS CLI**: Pre-configured at `/usr/local/bin/aws`
+- **Setup Command**: `sh run-local-dev.sh` (sets up S3, Lambda, API Gateway)
 
-### Deployment Pipeline
-1. **Package Lambda**: Create deployment packages for Python functions
-2. **Deploy Infrastructure**: Use AWS CLI or CDK for resource creation
-3. **Update Code**: Deploy application code to Lambda functions  
-4. **Test Deployment**: Run integration tests against deployed environment
-5. **Monitor**: Check CloudWatch logs and metrics
+### Production Deployment Commands
+```bash
+# Deploy static files to S3
+aws s3 sync static/ s3://ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo/ \
+    --profile goker --cache-control "max-age=3600" --delete
+
+# Invalidate CloudFront cache
+aws cloudfront create-invalidation --distribution-id E3CPZK9XL7GR6Q \
+    --paths "/*" --profile goker
+
+```
 
 ### Infrastructure as Code
-```bash
-# Deploy to AWS
-aws cloudformation deploy --template-file infrastructure.yaml --stack-name ibkr-tax-calculator
+- **Main Stack**: `ibkr-tax-useast1-complete` (CloudFormation)
+- **Template**: `deployment/single-region-complete.yaml`
+- **Custom Domain Stack**: `ibkr-tax-calculator-custom-domain`
 
-# Update Lambda function
-aws lambda update-function-code --function-name tax-calculator --zip-file fileb://deployment.zip
-```
+### Google AdSense Integration (Reference: ADSENSE_SIMPLE_GUIDE.md)
+- **Publisher ID**: `ca-pub-2934063890442014`
+- **Implementation**: Simple script tag in HTML head (Auto Ads enabled)
+- **Revenue Model**: Display ads, affiliate marketing integration
+- **Configuration**: Controlled via Google AdSense dashboard
 
 ## 🔍 Continuous Integration
 
@@ -373,6 +446,34 @@ Related: [Task/Issue reference]
 
 ---
 
+## 📚 Key Reference Documentation
+
+For detailed information on specific topics, refer to these files:
+
+### Deployment & Infrastructure
+- **`AWS_DEPLOYMENT_REFERENCE.md`**: Complete AWS infrastructure details, deployment commands, live site information
+- **`DEPLOYMENT_GUIDE.md`**: Step-by-step deployment instructions with advertisement setup
+- **`DEPLOYMENT_SUMMARY.md`**: Overview of completed deployment with revenue analysis
+
+### Google AdSense & Monetization  
+- **`ADSENSE_SIMPLE_GUIDE.md`**: Correct AdSense implementation (one script tag approach)
+- **`ADSENSE_DEBUG_GUIDE.md`**: Troubleshooting ads not showing on different pages
+- **`CSP_ADSENSE_FIX.md`**: Content Security Policy configuration for AdSense
+- **`CLOUDFRONT_CSP_CONFIGURATION.md`**: Server-level CSP header configuration
+
+### Development & Testing
+- **`tasks.md`**: Current project status, active development priorities, completed tasks
+- **`ui_tasks.md`**: Frontend-specific tasks including React SPA migration
+- **`PROJECT_PLAN.md`**: Structured agile backlog with task tracking
+- **`JAVASCRIPT_UNIT_TESTS_SUMMARY.md`**: Critical bug fixes and JavaScript testing approach
+- **`GEMINI.md`**: Comprehensive project overview, architecture, building instructions
+
+### Important Notes
+- **Live Site**: https://cgttaxtool.uk (production ready with AdSense)
+- **Critical Fix**: Duplicate file upload bug resolved (prevents data aggregation)
+- **Current Priority**: Complete React SPA migration in `frontend/` directory
+- **Revenue Model**: Google AdSense + Amazon Associates affiliate marketing
+
 ## 🎯 Summary Checklist
 
 Before completing any task, ensure:
@@ -382,5 +483,6 @@ Before completing any task, ensure:
 - [ ] All tests run and pass (`pytest`)
 - [ ] UI changes tested with Playwright (if applicable)
 - [ ] Documentation updated (if needed)
-- [ ] No regressions introduced
+- [ ] No regressions introduced (especially duplicate file upload bug)
 - [ ] Code reviewed for security and performance
+- [ ] AWS deployment tested if infrastructure changes made
