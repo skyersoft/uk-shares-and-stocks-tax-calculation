@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Modal } from './Modal';
 
@@ -21,13 +21,21 @@ describe('Modal Component', () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Use RTL cleanup to properly unmount components
+    cleanup();
+    
     // Clean up any modals that might be left in DOM
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => modal.remove());
     
     // Reset body overflow
     document.body.style.overflow = '';
+    
+    // Wait for React to finish cleanup
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
   });
 
   // Basic Rendering Tests

@@ -1,151 +1,267 @@
 import React, { useMemo } from 'react';
 import { useCalculation } from '../context/CalculationContext';
+import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
+import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { PortfolioSummary } from '../components/results/PortfolioSummary';
+import { ResultsHoldingsTable } from '../components/results/HoldingsTable';
+import { TaxCalculations } from '../components/results/TaxCalculations';
+import DataVisualization from '../components/results/DataVisualization';
+import { PortfolioAnalysis, TaxCalculation } from '../types/calculation';
 
 const ResultsPage: React.FC = () => {
-  console.log('[ResultsPage] Rendering component');
   const { state } = useCalculation();
-  const holdings = useMemo(()=>{
-    const ms = state.raw?.portfolio_analysis?.market_summaries || {};
-    let list: any[] = []; 
-    Object.values(ms).forEach((m: any) => { 
-      if(Array.isArray(m.holdings)) list = list.concat(m.holdings); 
-    });
-    return list;
-  },[state.raw]);
 
-  console.log('[ResultsPage] State:', state.status, 'Holdings:', holdings.length);
+  // Transform raw data to our typed interfaces
+  const portfolioAnalysis: PortfolioAnalysis | null = useMemo(() => {
+    if (!state.raw?.portfolio_analysis) return null;
+    return state.raw.portfolio_analysis;
+  }, [state.raw]);
 
-  if(state.status!=='success') {
+  const taxCalculations: TaxCalculation | null = useMemo(() => {
+    if (!state.raw?.tax_calculations) return null;
+    return state.raw.tax_calculations;
+  }, [state.raw]);
+
+  // Handle loading and error states
+  if (state.status === 'submitting') {
     return (
-      <div style={{
-        padding: '2rem',
-        border: '2px solid orange',
-        margin: '10px',
-        backgroundColor: '#fff9e6',
-        textAlign: 'center'
-      }}>
-        <h2 style={{ color: 'orange' }}>📊 Results Page</h2>
-        <p style={{ fontSize: '18px', margin: '1rem 0' }}>
-          {state.status === 'idle' && '🔄 No calculation performed yet'}
-          {state.status === 'submitting' && '⏳ Calculation in progress...'}
-          {state.status === 'error' && `❌ Error: ${state.error}`}
-        </p>
-        <button 
-          onClick={() => window.location.hash = ''}
-          style={{ 
-            padding: '1rem 2rem',
-            backgroundColor: '#007acc',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          🧮 Go to Calculator
-        </button>
+      <div className="container-fluid py-4">
+        <div className="row justify-content-center">
+          <div className="col-12 col-md-8 text-center">
+            <LoadingSpinner size="lg" className="mb-3" />
+            <h3 className="text-primary">Processing Your Tax Calculation</h3>
+            <p className="text-muted">
+              Please wait while we analyse your portfolio and calculate your tax obligations...
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div style={{
-      padding: '2rem',
-      border: '3px solid green',
-      margin: '10px',
-      backgroundColor: '#f0fff0',
-      minHeight: '80vh'
-    }}>
-      <div style={{ 
-        backgroundColor: '#4CAF50',
-        color: 'white',
-        padding: '1rem',
-        borderRadius: '8px',
-        textAlign: 'center',
-        marginBottom: '2rem'
-      }}>
-        <h1 style={{ margin: 0 }}>📊 Tax Calculation Results</h1>
+  if (state.status === 'error') {
+    return (
+      <div className="container-fluid py-4">
+        <div className="row justify-content-center">
+          <div className="col-12 col-md-8">
+            <Alert variant="danger" className="text-center">
+              <div className="d-flex align-items-center justify-content-center mb-2">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                <h4 className="mb-0">Calculation Error</h4>
+              </div>
+              <p className="mb-3">{state.error || 'An unexpected error occurred while processing your calculation.'}</p>
+              <Button 
+                variant="primary"
+                onClick={() => window.location.hash = ''}
+                className="me-2"
+              >
+                <i className="fas fa-calculator me-2"></i>
+                Try Again
+              </Button>
+            </Alert>
+          </div>
+        </div>
       </div>
-      
-      <div style={{ 
-        backgroundColor: 'white',
-        padding: '1.5rem',
-        borderRadius: '8px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        marginBottom: '2rem'
-      }}>
-        <h2 style={{ color: '#4CAF50' }}>📈 Portfolio Summary</h2>
-        <p style={{ fontSize: '18px', fontWeight: 'bold' }}>
-          Total Holdings: <span style={{ color: '#4CAF50' }}>{holdings.length}</span>
-        </p>
+    );
+  }
+
+  if (state.status === 'idle') {
+    return (
+      <div className="container-fluid py-4">
+        <div className="row justify-content-center">
+          <div className="col-12 col-md-8 text-center">
+            <div className="mb-4">
+              <i className="fas fa-chart-line text-primary" style={{ fontSize: '4rem' }}></i>
+            </div>
+            <h2 className="text-primary mb-3">No Calculation Results</h2>
+            <p className="text-muted mb-4">
+              Upload your brokerage files and run a calculation to see your tax results here.
+            </p>
+            <Button 
+              variant="primary" 
+              size="lg"
+              onClick={() => window.location.hash = ''}
+            >
+              <i className="fas fa-calculator me-2"></i>
+              Start Tax Calculation
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Success state - show results
+  if (!portfolioAnalysis || !taxCalculations) {
+    return (
+      <div className="container-fluid py-4">
+        <div className="row justify-content-center">
+          <div className="col-12 col-md-8">
+            <Alert variant="warning" className="text-center">
+              <h4>Incomplete Data</h4>
+              <p>The calculation completed but some results data is missing. Please try running the calculation again.</p>
+              <Button variant="primary" onClick={() => window.location.hash = ''}>
+                Run New Calculation
+              </Button>
+            </Alert>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Main results layout
+  return (
+    <div className="container-fluid py-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
+      {/* Page Header */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="d-flex justify-content-between align-items-center bg-white rounded shadow-sm p-4">
+            <div>
+              <h1 className="h2 mb-1 text-primary">
+                <i className="fas fa-chart-line me-3"></i>
+                Tax Calculation Results
+              </h1>
+              <p className="text-muted mb-0">
+                Comprehensive analysis of your portfolio and UK tax obligations
+              </p>
+            </div>
+            <div className="text-end">
+              <Button 
+                variant="outline-primary"
+                size="sm"
+                onClick={() => window.location.hash = ''}
+                className="me-2"
+              >
+                <i className="fas fa-calculator me-2"></i>
+                New Calculation
+              </Button>
+              <Button 
+                variant="outline-secondary"
+                size="sm"
+                onClick={() => window.print()}
+              >
+                <i className="fas fa-print me-2"></i>
+                Print Results
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {holdings.length > 0 && (
-        <div style={{ 
-          backgroundColor: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          marginBottom: '2rem'
-        }}>
-          <h3 style={{ color: '#4CAF50', marginBottom: '1rem' }}>🏢 Holdings Details (First 10)</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ 
-              width: '100%',
-              borderCollapse: 'collapse',
-              backgroundColor: 'white'
-            }}>
-              <thead>
-                <tr style={{ backgroundColor: '#4CAF50', color: 'white' }}>
-                  <th style={{ padding: '12px', border: '1px solid #ddd' }}>Symbol</th>
-                  <th style={{ padding: '12px', border: '1px solid #ddd' }}>Quantity</th>
-                  <th style={{ padding: '12px', border: '1px solid #ddd' }}>Price</th>
-                  <th style={{ padding: '12px', border: '1px solid #ddd' }}>Market Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                {holdings.slice(0,10).map((h,i)=>(
-                  <tr key={i} style={{ 
-                    backgroundColor: i % 2 === 0 ? '#f9f9f9' : 'white'
-                  }}>
-                    <td style={{ 
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      fontWeight: 'bold',
-                      color: '#4CAF50'
-                    }}>{h.symbol||'--'}</td>
-                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>{h.quantity||0}</td>
-                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>${h.price||0}</td>
-                    <td style={{ 
-                      padding: '10px',
-                      border: '1px solid #ddd',
-                      fontWeight: 'bold'
-                    }}>${h.market_value||0}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Success Alert for Tax Liability */}
+      {taxCalculations.total_tax_liability > 0 && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <Alert variant="warning" className="border-0 shadow-sm">
+              <div className="d-flex align-items-center">
+                <i className="fas fa-exclamation-triangle me-3" style={{ fontSize: '1.5rem' }}></i>
+                <div>
+                  <h5 className="mb-1">Tax Liability Identified</h5>
+                  <p className="mb-0">
+                    Your portfolio analysis shows a potential tax liability of{' '}
+                    <strong>
+                      {new Intl.NumberFormat('en-GB', {
+                        style: 'currency',
+                        currency: 'GBP'
+                      }).format(taxCalculations.total_tax_liability)}
+                    </strong>
+                    . Please consult with a qualified tax advisor to confirm your obligations.
+                  </p>
+                </div>
+              </div>
+            </Alert>
           </div>
         </div>
       )}
 
-      <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-        <button 
-          onClick={() => window.location.hash = ''}
-          style={{ 
-            padding: '1rem 2rem',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-          }}
-        >
-          🧮 New Calculation
-        </button>
+      {/* Portfolio Summary */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <PortfolioSummary 
+            portfolioAnalysis={portfolioAnalysis}
+            className="shadow-sm border-0"
+          />
+        </div>
+      </div>
+
+      {/* Holdings Table */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <ResultsHoldingsTable 
+            marketSummaries={portfolioAnalysis.market_summaries}
+            className="shadow-sm border-0"
+          />
+        </div>
+      </div>
+
+      {/* Tax Calculations */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <TaxCalculations 
+            taxCalculations={taxCalculations}
+            className="shadow-sm border-0"
+          />
+        </div>
+      </div>
+
+      {/* Data Visualization */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="bg-white rounded shadow-sm p-4">
+            <div className="d-flex align-items-center mb-4">
+              <i className="fas fa-chart-bar me-3 text-primary" style={{ fontSize: '1.5rem' }}></i>
+              <div>
+                <h4 className="mb-1">Portfolio Analytics</h4>
+                <p className="text-muted mb-0">
+                  Interactive charts and visualizations of your portfolio performance and tax analysis
+                </p>
+              </div>
+            </div>
+            <DataVisualization
+              portfolioAnalysis={portfolioAnalysis}
+              taxCalculations={taxCalculations}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Actions */}
+      <div className="row">
+        <div className="col-12">
+          <div className="bg-white rounded shadow-sm p-4 text-center">
+            <div className="mb-3">
+              <h5 className="text-muted">Need Help?</h5>
+              <p className="small text-muted mb-0">
+                These calculations are estimates. For professional tax advice, consult with a qualified accountant or tax advisor.
+              </p>
+            </div>
+            <div className="d-flex justify-content-center gap-3 flex-wrap">
+              <Button 
+                variant="primary"
+                onClick={() => window.location.hash = ''}
+              >
+                <i className="fas fa-calculator me-2"></i>
+                Run New Calculation
+              </Button>
+              <Button 
+                variant="outline-secondary"
+                onClick={() => window.location.href = '/'}
+              >
+                <i className="fas fa-home me-2"></i>
+                Back to Home
+              </Button>
+              <Button 
+                variant="outline-secondary"
+                onClick={() => window.open('https://www.gov.uk/capital-gains-tax', '_blank')}
+              >
+                <i className="fas fa-external-link-alt me-2"></i>
+                HMRC Guidance
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
