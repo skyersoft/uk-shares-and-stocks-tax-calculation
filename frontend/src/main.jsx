@@ -2,6 +2,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 
+// Import global styles
+import './styles/global.scss';
+
 console.log('[SPA] Starting React application...');
 
 const container = document.getElementById('spa-root');

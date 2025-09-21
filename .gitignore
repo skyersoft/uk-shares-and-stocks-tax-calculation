@@ -59,6 +59,7 @@ deployment/dns-update.json
 *credentials*
 *config.json
 .awsprofile
+
 .DS_Store
 
 # Private Data Files - DO NOT COMMIT
@@ -147,3 +148,6 @@ localstack_*
 *.seed
 *.out
 *.gz
+
+*storybook.log
+storybook-static
