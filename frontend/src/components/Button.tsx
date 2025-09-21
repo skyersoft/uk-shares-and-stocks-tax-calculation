@@ -1,11 +1,27 @@
 // Sample Button component for testing Storybook setup
 import React from 'react';
-import PropTypes from 'prop-types';
+
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  /** Is this the principal call to action on the page? */
+  primary?: boolean;
+  /** What background color to use */
+  backgroundColor?: string | null;
+  /** How large should the button be? */
+  size?: 'small' | 'medium' | 'large';
+  /** Button contents */
+  label: string;
+  /** Show loading state */
+  loading?: boolean;
+  /** Disable button */
+  disabled?: boolean;
+  /** Icon to display */
+  icon?: React.ReactNode;
+}
 
 /**
  * Primary UI component for user interaction
  */
-export const Button = ({ 
+export const Button: React.FC<ButtonProps> = ({ 
   primary = false, 
   size = 'medium', 
   backgroundColor = null, 
@@ -28,7 +44,7 @@ export const Button = ({
     <button
       type="button"
       className={className}
-      style={{ backgroundColor }}
+      style={{ backgroundColor: backgroundColor || undefined }}
       disabled={disabled || loading}
       {...props}
     >
@@ -39,35 +55,6 @@ export const Button = ({
       {label}
     </button>
   );
-};
-
-Button.propTypes = {
-  /** Is this the principal call to action on the page? */
-  primary: PropTypes.bool,
-  /** What background color to use */
-  backgroundColor: PropTypes.string,
-  /** How large should the button be? */
-  size: PropTypes.oneOf(['small', 'medium', 'large']),
-  /** Button contents */
-  label: PropTypes.string.isRequired,
-  /** Show loading state */
-  loading: PropTypes.bool,
-  /** Disable button */
-  disabled: PropTypes.bool,
-  /** Icon to display */
-  icon: PropTypes.node,
-  /** Optional click handler */
-  onClick: PropTypes.func,
-};
-
-Button.defaultProps = {
-  primary: false,
-  size: 'medium',
-  backgroundColor: null,
-  loading: false,
-  disabled: false,
-  icon: null,
-  onClick: undefined,
 };
 
 export default Button;

@@ -2,6 +2,8 @@ import React from 'react';
 import { render, RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { configureAxe, toHaveNoViolations } from 'jest-axe';
+import { ToastProvider } from '../../components/ui/ToastContext';
+import { CalculationProvider } from '../../context/CalculationContext';
 
 // Extend jest matchers for accessibility testing
 expect.extend(toHaveNoViolations);
@@ -14,14 +16,22 @@ const axe = configureAxe({
   },
 });
 
+// Test providers wrapper
+const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <CalculationProvider>
+      {children}
+    </CalculationProvider>
+  );
+};
+
 /**
  * Custom render function for testing components with providers
  * Returns render result along with a user event instance
  */
 export const renderWithProviders = (ui: React.ReactElement, options = {}) => {
   const result = render(ui, {
-    // Add any global providers here if needed
-    // wrapper: ({ children }) => <Providers>{children}</Providers>,
+    wrapper: AllTheProviders,
     ...options,
   });
   
@@ -110,3 +120,14 @@ export const mockCalculationResults = {
 // Re-export everything from testing-library
 export * from '@testing-library/react';
 export { default as userEvent } from '@testing-library/user-event';
+
+// Basic test to ensure this file doesn't fail
+describe('Test Utils', () => {
+  test('should export render function', () => {
+    expect(render).toBeDefined();
+  });
+  
+  test('should export userEvent', () => {
+    expect(userEvent).toBeDefined();
+  });
+});

@@ -1,0 +1,111 @@
+/* Toast Component Styles */
+
+.toast {
+  /* Ensure proper stacking and positioning */
+  z-index: 1055;
+  margin-bottom: 0.5rem;
+}
+
+.toast.show {
+  /* Override Bootstrap's default opacity fade-in */
+  opacity: 1;
+}
+
+/* Toast variants */
+.toast-success {
+  --bs-toast-border-color: var(--bs-success);
+  --bs-toast-header-bg: rgba(var(--bs-success-rgb), 0.1);
+}
+
+.toast-success .toast-header {
+  border-bottom-color: rgba(var(--bs-success-rgb), 0.25);
+}
+
+.toast-danger {
+  --bs-toast-border-color: var(--bs-danger);
+  --bs-toast-header-bg: rgba(var(--bs-danger-rgb), 0.1);
+}
+
+.toast-danger .toast-header {
+  border-bottom-color: rgba(var(--bs-danger-rgb), 0.25);
+}
+
+.toast-warning {
+  --bs-toast-border-color: var(--bs-warning);
+  --bs-toast-header-bg: rgba(var(--bs-warning-rgb), 0.1);
+}
+
+.toast-warning .toast-header {
+  border-bottom-color: rgba(var(--bs-warning-rgb), 0.25);
+}
+
+.toast-info {
+  --bs-toast-border-color: var(--bs-info);
+  --bs-toast-header-bg: rgba(var(--bs-info-rgb), 0.1);
+}
+
+.toast-info .toast-header {
+  border-bottom-color: rgba(var(--bs-info-rgb), 0.25);
+}
+
+/* Toast container positioning */
+.toast-container {
+  /* Ensure proper stacking */
+  z-index: 1055;
+  pointer-events: none;
+}
+
+.toast-container .toast {
+  /* Enable pointer events for individual toasts */
+  pointer-events: auto;
+}
+
+/* Custom timestamp styling */
+.toast-timestamp {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+/* Icon styling */
+.toast .fas {
+  color: currentColor;
+  opacity: 0.8;
+}
+
+.toast-success .fas {
+  color: var(--bs-success);
+}
+
+.toast-danger .fas {
+  color: var(--bs-danger);
+}
+
+.toast-warning .fas {
+  color: var(--bs-warning);
+}
+
+.toast-info .fas {
+  color: var(--bs-info);
+}
+
+/* Animation support */
+.toast {
+  transition: transform 0.15s ease-in-out, opacity 0.15s ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .toast-container {
+    /* Full width on mobile */
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  .toast {
+    /* Full width toasts on mobile */
+    width: 100% !important;
+    max-width: none !important;
+  }
+}

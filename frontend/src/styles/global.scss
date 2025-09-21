@@ -52,6 +52,15 @@ body {
   &:hover {
     box-shadow: var(--shadow-md);
   }
+  
+  &.card-hoverable {
+    cursor: pointer;
+    
+    &:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+  }
 }
 
 .form-control,

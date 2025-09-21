@@ -1,16 +1,15 @@
 import React, { useMemo } from 'react';
 import { useCalculation } from '../context/CalculationContext';
 
-function formatCurrency(v){
-  const n = Number(v)||0; return '£'+ n.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
-}
-
-export default function ResultsPage(){
+const ResultsPage: React.FC = () => {
   console.log('[ResultsPage] Rendering component');
   const { state } = useCalculation();
   const holdings = useMemo(()=>{
     const ms = state.raw?.portfolio_analysis?.market_summaries || {};
-    let list=[]; Object.values(ms).forEach(m=>{ if(Array.isArray(m.holdings)) list=list.concat(m.holdings); });
+    let list: any[] = []; 
+    Object.values(ms).forEach((m: any) => { 
+      if(Array.isArray(m.holdings)) list = list.concat(m.holdings); 
+    });
     return list;
   },[state.raw]);
 
@@ -107,8 +106,7 @@ export default function ResultsPage(){
               <tbody>
                 {holdings.slice(0,10).map((h,i)=>(
                   <tr key={i} style={{ 
-                    backgroundColor: i % 2 === 0 ? '#f9f9f9' : 'white',
-                    '&:hover': { backgroundColor: '#e8f5e8' }
+                    backgroundColor: i % 2 === 0 ? '#f9f9f9' : 'white'
                   }}>
                     <td style={{ 
                       padding: '10px',
@@ -151,4 +149,6 @@ export default function ResultsPage(){
       </div>
     </div>
   );
-}
+};
+
+export default ResultsPage;
