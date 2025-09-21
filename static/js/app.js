@@ -11,6 +11,11 @@ const EXECUTE_API_FALLBACK = '__EXECUTE_API_URL__'; // optionally replaced durin
 
 function resolveApiBaseUrl() {
     try {
+        // Handle test environment where window is not defined
+        if (typeof window === 'undefined') {
+            return '/prod';
+        }
+        
         const origin = window.location.origin;
         // If we are already under a path that includes /prod, keep it
         if (origin.includes('localhost')) {
@@ -56,29 +61,31 @@ let uploadArea, fileInput, calculatorForm, calculateBtn;
 /**
  * Initialize the application when DOM is loaded
  */
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('IBKR Tax Calculator - Initializing...');
-    
-    // Get DOM elements
-    uploadArea = document.querySelector('label[for="fileInput"]');
-    fileInput = document.getElementById('fileInput');
-    calculatorForm = document.getElementById('calculatorForm');
-    calculateBtn = document.getElementById('calculateBtn');
-    
-    if (!uploadArea || !fileInput || !calculatorForm || !calculateBtn) {
-        console.error('Required DOM elements not found');
-        showAlert('Application initialization failed. Please refresh the page.', 'danger');
-        return;
-    }
-    
-    // Initialize components
-    initializeFileUpload();
-    initializeFormHandling();
-    addDragDropStyling();
-    checkAPIHealth();
-    
-    console.log('IBKR Tax Calculator - Initialized successfully');
-});
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('IBKR Tax Calculator - Initializing...');
+        
+        // Get DOM elements
+        uploadArea = document.querySelector('label[for="fileInput"]');
+        fileInput = document.getElementById('fileInput');
+        calculatorForm = document.getElementById('calculatorForm');
+        calculateBtn = document.getElementById('calculateBtn');
+        
+        // Only initialize if we're on the calculator page (elements exist)
+        if (!uploadArea || !fileInput || !calculatorForm || !calculateBtn) {
+            console.log('Calculator elements not found - skipping initialization (not on calculator page)');
+            return;
+        }
+        
+        // Initialize components
+        initializeFileUpload();
+        initializeFormHandling();
+        addDragDropStyling();
+        checkAPIHealth();
+        
+        console.log('IBKR Tax Calculator - Initialized successfully');
+    });
+}
 
 /**
  * Initialize file upload functionality
@@ -244,11 +251,18 @@ async function handleFormSubmit(e) {
         console.log('[FORM_DATA] Form file:', formFile ? formFile.name : 'NULL', 'Size:', formFile ? formFile.size : 'N/A');
         console.log('[FORM_DATA] uploadedFile:', uploadedFile ? uploadedFile.name : 'NULL', 'Size:', uploadedFile ? uploadedFile.size : 'N/A');
         
-        // DEBUG: Calculate file hash to verify integrity
-        const fileBuffer = await uploadedFile.arrayBuffer();
-        const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        // DEBUG: Calculate file hash to verify integrity (skip in test environment)
+        let hashHex = 'test-hash';
+        try {
+            if (typeof crypto !== 'undefined' && crypto.subtle && uploadedFile.arrayBuffer) {
+                const fileBuffer = await uploadedFile.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        } catch (e) {
+            console.warn('Hash calculation failed (non-critical):', e.message);
+        }
         
         const apiUrl = `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.calculate}`;
         console.log('[API_CALL] Making request to:', apiUrl);
@@ -497,6 +511,9 @@ if (typeof module !== 'undefined' && module.exports) {
         showAlert,
         updateCalculateButton,
         handleFormSubmit,
+        handleFileSelection,
+        updateUploadAreaUI,
+        callAlert,
         API_CONFIG
     };
 }
@@ -506,6 +523,9 @@ if (typeof global !== 'undefined') {
     if (!global.showAlert) global.showAlert = showAlert;
     if (!global.updateCalculateButton) global.updateCalculateButton = updateCalculateButton;
     if (!global.handleFormSubmit) global.handleFormSubmit = handleFormSubmit;
+    if (!global.handleFileSelection) global.handleFileSelection = handleFileSelection;
+    if (!global.updateUploadAreaUI) global.updateUploadAreaUI = updateUploadAreaUI;
+    if (!global.callAlert) global.callAlert = callAlert;
     if (!global.validateFile) global.validateFile = validateFile;
     if (!global.formatFileSize) global.formatFileSize = formatFileSize;
     // Expose uploadedFile through accessor to share same reference
@@ -513,6 +533,21 @@ if (typeof global !== 'undefined') {
         Object.defineProperty(global, 'uploadedFile', {
             get() { return uploadedFile; },
             set(v) { uploadedFile = v; },
+            configurable: true
+        });
+    }
+    // Expose DOM element variables for testing
+    if (!Object.getOwnPropertyDescriptor(global, 'uploadArea')) {
+        Object.defineProperty(global, 'uploadArea', {
+            get() { return uploadArea; },
+            set(v) { uploadArea = v; },
+            configurable: true
+        });
+    }
+    if (!Object.getOwnPropertyDescriptor(global, 'fileInput')) {
+        Object.defineProperty(global, 'fileInput', {
+            get() { return fileInput; },
+            set(v) { fileInput = v; },
             configurable: true
         });
     }

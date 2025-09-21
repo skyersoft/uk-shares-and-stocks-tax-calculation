@@ -28,13 +28,23 @@
   - **Coverage**: Playwright E2E test verifies complete workflow including the duplicate file fix
   - **Completed**: 2025-01-28
 
-### Active Development
-- [ ] **Complete React SPA migration** - Finish transitioning from static HTML to React components
+- [x] **JavaScript unit tests for duplicate file upload bug prevention** - Comprehensive regression testing ✅
+  - **Component**: `static/js/__tests__/` - Jest-based JavaScript testing
+  - **Coverage**: FormData handling, file synchronization, validation logic
+  - **Focus**: Prevents regression of duplicate file upload bug that caused data aggregation
+  - **Architecture**: Mock File/FormData classes, JSDOM DOM simulation, console log verification
+  - **Verification**: Tests confirm individual securities display vs aggregated holdings
+  - **Debug logging**: Enhanced production logging for troubleshooting file upload issues
+  - **Completed**: 2025-01-28
+
+### Active Development (PRIORITY)
+- [ ] **Complete React SPA migration** - Finish transitioning from static HTML to React components ⚠️ URGENT
   - **Component**: `frontend/` directory - React + Vite setup
-  - **Status**: Phase 1 planned but not yet implemented
-  - **Dependencies**: Fix current results display issue first
-  - **Priority**: Medium
-  - **Estimated Effort**: Large
+  - **Status**: Basic structure exists but SPA shows nearly empty content at https://cgttaxtool.uk/spa/
+  - **Issue**: React components are not properly rendering or have missing functionality
+  - **Priority**: HIGH (must complete before monitoring)
+  - **Estimated Effort**: Medium
+  - **Next Steps**: Debug React routing, component rendering, and API integration
 
 ## 🚀 Technical Debt & Improvements
 
@@ -60,8 +70,18 @@
 ### Performance & Monitoring
 - [ ] **Add application monitoring** - CloudWatch dashboards and alerts
   - **Component**: AWS Lambda, API Gateway metrics
-  - **Priority**: Low
-  - **Estimated Effort**: Small
+  - **Priority**: High (next priority after React SPA)
+  - **Estimated Effort**: Medium
+  - **Requirements**: Usage tracking, error rate monitoring, performance metrics
+  - **Deliverables**: CloudWatch dashboard, SNS alerts for failures, cost monitoring
+
+### User Experience & Error Handling
+- [ ] **Enhanced error handling and UX improvements** - Better user feedback and error recovery
+  - **Component**: Frontend JavaScript and backend error responses
+  - **Priority**: High (follows monitoring setup)
+  - **Estimated Effort**: Medium
+  - **Requirements**: Loading states, progress indicators, timeout handling, user-friendly error messages
+  - **Deliverables**: Improved error messages, file upload progress, better validation feedback
 
 ## 📚 Reference Information
 
