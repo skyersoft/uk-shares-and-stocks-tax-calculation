@@ -151,3 +151,4 @@ localstack_*
 
 *storybook.log
 storybook-static
+test-results/
