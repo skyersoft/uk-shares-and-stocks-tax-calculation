@@ -17,6 +17,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:all": "npm run test:unit:ci && npm run test:e2e",
     "test:accessibility": "jest --testNamePattern='accessibility'",
+    "test:quality": "node frontend/run-quality-analysis-fixed.js",
     "dev:spa": "vite --config frontend/vite.config.ts",
     "build:spa": "vite build --config frontend/vite.config.ts",
     "preview:spa": "vite preview --config frontend/vite.config.ts",

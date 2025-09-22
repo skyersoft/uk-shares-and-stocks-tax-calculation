@@ -45,13 +45,14 @@ module.exports = {
   // Coverage configuration
   collectCoverage: true,
   collectCoverageFrom: [
-    'frontend/src/**/*.{js,jsx}',
-    '!frontend/src/main.jsx',
-    '!frontend/src/**/*.stories.{js,jsx}',
-    '!frontend/src/**/*.test.{js,jsx}',
+    'frontend/src/**/*.{js,jsx,ts,tsx}',
+    '!frontend/src/main.{jsx,tsx}',
+    '!frontend/src/**/*.stories.{js,jsx,ts,tsx}',
+    '!frontend/src/**/*.test.{js,jsx,ts,tsx}',
     '!frontend/src/**/__tests__/**',
     '!frontend/src/**/node_modules/**',
-    '!**/vendor/**'
+    '!**/vendor/**',
+    '!frontend/src/vite-env.d.ts'
   ],
   
   // Coverage thresholds (90% minimum as per requirements)
