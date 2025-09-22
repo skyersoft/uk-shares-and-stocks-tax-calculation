@@ -26,7 +26,7 @@ export default defineConfig(({ command, mode }) => {
       emptyOutDir: true,
       sourcemap: mode !== 'production',
       rollupOptions: {
-        input: path.resolve(__dirname, 'src/main.tsx'),
+        input: path.resolve(__dirname, 'src/index.html'),
         output: {
           // Manual chunks for better caching
           manualChunks: {

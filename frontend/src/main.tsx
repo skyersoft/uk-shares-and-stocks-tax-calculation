@@ -2,6 +2,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 
+// Import Bootstrap JavaScript for navbar collapse functionality
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+
 // Import global styles
 import './styles/global.scss';
 
