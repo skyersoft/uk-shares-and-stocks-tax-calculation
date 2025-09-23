@@ -64,7 +64,7 @@ const mockSuccessState: CalculationState = {
       total_unrealized_gain_loss: 5000,
       total_unrealized_gain_loss_percent: 10.5
     },
-    tax_calculations: {
+    tax_analysis: {
       capital_gains_tax: 2000,
       dividend_tax: 500,
       total_tax_liability: 2500,
@@ -181,8 +181,8 @@ describe('ResultsPage', () => {
       ...mockSuccessState,
       raw: {
         ...mockSuccessState.raw,
-        tax_calculations: {
-          ...mockSuccessState.raw!.tax_calculations,
+        tax_analysis: {
+          ...mockSuccessState.raw!.tax_analysis,
           total_tax_liability: 0
         }
       }
@@ -198,7 +198,7 @@ describe('ResultsPage', () => {
       ...mockSuccessState,
       raw: {
         portfolio_analysis: null,
-        tax_calculations: null
+        tax_analysis: null
       }
     };
     

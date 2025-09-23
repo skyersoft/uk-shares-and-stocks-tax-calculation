@@ -32,6 +32,24 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   const totalHoldings = Object.values(portfolioAnalysis.market_summaries)
     .reduce((total, summary) => total + summary.holdings.length, 0);
 
+  // Calculate percentage since it's not provided by backend
+  const calculatePercentage = (gainLoss: number, totalValue: number): number => {
+    // For portfolio percentage, we need to calculate based on cost basis
+    // If we don't have cost, we estimate it as totalValue - gainLoss
+    const estimatedCost = totalValue - gainLoss;
+    if (estimatedCost > 0) {
+      return (gainLoss / estimatedCost) * 100;
+    }
+    return 0;
+  };
+
+  const totalUnrealizedPercentage = calculatePercentage(
+    portfolioAnalysis.total_unrealized_gain_loss || 0,
+    portfolioAnalysis.total_portfolio_value || 0
+  );
+
+  // NOTE: market_summaries keys are expected to be currency codes (e.g., GBP, USD). Display raw key.
+
   return (
     <Card 
       className={`portfolio-summary ${className}`}
@@ -100,12 +118,12 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
             <div className="metric-label text-muted small">Unrealized Gain/Loss %</div>
             <div className="d-flex align-items-center">
               <Badge 
-                variant={getGainLossVariant(portfolioAnalysis.total_unrealized_gain_loss_percent)}
+                variant={getGainLossVariant(totalUnrealizedPercentage)}
                 className="fs-6"
               >
-                {formatPercentage(portfolioAnalysis.total_unrealized_gain_loss_percent)}
+                {formatPercentage(totalUnrealizedPercentage)}
               </Badge>
-              <i className={`fas fa-trending-${portfolioAnalysis.total_unrealized_gain_loss_percent >= 0 ? 'up' : 'down'} ms-2`}></i>
+              <i className={`fas fa-trending-${totalUnrealizedPercentage >= 0 ? 'up' : 'down'} ms-2`}></i>
             </div>
           </div>
         </div>
@@ -131,7 +149,7 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
                   </div>
                   <div className={`small text-${getGainLossVariant(summary.total_unrealized_gain_loss)}`}>
                     {formatCurrency(summary.total_unrealized_gain_loss, currency)} 
-                    ({formatPercentage(summary.total_unrealized_gain_loss_percent)})
+                    ({formatPercentage(calculatePercentage(summary.total_unrealized_gain_loss || 0, summary.total_market_value || 0))})
                   </div>
                 </div>
               </div>

@@ -56,15 +56,15 @@ const DataVisualization: React.FC<DataVisualizationProps> = ({
     // Get all holdings from all market summaries
     const allHoldings = Object.values(portfolioAnalysis.market_summaries)
       .flatMap(summary => summary.holdings)
-      .sort((a: Holding, b: Holding) => b.market_value - a.market_value)
+      .sort((a: Holding, b: Holding) => b.current_value_gbp - a.current_value_gbp)
       .slice(0, 10); // Top 10 holdings
 
     return {
-      labels: allHoldings.map((h: Holding) => h.symbol),
+      labels: allHoldings.map((h: Holding) => h.security?.symbol || 'N/A'),
       datasets: [
         {
           label: 'Portfolio Value (£)',
-          data: allHoldings.map((h: Holding) => h.market_value),
+          data: allHoldings.map((h: Holding) => h.current_value_gbp),
           backgroundColor: [
             '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
             '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384',
@@ -80,7 +80,7 @@ const DataVisualization: React.FC<DataVisualizationProps> = ({
     const holdingsWithGains = Object.values(portfolioAnalysis.market_summaries)
       .flatMap(summary => summary.holdings)
       .map((h: Holding) => ({
-        symbol: h.symbol,
+        symbol: h.security?.symbol || 'N/A',
         gain: h.unrealized_gain_loss || 0,
       }))
       .sort((a: {symbol: string, gain: number}, b: {symbol: string, gain: number}) => Math.abs(b.gain) - Math.abs(a.gain))
@@ -106,7 +106,7 @@ const DataVisualization: React.FC<DataVisualizationProps> = ({
   const getCurrencyData = (): ChartData => {
     const currencyTotals = portfolioAnalysis.market_summaries;
     const currencies = Object.keys(currencyTotals);
-    
+
     if (currencies.length <= 1) {
       return {
         labels: [currencies[0] || 'GBP'],

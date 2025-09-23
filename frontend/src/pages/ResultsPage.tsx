@@ -19,8 +19,43 @@ const ResultsPage: React.FC = () => {
   }, [state.raw]);
 
   const taxCalculations: TaxCalculation | null = useMemo(() => {
-    if (!state.raw?.tax_calculations) return null;
-    return state.raw.tax_calculations;
+    if (!state.raw?.tax_analysis) return null;
+
+    // The backend provides estimated tax figures under tax_report.summary.estimated_tax_liability
+    // but the UI expects a flattened TaxCalculation object with capital_gains_tax, dividend_tax, etc.
+    const estimated = state.raw.tax_report?.summary?.estimated_tax_liability || {};
+    const capitalGains = state.raw.tax_analysis.capital_gains || {};
+
+    // Build disposal calculations in the simplified shape expected by the UI
+    const disposal_calculations = (capitalGains.disposals || []).map((d: any) => {
+      const proceeds = Number(d.proceeds) || 0;
+      const cost_basis = Number(d.cost_basis) || 0;
+      const expenses = Number(d.expenses) || 0;
+      const gain_loss = proceeds - cost_basis - expenses;
+      return {
+        symbol: d.security?.symbol || 'UNKNOWN',
+        disposal_date: d.sell_date || d.disposal_date || '',
+        quantity: d.quantity || 0,
+        proceeds,
+        gain_loss,
+      };
+    });
+
+    // Section 104 pools not yet exposed separately by backend summary; keep empty for now
+    const section_104_pools: Record<string, any> = {};
+
+    return {
+      capital_gains_tax: Number(estimated.capital_gains_tax) || 0,
+      dividend_tax: Number(estimated.dividend_tax) || 0,
+      total_tax_liability: (
+        Number(estimated.total_estimated_tax) ||
+        (Number(estimated.capital_gains_tax) || 0) +
+          (Number(estimated.dividend_tax) || 0) +
+          (Number(estimated.currency_gains_tax) || 0)
+      ),
+      section_104_pools,
+      disposal_calculations,
+    } as TaxCalculation;
   }, [state.raw]);
 
   // Handle loading and error states

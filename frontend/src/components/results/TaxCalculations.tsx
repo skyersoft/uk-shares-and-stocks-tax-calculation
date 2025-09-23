@@ -21,30 +21,31 @@ export const TaxCalculations: React.FC<TaxCalculationsProps> = ({
   className = ''
 }) => {
   const formatCurrency = (amount: number): string => {
+    const safe = typeof amount === 'number' && isFinite(amount) ? amount : 0;
     return new Intl.NumberFormat('en-GB', {
       style: 'currency',
       currency: 'GBP',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(safe);
   };
 
   const taxLineItems: TaxLineItem[] = [
     {
       label: 'Capital Gains Tax',
-      amount: taxCalculations.capital_gains_tax,
+  amount: Number(taxCalculations.capital_gains_tax) || 0,
       description: 'Tax on capital gains from share disposals',
       type: 'tax'
     },
     {
       label: 'Dividend Tax',
-      amount: taxCalculations.dividend_tax,
+  amount: Number(taxCalculations.dividend_tax) || 0,
       description: 'Tax on dividend income received',
       type: 'tax'
     },
     {
       label: 'Total Tax Liability',
-      amount: taxCalculations.total_tax_liability,
+  amount: Number(taxCalculations.total_tax_liability) || 0,
       description: 'Total tax owed to HMRC',
       type: 'total'
     }

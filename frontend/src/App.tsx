@@ -8,6 +8,7 @@ import ResultsPage from './pages/ResultsPage';
 import AboutPage from './pages/AboutPage';
 import HelpPage from './pages/HelpPage';
 import GuidePage from './pages/GuidePage';
+import BlogPage from './pages/BlogPage';
 
 const App: React.FC = () => {
   console.log('[SPA] App component rendering...');
@@ -36,11 +37,19 @@ const App: React.FC = () => {
     if (route === 'about') return 'about';
     if (route === 'help') return 'help';
     if (route === 'guide') return 'guide';
-    if (route === 'blog') return 'blog';
+    // Support deep links like blog/post/2
+    if (route === 'blog' || route.startsWith('blog/')) return 'blog';
     return 'calculator';
   };
   
   const renderContent = () => {
+    // Normalize route patterns for switch simplicity
+    if (currentRoute.startsWith('blog')) {
+      return <BlogPage />;
+    }
+    if (currentRoute.startsWith('results')) {
+      return <ResultsPage />;
+    }
     switch (currentRoute) {
       case 'about':
         return <AboutPage />;
@@ -49,9 +58,6 @@ const App: React.FC = () => {
       case 'guide':
         return <GuidePage />;
       default:
-        if (currentRoute.startsWith('results')) {
-          return <ResultsPage />;
-        }
         return <CalculatorPage />;
     }
   };

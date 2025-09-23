@@ -20,18 +20,18 @@ export const ResultsHoldingsTable: React.FC<ResultsHoldingsTableProps> = ({
     Object.entries(marketSummaries).forEach(([, summary]) => {
       summary.holdings.forEach((holding: Holding) => {
         const security: Security = {
-          symbol: holding.symbol,
-          name: holding.symbol // In real app, would lookup full name
+          symbol: holding.security?.symbol || 'N/A',
+          name: holding.security?.name || holding.security?.symbol || 'N/A'
         };
 
         const holdingData: HoldingData = {
           security,
           quantity: holding.quantity,
-          average_cost_gbp: holding.average_cost || holding.price, // Fallback if no average cost
-          current_value_gbp: holding.market_value,
-          total_cost_gbp: (holding.average_cost || holding.price) * holding.quantity,
+          average_cost_gbp: holding.average_cost_gbp || (holding.current_value_gbp / holding.quantity), // Calculate if not provided
+          current_value_gbp: holding.current_value_gbp,
+          total_cost_gbp: (holding.average_cost_gbp || (holding.current_value_gbp / holding.quantity)) * holding.quantity,
           unrealized_gain_loss: holding.unrealized_gain_loss || 0,
-          total_return_pct: holding.unrealized_gain_loss_percent || 0
+          total_return_pct: holding.total_return_pct || 0
         };
 
         holdings.push(holdingData);

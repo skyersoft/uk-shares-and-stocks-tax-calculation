@@ -83,6 +83,9 @@ export const Layout: React.FC<LayoutProps> = ({
                 <li className="nav-item">
                   <a className="nav-link" href="#guide" onClick={closeNavbar}>CGT Guide</a>
                 </li>
+                <li className="nav-item">
+                  <a className="nav-link" href="#blog" onClick={closeNavbar}>Blog</a>
+                </li>
               </ul>
               
               <div className="d-flex">
