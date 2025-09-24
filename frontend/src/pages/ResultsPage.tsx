@@ -8,6 +8,7 @@ import { ResultsHoldingsTable } from '../components/results/HoldingsTable';
 import { TaxCalculations } from '../components/results/TaxCalculations';
 import DataVisualization from '../components/results/DataVisualization';
 import { PortfolioAnalysis, TaxCalculation } from '../types/calculation';
+import { AffiliateGrid } from '../components/affiliate';
 
 const ResultsPage: React.FC = () => {
   const { state } = useCalculation();
@@ -257,6 +258,32 @@ const ResultsPage: React.FC = () => {
             <DataVisualization
               portfolioAnalysis={portfolioAnalysis}
               taxCalculations={taxCalculations}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Educational Resources Section */}
+      <div className="row">
+        <div className="col-12">
+          <div className="bg-white rounded shadow-sm p-4 mb-4">
+            <div className="text-center mb-4">
+              <h4 className="text-dark mb-2">
+                📈 Further Your Tax Knowledge
+              </h4>
+              <p className="text-muted">
+                Based on your calculation complexity, these resources can help you understand tax implications better
+              </p>
+            </div>
+            
+            <AffiliateGrid
+              featuredOnly={true}
+              limit={3}
+              columns={{ xs: 1, sm: 2, md: 3 }}
+              showRatings={true}
+              showCategories={true}
+              layout="vertical"
+              sortBy="rating"
             />
           </div>
         </div>

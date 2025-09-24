@@ -1,0 +1,213 @@
+/**
+ * Affiliate Components Styles
+ * CSS for Amazon affiliate marketing components
+ */
+
+/* Affiliate Link Styles */
+.affiliate-link {
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.affiliate-link:hover {
+  text-decoration: underline;
+}
+
+/* Affiliate Card Styles */
+.affiliate-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  border: 1px solid #dee2e6;
+}
+
+.affiliate-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.affiliate-card--compact {
+  max-height: 400px;
+}
+
+.affiliate-card--horizontal .affiliate-card__image img {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+}
+
+.affiliate-card__image {
+  position: relative;
+  overflow: hidden;
+}
+
+.affiliate-card__image img {
+  transition: transform 0.3s ease-in-out;
+}
+
+.affiliate-card:hover .affiliate-card__image img {
+  transform: scale(1.05);
+}
+
+.affiliate-product-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+}
+
+.affiliate-product-description {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #6c757d;
+}
+
+.affiliate-price {
+  font-weight: 600;
+}
+
+.affiliate-rating {
+  font-size: 0.85rem;
+}
+
+.affiliate-rating .bi {
+  font-size: 0.8rem;
+}
+
+/* Affiliate Grid Styles */
+.affiliate-grid {
+  margin-bottom: 2rem;
+}
+
+.affiliate-grid__header {
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 0.75rem;
+}
+
+.affiliate-grid__categories .badge {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Affiliate Disclosure Styles */
+.affiliate-disclosure {
+  font-style: italic;
+}
+
+.affiliate-disclosure.alert {
+  font-style: normal;
+  margin-bottom: 1.5rem;
+}
+
+.affiliate-disclosure.alert .bi {
+  font-size: 1.1rem;
+}
+
+/* Loading States */
+.affiliate-card .placeholder {
+  border-radius: 4px;
+}
+
+.affiliate-card .placeholder-glow .placeholder {
+  animation: placeholder-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes placeholder-glow {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 576px) {
+  .affiliate-card--horizontal {
+    flex-direction: column !important;
+  }
+  
+  .affiliate-card--horizontal .row {
+    flex-direction: column;
+  }
+  
+  .affiliate-card--horizontal .col-md-4,
+  .affiliate-card--horizontal .col-md-8 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .affiliate-product-title {
+    font-size: 1rem;
+  }
+  
+  .affiliate-grid__header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.5rem;
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .affiliate-card {
+    border-color: #495057;
+    background-color: #343a40;
+  }
+  
+  .affiliate-product-description {
+    color: #adb5bd;
+  }
+  
+  .affiliate-grid__header {
+    border-color: #495057;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .affiliate-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  .affiliate-disclosure {
+    font-size: 10px;
+    color: #000;
+  }
+}
+
+/* Accessibility */
+.affiliate-link:focus {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+.affiliate-card:focus-within {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .affiliate-card {
+    border: 2px solid;
+  }
+  
+  .affiliate-link {
+    text-decoration: underline;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .affiliate-card,
+  .affiliate-card__image img,
+  .affiliate-link {
+    transition: none;
+  }
+  
+  .affiliate-card:hover {
+    transform: none;
+  }
+  
+  .affiliate-card:hover .affiliate-card__image img {
+    transform: none;
+  }
+}

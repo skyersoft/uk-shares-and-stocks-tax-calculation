@@ -1,4 +1,5 @@
 import React from 'react';
+import { AffiliateGrid } from '../components/affiliate';
 
 const AboutPage: React.FC = () => {
   return (
@@ -29,6 +30,29 @@ const AboutPage: React.FC = () => {
               <div className="alert alert-info">
                 <i className="bi bi-info-circle me-2"></i>
                 This calculator is provided for informational purposes only. Always consult with a qualified tax advisor for official tax guidance.
+              </div>
+            </div>
+          </div>
+          
+          {/* Educational Resources Section */}
+          <div className="mt-4">
+            <div className="card shadow">
+              <div className="card-body">
+                <h2 className="card-title h4 mb-3">
+                  📚 Educational Resources
+                </h2>
+                <p className="text-muted mb-4">
+                  Enhance your understanding of UK taxation and investment strategies with these professionally recommended guides
+                </p>
+                
+                <AffiliateGrid
+                  limit={6}
+                  columns={{ xs: 1, sm: 2, md: 2, lg: 3 }}
+                  showRatings={true}
+                  showCategories={true}
+                  layout="vertical"
+                  sortBy="featured"
+                />
               </div>
             </div>
           </div>

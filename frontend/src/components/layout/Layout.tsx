@@ -1,4 +1,5 @@
-import React, { ReactNode, useState, useRef, useEffect } from 'react';
+import React, { ReactNode, useState, useEffect } from 'react';
+import { AffiliateDisclosure } from '../affiliate';
 
 interface LayoutProps {
   children: ReactNode;
@@ -75,6 +76,12 @@ export const Layout: React.FC<LayoutProps> = ({
                 </li>
                 <li className="nav-item">
                   <a className="nav-link" href="#blog" onClick={closeNavbar}>Blog</a>
+                </li>
+                <li className="nav-item">
+                  <a className="nav-link" href="#affiliate-demo" onClick={closeNavbar}>
+                    <span className="badge bg-primary me-1">New</span>
+                    Resources
+                  </a>
                 </li>
               </ul>
               
@@ -157,6 +164,16 @@ export const Layout: React.FC<LayoutProps> = ({
               <p className="small mt-2 mb-0 text-muted">
                 © 2024 UK Tax Calculator. Educational purposes only.
               </p>
+            </div>
+          </div>
+          
+          {/* Global Affiliate Disclosure */}
+          <div className="row mt-3 pt-3 border-top border-secondary">
+            <div className="col-12">
+              <AffiliateDisclosure 
+                style="footer" 
+                className="text-light"
+              />
             </div>
           </div>
         </div>

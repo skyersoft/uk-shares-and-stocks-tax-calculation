@@ -3,6 +3,7 @@ import { BlogIndex } from '../components/blog/BlogIndex';
 import { BlogPost as BlogPostComponent, BlogPostData } from '../components/blog/BlogPost';
 import { getAllPosts } from '../content/blogLoader';
 import { BlogPost as LoadedBlogPost } from '../types/blog';
+import { AffiliateGrid, searchAffiliateProducts } from '../components/affiliate';
 
 // Map legacy numeric IDs (original hardcoded sample posts) to new slugs.
 // This allows previously shared links like #blog/post/2 to redirect.
@@ -22,6 +23,22 @@ const BlogPage: React.FC = () => {
   const hasRedirectedRef = useRef(false);
 
   const selectedPost = selectedSlug ? posts.find(p => p.id === selectedSlug) || null : null;
+
+  // Get relevant books based on blog post content
+  const getRelevantBooks = useCallback((post: BlogPostData) => {
+    const searchTerms = [
+      ...(post.tags || []),
+      post.category,
+      ...(post.title.toLowerCase().includes('tax') ? ['tax'] : []),
+      ...(post.title.toLowerCase().includes('trading') ? ['trading'] : []),
+      ...(post.title.toLowerCase().includes('investment') ? ['investing'] : []),
+      ...(post.title.toLowerCase().includes('capital gains') ? ['tax'] : [])
+    ].filter(Boolean);
+    
+    // Search for books matching the content
+    const relevantBooks = searchAffiliateProducts(searchTerms.join(' '));
+    return relevantBooks.slice(0, 3); // Limit to 3 books
+  }, []);
 
   // Load posts once
   useEffect(() => {
@@ -145,6 +162,28 @@ const BlogPage: React.FC = () => {
                 <span className="text-muted small">Post {posts.findIndex(p => p.id === selectedPost.id) + 1} of {posts.length}</span>
               </div>
                <BlogPostComponent post={selectedPost} />
+               
+              {/* Related Resources Section */}
+              <div className="mt-5 mb-4">
+                <div className="border-top pt-4">
+                  <h4 className="h5 mb-3">
+                    📚 Related Resources
+                  </h4>
+                  <p className="text-muted mb-3">
+                    Deepen your understanding with these expert-recommended books
+                  </p>
+                  
+                  <AffiliateGrid
+                    products={getRelevantBooks(selectedPost)}
+                    columns={{ xs: 1, sm: 2, md: 3 }}
+                    showRatings={true}
+                    showCategories={true}
+                    layout="vertical"
+                    emptyStateMessage="No related books found for this topic"
+                  />
+                </div>
+              </div>
+              
               <div className="mt-4 d-flex justify-content-between">
                 <button
                   className="btn btn-outline-primary btn-sm"

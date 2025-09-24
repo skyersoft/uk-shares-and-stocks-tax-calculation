@@ -8,6 +8,7 @@ import AboutPage from './pages/AboutPage';
 import HelpPage from './pages/HelpPage';
 import GuidePage from './pages/GuidePage';
 import BlogPage from './pages/BlogPage';
+import AffiliateDemo from './pages/AffiliateDemo';
 
 const App: React.FC = () => {
   console.log('[SPA] App component rendering...');
@@ -45,6 +46,8 @@ const App: React.FC = () => {
         return <HelpPage />;
       case 'guide':
         return <GuidePage />;
+      case 'affiliate-demo':
+        return <AffiliateDemo />;
       default:
         return <CalculatorPage />;
     }

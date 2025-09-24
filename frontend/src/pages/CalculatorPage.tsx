@@ -10,6 +10,7 @@ import { Select } from '../components/ui/Select';
 import { Card } from '../components/ui/Card';
 import { Accordion } from '../components/ui/Accordion';
 import { useToast } from '../components/ui/ToastContext';
+import { AffiliateGrid } from '../components/affiliate';
 
 type TaxYear = '2024-2025' | '2023-2024' | '2022-2023' | '2021-2022';
 type AnalysisType = 'both' | 'tax' | 'portfolio';
@@ -488,6 +489,27 @@ const CalculatorPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
+          
+          {/* Tax Education Resources Section */}
+          <div className="mt-5">
+            <div className="text-center mb-4">
+              <h2 className="h3 text-dark mb-2">
+                📚 Recommended Tax Resources
+              </h2>
+              <p className="text-muted">
+                Enhance your tax knowledge with these expert-recommended guides
+              </p>
+            </div>
+            
+            <AffiliateGrid
+              category="tax"
+              limit={3}
+              columns={{ xs: 1, sm: 2, md: 3 }}
+              showRatings={true}
+              showCategories={false}
+              layout="vertical"
+            />
           </div>
         </div>
       </div>

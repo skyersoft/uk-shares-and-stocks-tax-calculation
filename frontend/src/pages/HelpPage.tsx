@@ -1,4 +1,5 @@
 import React from 'react';
+import { AffiliateGrid } from '../components/affiliate';
 
 const HelpPage: React.FC = () => {
   return (
@@ -93,6 +94,29 @@ const HelpPage: React.FC = () => {
                   <p>If you can't find the answer you're looking for, try our CGT Guide for detailed explanations of UK Capital Gains Tax rules.</p>
                   <a href="#guide" className="btn btn-primary">View CGT Guide</a>
                 </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Additional Resources Section */}
+          <div className="mt-4">
+            <div className="card shadow">
+              <div className="card-body">
+                <h2 className="h4 mb-3">
+                  📖 Recommended Reading
+                </h2>
+                <p className="text-muted mb-4">
+                  Expand your knowledge with these comprehensive guides to UK taxation and investment strategies
+                </p>
+                
+                <AffiliateGrid
+                  category="tax"
+                  limit={4}
+                  columns={{ xs: 1, sm: 2, md: 2 }}
+                  showRatings={true}
+                  showCategories={false}
+                  layout="horizontal"
+                />
               </div>
             </div>
           </div>
