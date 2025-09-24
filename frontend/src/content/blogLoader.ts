@@ -58,7 +58,6 @@ let cache: BlogPost[] | null = null;
 
 function parseMarkdown(raw: string, path: string): BlogPost {
   const { content, data } = parseFrontmatter(raw);
-  console.log('[BlogLoader] Parsed frontmatter for', path, ':', data);
   const fm = data as Partial<BlogFrontmatter>;
   const errors = validateFrontmatter(fm);
   if (errors.length) {
@@ -89,10 +88,7 @@ export function __parseMarkdownForTest(raw: string, path = 'test.md') {
 export async function getAllPosts(force = false): Promise<BlogPost[]> {
   if (cache && !force) return cache;
   const entries = Object.entries(markdownModules);
-  
-  // Debug logging to understand what's happening
-  console.log('[BlogLoader] markdownModules keys:', Object.keys(markdownModules));
-  console.log('[BlogLoader] entries length:', entries.length);
+
   
   if (entries.length === 0) {
     // Helpful diagnostic in case production build accidentally omits content.
@@ -103,9 +99,7 @@ export async function getAllPosts(force = false): Promise<BlogPost[]> {
   const posts: BlogPost[] = [];
   for (const [path, loader] of entries) {
     try {
-      console.log('[BlogLoader] Loading path:', path);
       const raw = await (loader as () => Promise<string>)();
-      console.log('[BlogLoader] Raw content length:', raw?.length || 0);
       const post = parseMarkdown(raw, path);
       posts.push(post);
     } catch (error) {

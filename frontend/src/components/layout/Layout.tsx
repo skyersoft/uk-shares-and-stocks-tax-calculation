@@ -1,22 +1,16 @@
 import React, { ReactNode, useState, useRef, useEffect } from 'react';
-import { AdPlacementManager } from '../ads/AdPlacement';
-import { PrivacyConsent } from '../ads/AdUnit';
-import { useAd } from '../../context/AdContext';
 
 interface LayoutProps {
   children: ReactNode;
-  pageType: 'calculator' | 'results' | 'help' | 'about' | 'blog' | 'guide';
   showSidebar?: boolean;
   className?: string;
 }
 
 export const Layout: React.FC<LayoutProps> = ({
   children,
-  pageType,
   showSidebar = true,
   className = ''
 }) => {
-  const { hasAdConsent, setAdConsent, screenSize } = useAd();
   const [isNavbarExpanded, setIsNavbarExpanded] = useState(false);
 
   const toggleNavbar = () => {
@@ -44,10 +38,6 @@ export const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className={`layout ${className}`}>
-      {/* Privacy consent banner */}
-      <PrivacyConsent onConsentChange={setAdConsent}>
-        <div className="d-none">Consent managed by banner</div>
-      </PrivacyConsent>
 
       {/* Header with navigation and header ad */}
       <header className="header-section">
@@ -96,13 +86,6 @@ export const Layout: React.FC<LayoutProps> = ({
             </div>
           </div>
         </nav>
-
-        {/* Header Ad Placement */}
-        <AdPlacementManager 
-          pageType={pageType} 
-          hasAdConsent={hasAdConsent} 
-          screenSize={screenSize} 
-        />
       </header>
 
       {/* Main content area */}
@@ -110,33 +93,16 @@ export const Layout: React.FC<LayoutProps> = ({
         <div className="container-fluid">
           <div className="row">
             {/* Main content column */}
-            <div className={`col ${showSidebar && screenSize !== 'mobile' ? 'col-lg-9' : 'col-12'}`}>
+            <div className={`col ${showSidebar ? 'col-lg-9' : 'col-12'}`}>
               <div className="content-wrapper py-4">
                 {children}
-                
-                {/* Content Ad for long pages */}
-                {pageType === 'guide' || pageType === 'help' || pageType === 'about' ? (
-                  <div className="content-ad-wrapper my-5">
-                    <AdPlacementManager 
-                      pageType={pageType} 
-                      hasAdConsent={hasAdConsent} 
-                      screenSize={screenSize} 
-                    />
-                  </div>
-                ) : null}
               </div>
             </div>
 
-            {/* Sidebar with ads */}
-            {showSidebar && screenSize !== 'mobile' && (
-              <div className="col-lg-3">
+            {/* Sidebar */}
+            {showSidebar && (
+              <div className="col-lg-3 d-none d-lg-block">
                 <aside className="sidebar py-4">
-                  {/* Sidebar Ad */}
-                  <AdPlacementManager 
-                    pageType={pageType} 
-                    hasAdConsent={hasAdConsent} 
-                    screenSize={screenSize} 
-                  />
                   
                   {/* Additional sidebar content */}
                   <div className="sidebar-content mt-4">
@@ -171,16 +137,8 @@ export const Layout: React.FC<LayoutProps> = ({
         </div>
       </main>
 
-      {/* Footer with footer ad */}
+      {/* Footer */}
       <footer className="footer bg-dark text-light py-4 mt-5">
-        {/* Footer Ad */}
-        <div className="footer-ad-section">
-          <AdPlacementManager 
-            pageType={pageType} 
-            hasAdConsent={hasAdConsent} 
-            screenSize={screenSize} 
-          />
-        </div>
         
         <div className="container">
           <div className="row">

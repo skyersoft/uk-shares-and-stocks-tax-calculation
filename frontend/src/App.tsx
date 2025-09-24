@@ -1,7 +1,6 @@
 import React from 'react';
 import { CalculationProvider } from './context/CalculationContext';
 import { ToastProvider } from './components/ui/ToastContext';
-import { AdProvider } from './context/AdContext';
 import { Layout } from './components/layout/Layout';
 import CalculatorPage from './pages/CalculatorPage';
 import ResultsPage from './pages/ResultsPage';
@@ -31,17 +30,6 @@ const App: React.FC = () => {
   
   console.log('[SPA] Current route:', currentRoute);
   
-  // Determine page type and content
-  const getPageType = (route: string): 'calculator' | 'results' | 'help' | 'about' | 'blog' | 'guide' => {
-    if (route.startsWith('results')) return 'results';
-    if (route === 'about') return 'about';
-    if (route === 'help') return 'help';
-    if (route === 'guide') return 'guide';
-    // Support deep links like blog/post/2
-    if (route === 'blog' || route.startsWith('blog/')) return 'blog';
-    return 'calculator';
-  };
-  
   const renderContent = () => {
     // Normalize route patterns for switch simplicity
     if (currentRoute.startsWith('blog')) {
@@ -64,15 +52,13 @@ const App: React.FC = () => {
   
   return (
     <ToastProvider position="top-end">
-      <AdProvider>
-        <CalculationProvider>
-          <div className="min-vh-100 bg-light">
-            <Layout pageType={getPageType(currentRoute)}>
-              {renderContent()}
-            </Layout>
-          </div>
-        </CalculationProvider>
-      </AdProvider>
+      <CalculationProvider>
+        <div className="min-vh-100 bg-light">
+          <Layout>
+            {renderContent()}
+          </Layout>
+        </div>
+      </CalculationProvider>
     </ToastProvider>
   );
 }
