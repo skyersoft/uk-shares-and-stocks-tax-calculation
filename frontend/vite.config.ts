@@ -1,5 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 import path from 'path';
 
 export default defineConfig(({ command, mode }) => {
@@ -11,7 +13,7 @@ export default defineConfig(({ command, mode }) => {
     root: path.resolve(__dirname, 'src'),
     base: './', // Use relative paths for assets
     
-    // Environment variables
+    // Environment variables and polyfills
     define: {
       __APP_ENV__: JSON.stringify(env.APP_ENV),
       __API_URL__: JSON.stringify(env.VITE_API_URL || (
@@ -19,6 +21,9 @@ export default defineConfig(({ command, mode }) => {
           ? 'https://cgttaxtool.uk/prod' 
           : 'http://localhost:8000'
       )),
+      global: 'globalThis',
+      // Add Buffer polyfill for gray-matter
+      'process.env': {},
     },
     
     build: {
@@ -33,7 +38,14 @@ export default defineConfig(({ command, mode }) => {
             vendor: ['react', 'react-dom'],
             bootstrap: ['bootstrap'],
           }
-        }
+        },
+        plugins: [
+          // Add Node.js polyfills for production builds
+          NodeGlobalsPolyfillPlugin({
+            buffer: true,
+          }),
+          NodeModulesPolyfillPlugin(),
+        ]
       }
     },
     
@@ -78,7 +90,28 @@ export default defineConfig(({ command, mode }) => {
         '@styles': path.resolve(__dirname, 'src/styles'),
         '@context': path.resolve(__dirname, 'src/context'),
         '@hooks': path.resolve(__dirname, 'src/hooks'),
+        // Add polyfills for Node.js modules
+        'buffer': 'buffer',
       }
+    },
+    
+    // Polyfill Node.js modules for browser
+    optimizeDeps: {
+      include: ['buffer', 'gray-matter'],
+      esbuildOptions: {
+        // Node.js global to browser globalThis
+        define: {
+          global: 'globalThis',
+        },
+        // Enable esbuild polyfill plugins
+        plugins: [
+          NodeGlobalsPolyfillPlugin({
+            buffer: true,
+            process: true,
+          }),
+          NodeModulesPolyfillPlugin(),
+        ],
+      },
     }
   };
 });

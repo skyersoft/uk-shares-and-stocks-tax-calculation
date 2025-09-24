@@ -38,7 +38,7 @@ export function validateFrontmatter(data: Partial<BlogFrontmatter>): string[] {
   if (data.slug && !/^[a-z0-9-]+$/.test(data.slug)) {
     errors.push(`Invalid slug format: ${data.slug}`);
   }
-  if (data.date && isNaN(Date.parse(data.date))) {
+  if (data.date && (isNaN(Date.parse(data.date)) || !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?)?$/.test(data.date))) {
     errors.push(`Invalid date format (expected ISO 8601): ${data.date}`);
   }
   if (data.excerpt && data.excerpt.length > 300) {
