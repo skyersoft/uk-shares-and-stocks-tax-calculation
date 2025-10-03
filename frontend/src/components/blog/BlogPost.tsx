@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card } from '../ui/Card';
+import './BlogContent.css';
 
 export interface BlogPostData {
   id: string;
