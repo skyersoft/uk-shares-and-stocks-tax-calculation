@@ -53,6 +53,95 @@ Whether you're dealing with multi-currency transactions, complex corporate actio
 | Commission | Trading costs | -1.00 USD |
 | Net Cash | Net cash flow | -15,026 USD |
 
+## Exporting Data from Interactive Brokers
+
+### QFX Export Method (Recommended - Most Comprehensive)
+
+**QFX files provide the most comprehensive data for UK tax calculations:**
+
+**Why QFX is recommended:**
+- Includes complete transaction history with all metadata
+- Contains corporate actions, dividends, and fee structures
+- Comprehensive currency conversion information
+- Optimized for financial software import
+- Most reliable format for complex tax scenarios
+
+**Step-by-step QFX export process:**
+
+1. **Login to Interactive Brokers**
+   - Navigate to the Interactive Brokers login page and enter your credentials.
+   - ![Step 1: Login to Interactive Brokers](/screenshots/ibkr-login.png)
+
+2. **Navigate to Performance & Reports**
+   - From the main navigation menu at the top of the page, click on **Performance & Reports**.
+   - ![Step 2: Navigate to Performance & Reports](/screenshots/ibkr-performance-reports-nav.png)
+
+3. **Select Statements**
+   - A dropdown menu will appear. Click on **Statements**.
+   - ![Step 3: Select Statements](/screenshots/ibkr-statements-dropdown.png)
+
+4. **Access Third-Party Reports**
+   - On the Statements page, click on the **Third-Party Reports** tab to access the download section.
+   - ![Step 4: Access Third-Party Reports](/screenshots/ibkr-third-party-reports-tab.png)
+
+5. **Configure QFX Download**
+   - In the **Third-Party Downloads** section, configure the following options:
+     - **Provider**: Select **Quicken Web Connect**. This will generate a QFX file.
+     - **Period**: Choose **Custom Date Range**.
+     - **From Date / To Date**: Enter the start and end dates for the tax year you need (e.g., April 6, 2023, to April 5, 2024).
+   - ![Step 5: Configure QFX Download](/screenshots/ibkr-qfx-download-config.png)
+
+6. **Download QFX File**
+   - Click the **Download** button to generate and save the QFX file to your computer. You can then upload this file to our calculator.
+
+### CSV Export via Flex Queries (Supported Alternative)
+
+**For users who prefer CSV format or need specific field selection, use IBKR's Flex Query system:**
+
+**When to use CSV:**
+- When QFX import encounters issues
+- For custom field selection
+- When working with specific tax software requirements
+- For partial data exports
+
+**Step-by-step CSV export process:**
+
+1. **Login to IBKR Account**
+   - Access your Interactive Brokers account via the client portal
+
+2. **Navigate to Flex Queries**
+   - Click on the **Reports** tab
+   - Select **Flex Queries** from the menu
+
+3. **Create Activity Flex Query**
+   - Click the **'+'** button next to **Activity Flex Query**
+
+4. **Configure Data Selection**
+   - Select **Trades** under **Sections**
+   - Choose **Executions** in the pop-up window
+   - Tick **SELECT ALL** to include all available fields
+   - Click **Save**
+
+5. **Name Your Query**
+   - Enter a descriptive name (e.g., "UK Tax Calculator Export")
+
+6. **Set Date Format**
+   - Under **General Configuration**, change **Date Format** to **mm/dd/yyyy**
+
+7. **Create and Run Query**
+   - Click **Create** to save the query configuration
+   - **Run** the newly created Activity Flex Query
+
+8. **Set Date Range**
+   - Under **Period**, select **Custom Date Range**
+   - Choose dates covering your entire tax year
+
+9. **Download CSV File**
+   - Set **Format** as **CSV**
+   - Click **Run** and download the generated file
+
+**Note:** While CSV files are supported, QFX files generally provide more comprehensive data and are recommended for complete tax calculations.
+
 ## Currency Conversion Challenges and Solutions
 
 ### Multi-Currency Transaction Example

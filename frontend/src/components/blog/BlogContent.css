@@ -229,6 +229,36 @@
 .blog-post-card {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
   border: 1px solid #e5e7eb !important;
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%) !important;
+}
+
+/* Ensure all text in blog cards is visible with proper contrast */
+.blog-post-card .card-title {
+  color: #1f2937 !important;
+  font-weight: 600 !important;
+}
+
+.blog-post-card .card-text {
+  color: #4b5563 !important;
+}
+
+.blog-post-card .text-muted {
+  color: #6b7280 !important;
+}
+
+.blog-post-card .badge.bg-secondary {
+  background-color: #6b7280 !important;
+  color: #ffffff !important;
+}
+
+.blog-post-card .badge.bg-light {
+  background-color: #f3f4f6 !important;
+  color: #1f2937 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.blog-post-card small {
+  color: #6b7280 !important;
 }
 
 .blog-post-header {

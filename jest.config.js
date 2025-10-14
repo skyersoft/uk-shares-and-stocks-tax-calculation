@@ -42,6 +42,8 @@ module.exports = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
   },
   
+
+  
   // Coverage configuration
   collectCoverage: true,
   collectCoverageFrom: [

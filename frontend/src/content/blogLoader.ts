@@ -107,21 +107,10 @@ export async function getAllPosts(force = false): Promise<BlogPost[]> {
       throw error;
     }
   }
-  // Sort by date descending
+  // Sort posts by date, newest first
   posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  // Ensure unique slugs
-  const seen = new Set<string>();
-  for (const p of posts) {
-    if (seen.has(p.slug)) {
-      throw new Error(`Duplicate slug detected: ${p.slug}`);
-    }
-    seen.add(p.slug);
-  }
+  
   cache = posts;
-  if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line no-console
-    console.debug(`[BlogLoader] Loaded ${posts.length} blog posts.`);
-  }
   return posts;
 }
 

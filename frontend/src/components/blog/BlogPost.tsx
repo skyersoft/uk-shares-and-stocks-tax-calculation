@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card } from '../ui/Card';
-import './BlogContent.css';
 
 export interface BlogPostData {
   id: string;
@@ -87,7 +86,13 @@ export const BlogPost: React.FC<BlogPostProps> = ({
           <div 
             className="prose"
             dangerouslySetInnerHTML={{ 
-              __html: post.content.replace(/\n/g, '<br />') 
+              __html: post.content
+                // Remove newlines that are immediately after opening block-level tags or before closing block-level tags
+                .replace(/(<\/?(ul|ol|li|div|p|h[1-6]|blockquote|pre|table|tr|td|th|thead|tbody)>)\s*\n+\s*/gi, '$1')
+                // Remove standalone newlines between closing and opening tags
+                .replace(/>\s*\n+\s*</g, '><')
+                // Only convert remaining standalone newlines (not near HTML tags) to <br />
+                .replace(/([^>])\n([^<])/g, '$1<br />$2')
             }}
           />
         </div>

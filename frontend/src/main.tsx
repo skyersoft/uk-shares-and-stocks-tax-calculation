@@ -2,11 +2,14 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 
+// Import Bootstrap CSS
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 // Import Bootstrap JavaScript for navbar collapse functionality
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
-// Import global styles
-import './styles/global.scss';
+// Import global styles (overrides Bootstrap where needed)
+import './styles/app.css';
 
 console.log('[SPA] Starting React application...');
 

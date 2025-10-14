@@ -2,6 +2,7 @@ import React from 'react';
 import { CalculationProvider } from './context/CalculationContext';
 import { ToastProvider } from './components/ui/ToastContext';
 import { Layout } from './components/layout/Layout';
+import LandingPage from './pages/LandingPage';
 import CalculatorPage from './pages/CalculatorPage';
 import ResultsPage from './pages/ResultsPage';
 import AboutPage from './pages/AboutPage';
@@ -14,13 +15,13 @@ const App: React.FC = () => {
   console.log('[SPA] App component rendering...');
   const [currentRoute, setCurrentRoute] = React.useState(() => {
     const hash = typeof window !== 'undefined' ? window.location.hash.slice(1) : '';
-    return hash || 'calculator';
+    return hash || 'home';
   });
   
   // Listen for hash changes
   React.useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.slice(1) || 'calculator';
+      const hash = window.location.hash.slice(1) || 'home';
       console.log('[SPA] Hash changed to:', hash);
       setCurrentRoute(hash);
     };
@@ -40,6 +41,8 @@ const App: React.FC = () => {
       return <ResultsPage />;
     }
     switch (currentRoute) {
+      case 'calculator':
+        return <CalculatorPage />;
       case 'about':
         return <AboutPage />;
       case 'help':
@@ -49,7 +52,7 @@ const App: React.FC = () => {
       case 'affiliate-demo':
         return <AffiliateDemo />;
       default:
-        return <CalculatorPage />;
+        return <LandingPage />;
     }
   };
   

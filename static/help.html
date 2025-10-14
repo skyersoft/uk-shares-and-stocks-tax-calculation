@@ -164,7 +164,8 @@
 
         <!-- QFX Export Instructions -->
         <section class="mb-5">
-            <h2 class="mb-4">Method 1: Export QFX File (Recommended)</h2>
+            <h2 class="mb-4">Method 1: Export QFX File (Recommended - Most Comprehensive)</h2>
+            <p class="text-muted mb-4">QFX files provide the most complete data for UK tax calculations, including corporate actions, dividends, and detailed fee structures.</p>
             
             <div class="step-card card">
                 <div class="card-body">
@@ -264,18 +265,16 @@
 
         <!-- CSV Export Instructions -->
         <section class="mb-5">
-            <h2 class="mb-4">Method 2: Export CSV File</h2>
+            <h2 class="mb-4">Method 2: Export CSV File via Flex Queries (Supported Alternative)</h2>
+            <p class="text-muted mb-4">Use CSV export when QFX files encounter import issues or when you need specific field selection.</p>
             
             <div class="step-card card">
                 <div class="card-body">
                     <div class="d-flex align-items-start">
                         <div class="step-number">1</div>
                         <div class="flex-grow-1">
-                            <h5>Access Flex Queries</h5>
-                            <p>In IBKR Client Portal, go to "Performance & Reports" → "Flex Queries".</p>
-                            <div class="screenshot-placeholder">
-                                <span>Screenshot: Flex Queries Menu</span>
-                            </div>
+                            <h5>Login to Interactive Brokers</h5>
+                            <p>Login to your <a href="https://www.interactivebrokers.com.au/sso/Login" target="_blank" rel="noopener">Interactive Brokers account</a>.</p>
                         </div>
                     </div>
                 </div>
@@ -286,10 +285,10 @@
                     <div class="d-flex align-items-start">
                         <div class="step-number">2</div>
                         <div class="flex-grow-1">
-                            <h5>Create New Query</h5>
-                            <p>Click "Create" to create a new Flex Query for transaction data.</p>
+                            <h5>Access Flex Queries</h5>
+                            <p>Click on the <strong>Reports</strong> tab and select <strong>Flex Queries</strong>.</p>
                             <div class="screenshot-placeholder">
-                                <span>Screenshot: Create New Query</span>
+                                <span>Screenshot: Reports → Flex Queries</span>
                             </div>
                         </div>
                     </div>
@@ -301,16 +300,10 @@
                     <div class="d-flex align-items-start">
                         <div class="step-number">3</div>
                         <div class="flex-grow-1">
-                            <h5>Configure Query Settings</h5>
-                            <p>Select the following sections:</p>
-                            <ul>
-                                <li>✅ Trades</li>
-                                <li>✅ Dividends</li>
-                                <li>✅ Corporate Actions</li>
-                                <li>✅ Cash Transactions</li>
-                            </ul>
+                            <h5>Create Activity Flex Query</h5>
+                            <p>Click <strong>'+'</strong> next to <strong>Activity Flex Query</strong>.</p>
                             <div class="screenshot-placeholder">
-                                <span>Screenshot: Query Configuration</span>
+                                <span>Screenshot: Create Activity Flex Query</span>
                             </div>
                         </div>
                     </div>
@@ -322,10 +315,10 @@
                     <div class="d-flex align-items-start">
                         <div class="step-number">4</div>
                         <div class="flex-grow-1">
-                            <h5>Set Date Range and Format</h5>
-                            <p>Set your tax year date range and choose CSV as the output format.</p>
+                            <h5>Select Sections</h5>
+                            <p>Select <strong>Trades</strong> under <strong>Sections</strong>, then select <strong>Executions</strong> on the pop-up window.</p>
                             <div class="screenshot-placeholder">
-                                <span>Screenshot: Date Range and CSV Format</span>
+                                <span>Screenshot: Select Trades → Executions</span>
                             </div>
                         </div>
                     </div>
@@ -337,11 +330,104 @@
                     <div class="d-flex align-items-start">
                         <div class="step-number">5</div>
                         <div class="flex-grow-1">
-                            <h5>Run and Download</h5>
-                            <p>Save the query and run it to generate your CSV file.</p>
+                            <h5>Configure Query Settings</h5>
+                            <p>Tick <strong>SELECT ALL</strong> and click <strong>Save</strong>.</p>
                             <div class="screenshot-placeholder">
-                                <span>Screenshot: Run Query and Download CSV</span>
+                                <span>Screenshot: Select All Fields</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">6</div>
+                        <div class="flex-grow-1">
+                            <h5>Name Your Query</h5>
+                            <p>Enter a <strong>Query Name</strong> (e.g., "Tax Calculator Export").</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">7</div>
+                        <div class="flex-grow-1">
+                            <h5>Set Date Format</h5>
+                            <p>Change <strong>Date Format</strong> to <strong>mm/dd/yyyy</strong> under <strong>General Configuration</strong>.</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Date Format Configuration</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">8</div>
+                        <div class="flex-grow-1">
+                            <h5>Create the Query</h5>
+                            <p>Click <strong>Create</strong> to save your query configuration.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">9</div>
+                        <div class="flex-grow-1">
+                            <h5>Run the Query</h5>
+                            <p><strong>Run</strong> the Activity Flex Query you just created.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">10</div>
+                        <div class="flex-grow-1">
+                            <h5>Set Date Range</h5>
+                            <p>Under <strong>Period</strong>, select <strong>Custom Date Range</strong> to cover all your trades (e.g., entire tax year).</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: Custom Date Range Selection</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">11</div>
+                        <div class="flex-grow-1">
+                            <h5>Set Format and Download</h5>
+                            <p>Set <strong>Format</strong> as <strong>CSV</strong>, click <strong>Run</strong> and download your trades file.</p>
+                            <div class="screenshot-placeholder">
+                                <span>Screenshot: CSV Format and Download</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-card card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="step-number">12</div>
+                        <div class="flex-grow-1">
+                            <h5>Upload to Calculator</h5>
+                            <p>Upload your CSV file to our calculator. <em>(You will be able to review the import before it is saved.)</em></p>
                         </div>
                     </div>
                 </div>
@@ -353,6 +439,7 @@
             <div class="alert alert-info">
                 <h4><i class="fas fa-info-circle"></i> Important Notes</h4>
                 <ul class="mb-0">
+                    <li><strong>Recommended Format:</strong> QFX files provide the most comprehensive data for tax calculations</li>
                     <li><strong>Tax Year Dates:</strong> UK tax year runs from April 6 to April 5 of the following year</li>
                     <li><strong>File Size:</strong> Large files may take time to generate - be patient</li>
                     <li><strong>Data Privacy:</strong> Your data is processed locally and not stored on our servers</li>

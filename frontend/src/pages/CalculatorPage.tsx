@@ -5,7 +5,7 @@ import { Alert } from '../components/ui/Alert';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Select } from '../components/ui/Select';
 import { AffiliateGrid } from '../components/affiliate';
-import './CalculatorPage.css';
+import { IbkrGuide } from '../components/ui/IbkrGuide';
 
 type TaxYear = '2024-2025' | '2023-2024' | '2022-2023' | '2021-2022';
 type AnalysisType = 'both' | 'tax' | 'portfolio';
@@ -18,6 +18,7 @@ const CalculatorPage: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [taxYear, setTaxYear] = useState<TaxYear>('2024-2025');
   const [analysisType, setAnalysisType] = useState<AnalysisType>('both');
+  const [showIbkrGuide, setShowIbkrGuide] = useState(false);
   
   // Validation state
   const [validationErrors, setValidationErrors] = useState<{
@@ -173,8 +174,19 @@ const CalculatorPage: React.FC = () => {
                       <div className="file-upload-subtext">
                         CSV or QFX files from IBKR, HL, Sharesight, etc. (Max 10MB)
                       </div>
+                      <button
+                        className="btn btn-link btn-sm mt-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowIbkrGuide(!showIbkrGuide);
+                        }}
+                      >
+                        How to get my QFX file from IBKR?
+                      </button>
                     </div>
                     
+                    {showIbkrGuide && <IbkrGuide />}
+
                     {file && (
                       <div className="selected-file-display">
                         <div className="file-icon">

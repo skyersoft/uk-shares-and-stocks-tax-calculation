@@ -3,7 +3,7 @@
  * Handles loading, validation, and filtering of affiliate product data
  */
 
-import affiliateData from '../data/affiliateProducts.json';
+import { affiliateData } from '../data/affiliateProducts';
 import { AffiliateProduct, AffiliateConfig, AffiliateValidationError } from '../types/affiliate';
 
 let productsCache: AffiliateProduct[] | null = null;
@@ -27,7 +27,7 @@ function validateProduct(product: any, index: number): AffiliateValidationError[
   });
   
   // Validate category
-  const validCategories = ['tax', 'trading', 'finance', 'business'];
+  const validCategories = ['tax', 'trading', 'finance', 'business', 'investing'];
   if (product.category && !validCategories.includes(product.category)) {
     errors.push({
       field: `products[${index}].category`,

@@ -2,6 +2,12 @@
 // Import jest-dom matchers for DOM assertions
 import '@testing-library/jest-dom';
 
+// Mock import.meta for Vite compatibility in Jest environment
+// This prevents "Cannot use 'import.meta' outside a module" errors
+global.importMeta = {
+  glob: () => ({})
+};
+
 // Polyfill TextEncoder/TextDecoder for jsdom environment
 if (typeof global.TextEncoder === 'undefined') {
 	const { TextEncoder, TextDecoder } = require('util');

@@ -38,6 +38,14 @@
 - **Monitoring**: Error tracking, performance monitoring, health checks
 - **Security**: Production-hardened nginx, security headers, rate limiting
 
+### **Epic 9: Affiliate Marketing System** 🚧 IN PROGRESS
+- **Scope**: Amazon affiliate program integration with tax/trading book recommendations
+- **Objective**: Monetize content through relevant book recommendations with proper affiliate disclosure
+- **Components**: AffiliateLink.tsx, AffiliateGrid.tsx, AffiliateData management
+- **Features**: FTC-compliant disclosure, responsive book cards, affiliate tracking
+- **Data**: JSON-based affiliate product database with book metadata
+- **Testing**: Comprehensive unit tests for affiliate components and data management
+
 ---
 
 ## 🏗️ Architecture Overview
@@ -1027,3 +1035,139 @@ function handleFileSelection(file) {
 *Project Status: Planning Phase*  
 *Next Review: Weekly on Fridays*  
 *Document Version: 1.0*
+
+---
+
+## 📝 Enhancement: Externalize Blog Content (Markdown Content System)
+
+### 🎯 Goal
+Move blog posts out of inline React code into a structured Markdown-based content system with YAML frontmatter, dynamic loading, validation, and slug-based routing.
+
+### 📂 Directory Structure (Planned)
+```
+frontend/content/blog/
+  2024/
+    understanding-uk-capital-gains-tax/index.md
+    hmrc-reporting-requirements/index.md
+    using-interactive-brokers-data/index.md
+    tax-efficient-investment-strategies/index.md
+```
+
+### 🧾 Frontmatter Schema
+```yaml
+---
+title: "Understanding UK Capital Gains Tax on Stocks and Shares"
+slug: "understanding-uk-capital-gains-tax"
+author: "Tax Calculator Team"
+date: "2024-01-15"   # ISO 8601
+category: "Tax Education"
+tags: [Tax, UK, "Capital Gains", Stocks]
+excerpt: "Learn the basics of UK Capital Gains Tax on stocks and shares, including allowances, rates, and key considerations."
+readingTime: 5  # optional override; else auto-computed
+---
+```
+
+### ✅ Acceptance Criteria
+- Blog page loads posts from markdown, sorted by date desc.
+- Deep link: `#blog/post/<slug>` renders full post.
+- Old numeric deep links redirect (e.g. `#blog/post/2` -> slug).
+- Build-time validation fails CI on schema errors / duplicate slugs.
+- Loader excluded from initial bundle (lazy or dynamic import) to reduce main bundle size impact.
+
+### 🚀 Task Breakdown
+| ID | Task | Status |
+|----|------|--------|
+| 1 | Choose format & structure | ⭕ Pending |
+| 2 | Add parsing deps (gray-matter + remark or marked) | ⭕ Pending |
+| 3 | Migrate 4 sample posts to markdown | ⭕ Pending |
+| 4 | Create types (`blog.ts`) | ⭕ Pending |
+| 5 | Implement `blogLoader.ts` (import.meta.glob) | ⭕ Pending |
+| 6 | Refactor `BlogPage` to use loader | ⭕ Pending |
+| 7 | Backward compatibility (ID→slug redirect) | ⭕ Pending |
+| 8 | Unit tests for loader | ⭕ Pending |
+| 9 | Integration tests for BlogPage | ⭕ Pending |
+| 10 | Build-time validation script | ⭕ Pending |
+| 11 | Authoring guide (`BLOG_CONTENT_GUIDE.md`) | ⭕ Pending |
+| 12 | Bundle impact optimization | ⭕ Pending |
+| 13 | Deployment & verification | ⭕ Pending |
+
+### 🛠 Implementation Notes
+- Use `import.meta.glob('/frontend/content/blog/**/index.md', { eager: false })` with dynamic import for lazy loading.
+- Compute reading time: `Math.ceil(wordCount / 200)` if not provided.
+- Validation: required fields (title, slug, author, date, excerpt, category); slug must match `[a-z0-9-]+`.
+- Consider caching parsed results in a module-level map.
+- Add a hash utility to normalize `#blog/post/<id or slug>`.
+
+### 🔍 Testing Strategy
+- Unit: mock virtual markdown modules (use `vi.mock`) to simulate different frontmatter cases.
+- Integration: render `BlogPage`, assert list population & navigation.
+- Edge Cases: missing frontmatter field, duplicate slug, invalid date.
+
+### 🧪 CI Validation
+Add `npm run validate:blog` that scans files with Node script:
+1. Load each markdown.
+2. Parse YAML frontmatter.
+3. Validate schema & uniqueness.
+4. Output structured report; exit 1 on failure.
+
+### 📄 Authoring Workflow (Preview)
+1. Add file under `frontend/content/blog/<year>/<slug>/index.md`.
+2. Run `npm run dev:spa` and open `#blog/post/<slug>`.
+3. Commit with meaningful message referencing post slug.
+
+---
+
+## 💰 Epic 9: Affiliate Marketing System
+
+### 🎯 Task 9.1: Affiliate Link Components
+**Status**: 🚧 IN PROGRESS  
+**Objective**: Create reusable affiliate link components with proper FTC compliance
+
+#### 📦 9.1.1: Core Affiliate Components
+- **AffiliateLink.tsx**: Single affiliate link with disclosure
+- **AffiliateCard.tsx**: Book card component with image, title, description
+- **AffiliateGrid.tsx**: Grid layout for multiple affiliate products
+- **AffiliateDisclosure.tsx**: FTC-compliant disclosure banner
+
+#### 📊 9.1.2: Affiliate Data Management
+- **affiliateProducts.json**: Centralized affiliate product database
+- **affiliateLoader.ts**: Data loading and validation utilities
+- **types/affiliate.ts**: TypeScript interfaces for affiliate data
+
+#### 🎨 9.1.3: Visual Design Requirements
+- **Responsive Cards**: Mobile-first design with Bootstrap grid
+- **Book Imagery**: Amazon product images with proper attribution
+- **Call-to-Action**: "Check Price on Amazon" buttons with affiliate tracking
+- **Disclosure**: Clear "As an Amazon Associate..." statements
+
+#### ✅ 9.1.4: Testing Requirements
+- **Unit Tests**: Component rendering, prop validation, click tracking
+- **Accessibility**: Screen reader support, keyboard navigation
+- **Responsive**: Mobile/tablet/desktop layout testing
+- **Performance**: Lazy loading for images, optimal bundle size
+
+#### 📋 9.1.5: Content Categories
+- **Tax Books**: UK tax guides, capital gains resources
+- **Trading Books**: Investment strategy, portfolio management
+- **Finance Books**: Personal finance, wealth building
+- **Business Books**: Entrepreneurship, business tax planning
+
+#### 🔒 9.1.6: Compliance Features
+- **FTC Disclosure**: Automatic affiliate relationship disclosure
+- **Privacy**: No tracking without consent
+- **Attribution**: Proper Amazon Associate program compliance
+- **Transparency**: Clear pricing and availability information
+
+### 🔄 Backward Compatibility
+Map legacy numeric IDs to new slugs:
+```ts
+const legacyIdMap: Record<string,string> = {
+  '1': 'understanding-uk-capital-gains-tax',
+  '2': 'hmrc-reporting-requirements',
+  '3': 'using-interactive-brokers-data',
+  '4': 'tax-efficient-investment-strategies'
+};
+```
+If hash contains numeric ID, immediately replace location.hash with slug variant.
+
+---
