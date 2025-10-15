@@ -1,15 +1,95 @@
 # Project Plan: UK Capital Gains Tax Calculator for Stocks and Shares
 
-## Agile Backlog & Task Tracker
+## Overview
 
-This project plan is structured for agile, test-driven development, and SOLID-compliant implementation. Do not fix formating issues such as line length. Each task is tracked with:
-- **ID**: Unique identifier
-- **Epic/Feature**: High-level grouping
-- **Component**: Specific class/module being worked on
-- **Task**: Concrete implementation or test
-- **Test Type**: Unit / Integration / System
-- **Dependencies**: What must be done first
-- **Status**: Todo / In Progress / Done
+This project implements a comprehensive UK capital gains tax calculator for stocks and shares, supporting both QFX and CSV file formats from major brokers like Interactive Brokers and Sharesight. The system follows HMRC tax rules and provides detailed reporting for tax compliance.
+
+## Architecture
+
+### Backend (Python)
+- **Core Engine**: SOLID-compliant tax calculation with dependency injection
+- **Parsers**: QFX and CSV file processing with robust error handling
+- **Models**: Domain objects for securities, transactions, and tax calculations
+- **Services**: Business logic for share pooling, matching rules, and tax computation
+
+### Frontend (Static HTML/JS + React SPA)
+- **Static Interface**: Production-ready HTML/JS with Bootstrap styling
+- **React Migration**: Modern SPA implementation in development
+- **File Upload**: Drag-and-drop interface for QFX/CSV files
+- **Results Display**: Interactive tables and charts for tax calculations
+
+### Infrastructure
+- **AWS Lambda**: Serverless computation with API Gateway
+- **CloudFront**: CDN for static assets with custom domain
+- **CI/CD**: Automated testing and deployment pipeline
+- **Testing**: 699+ tests across unit, integration, and E2E suites
+
+## Development Phases
+
+### Phase 1: Core Backend (COMPLETED)
+- ✅ QFX file parsing with XML node processing
+- ✅ Domain models (Security, Transaction, Currency)
+- ✅ Share pool management with Section 104 rules
+- ✅ Transaction matching (same-day, 30-day, pool rules)
+- ✅ Tax calculation engine with HMRC compliance
+- ✅ CLI interface with argument parsing
+
+### Phase 2: Extended Support (COMPLETED)
+- ✅ CSV parser for Sharesight and similar formats
+- ✅ Currency conversion and exchange rate handling
+- ✅ Report generation (CSV/JSON formats)
+- ✅ System integration testing
+- ✅ Performance optimization
+
+### Phase 3: Web Interface (COMPLETED)
+- ✅ Flask web application with file upload
+- ✅ Bootstrap-based responsive UI
+- ✅ Results visualization with tables and charts
+- ✅ Error handling and user feedback
+- ✅ Production deployment to AWS
+
+### Phase 4: React Migration (IN PROGRESS)
+- ✅ Component library with 339 tests (12 components)
+- ✅ TypeScript integration and modern tooling
+- ✅ SEO optimization and content management
+- ✅ Google Ads integration with privacy compliance
+- ✅ Testing framework with 699+ total tests
+- 🚧 Affiliate marketing system (in development)
+
+## Current Status
+
+### Completed Features
+- **File Processing**: QFX and CSV format support
+- **Tax Calculations**: HMRC-compliant CGT calculations
+- **Web Interface**: Production-ready static site
+- **Testing**: Comprehensive test suite (699+ tests)
+- **Deployment**: AWS infrastructure with CI/CD
+- **Monetization**: Google AdSense integration
+
+### Active Development
+- **React SPA**: Modern frontend migration (ui_tasks.md)
+- **Affiliate System**: Amazon Associates integration
+- **Content Management**: Blog system with MDX support
+
+## Quality Metrics
+
+- **Test Coverage**: 76%+ across statements/branches/functions/lines
+- **Code Quality**: SOLID principles, dependency injection
+- **Performance**: Sub-second processing for typical files
+- **Reliability**: Production deployment with monitoring
+- **User Experience**: Mobile-responsive design
+
+## Next Priorities
+
+1. **Complete React SPA Migration** - Finish ui_tasks.md implementation
+2. **Affiliate Marketing** - Implement Amazon Associates system
+3. **Content Enhancement** - Expand blog with tax education
+4. **Performance Monitoring** - Add application analytics
+5. **User Feedback** - Implement feedback collection
+
+## Sprint Structure
+
+This project uses agile development with focused sprints. Each sprint delivers working software with comprehensive testing.
 
 ---
 

@@ -39,7 +39,7 @@ This is a UK Capital Gains Tax Calculator for stocks and shares, processing QFX/
 ### Frontend (JavaScript/React)
 - **Framework**: React 18 with Vite for build tooling
 - **Testing**: Jest for unit tests, Playwright for E2E testing
-- **Structure**: Static files in `/static/` directory for Flask serving
+- **Structure**: Static files in `/static/` directory 
 
 ### Infrastructure
 - **Deployment**: AWS Lambda + API Gateway with CloudFront CDN
@@ -141,15 +141,6 @@ Use dedicated markdown files for task tracking:
 - **Feature Tasks**: `/ui_tasks.md`, `/enhancement_tasks.md` etc.
 - **Sprint Tasks**: Reference existing `/PROJECT_PLAN.md` structure
 
-### Current Project Status (Reference: tasks.md)
-- **Live Production**: https://cgttaxtool.uk with Google AdSense
-- **Critical Bug Fixed**: Duplicate file upload causing data aggregation (Jan 2025)
-- **Test Infrastructure**: Comprehensive Playwright E2E + Jest unit tests
-- **Active Priority**: Complete React SPA migration (`frontend/` directory)
-- **Recent Achievements**: 
-  - Fixed duplicate FormData.append() in `static/js/app.js`
-  - Organized test files into proper `tests/` structure
-  - Enhanced JavaScript testing for regression prevention
 
 ### Task File Format
 ```markdown

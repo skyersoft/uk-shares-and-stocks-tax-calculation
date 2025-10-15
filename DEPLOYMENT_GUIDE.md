@@ -1,121 +1,85 @@
 # 🚀 IBKR Tax Calculator - AWS Deployment Guide
 
-This guide will help you deploy the IBKR Tax Calculator to AWS using Lambda + API Gateway with advertisement monetization.
+This comprehensive guide covers deploying the IBKR Tax Calculator to AWS with full monetization setup.
 
 ## 📋 Prerequisites
 
-### 1. AWS Account Setup
-- Create an AWS account at https://aws.amazon.com/
-- Ensure you're eligible for AWS Free Tier (12 months free)
-- Set up billing alerts to monitor costs
+### AWS Account Setup
+- Create AWS account at https://aws.amazon.com/ (Free Tier eligible)
+- Set up billing alerts for cost monitoring
+- Install AWS CLI and configure credentials
 
-### 2. Install Required Tools
-```bash
-# Install AWS CLI
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
+### Advertisement Setup (Required for Monetization)
+1. **Google AdSense**: Apply at https://www.google.com/adsense/
+   - Get Publisher ID (format: `ca-pub-XXXXXXXXXXXXXXXXX`)
+   - Create ad units and note slot IDs
 
-# Verify installation
-aws --version
-```
+2. **Amazon Associates**: Join at https://affiliate-program.amazon.com/
+   - Get affiliate ID for UK marketplace
+   - Prepare product links for tax/investment books
 
-### 3. Configure AWS Credentials
-```bash
-aws configure
-# Enter your:
-# - AWS Access Key ID
-# - AWS Secret Access Key  
-# - Default region (e.g., us-east-1)
-# - Default output format (json)
-```
+3. **Font Awesome**: Get free kit at https://fontawesome.com/
+   - Copy kit URL for icons
 
-## 💰 Advertisement Setup (BEFORE Deployment)
+## ☁️ AWS Infrastructure Overview
 
-### 1. Google AdSense Setup
-1. **Apply for AdSense**: Visit https://www.google.com/adsense/
-2. **Create Ad Units**:
-   - Banner Ad (728x90 or responsive)
-   - Sidebar Ad (300x250 or responsive)
-   - Results Banner Ad (responsive)
-   - Bottom Banner Ad (responsive)
-3. **Get Your Publisher ID**: Format `ca-pub-XXXXXXXXXXXXXXXXX`
-4. **Get Ad Slot IDs**: Each ad unit has a unique slot ID
+### Current Live Deployment
+- **Website**: https://cgttaxtool.uk (active)
+- **API Gateway**: https://d1tr8kb7oh.execute-api.us-east-1.amazonaws.com/prod
+- **Lambda Function**: ibkr-tax-calculator-prod-us-east-1
+- **CloudFront**: E3CPZK9XL7GR6Q
+- **S3 Bucket**: ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo
 
-### 1.1. ads.txt Configuration
-The application automatically serves an ads.txt file at `/ads.txt` with your Google AdSense publisher ID:
-```
-google.com, pub-2934063890442014, DIRECT, f08c47fec0942fa0
-```
-This is configured in `deployment/lambda_handler.py` and will be available at:
-- https://cgttaxtool.uk/ads.txt
-- https://www.cgttaxtool.uk/ads.txt
-
-### 2. Amazon Associates Setup
-1. **Join Amazon Associates**: Visit https://affiliate-program.amazon.com/
-2. **Get Your Affiliate ID**: Format `your-affiliate-id-20`
-3. **Create Product Links** for:
-   - UK Tax Planning books
-   - Portfolio management software
-   - Investment guides
-   - Tax preparation tools
-
-### 3. Font Awesome Setup
-1. **Get Font Awesome Kit**: Visit https://fontawesome.com/
-2. **Create free account** and get your kit code
-3. **Copy the kit URL**: Format `https://kit.fontawesome.com/YOUR_KIT_ID.js`
+### Architecture Components
+- **Lambda + API Gateway**: Serverless backend processing
+- **CloudFront + S3**: CDN and static file hosting
+- **Route 53**: DNS management for custom domain
+- **ACM**: SSL certificate management
 
 ## 🔧 Pre-Deployment Configuration
 
-### 1. Update Advertisement IDs
-Replace placeholders in the relevant template files with your actual advertisement IDs.
+### 1. Update Advertisement Placeholders
+Replace placeholders in `deployment/lambda_handler.py` and template files:
 
-**In `deployment/templates/landing_page.py`:**
-- Replace `YOUR_ADSENSE_ID` with your AdSense publisher ID.
-- Replace `YOUR_BANNER_SLOT_ID` with your banner ad slot ID.
-- Replace `YOUR_SIDEBAR_SLOT_ID` with your sidebar ad slot ID.
-- Replace `YOUR_FONTAWESOME_KIT` with your Font Awesome kit ID.
-
-**In `deployment/templates/results_page.py`:**
-- Replace `YOUR_ADSENSE_ID` with your AdSense publisher ID.
-- Replace `YOUR_RESULTS_BANNER_SLOT_ID` with your results banner ad slot ID.
-- Replace `YOUR_SIDEBAR_SLOT_ID` with your sidebar ad slot ID.
-- Replace `YOUR_FONTAWESOME_KIT` with your Font Awesome kit ID.
-
-**In `deployment/templates/about_page.py`:**
-- Replace `YOUR_ADSENSE_ID` with your AdSense publisher ID.
-- Replace `YOUR_SIDEBAR_SLOT_ID` with your sidebar ad slot ID.
-
-### 2. Update Amazon Affiliate Links
-Replace placeholder affiliate links:
 ```python
-# Replace these in all template files:
-YOUR_AFFILIATE_LINK → your-actual-amazon-affiliate-links
-YOUR_TAX_GUIDE_LINK → specific-product-affiliate-link
-YOUR_PORTFOLIO_BOOK_LINK → specific-product-affiliate-link
-YOUR_SOFTWARE_LINK → specific-product-affiliate-link
+# AdSense Configuration
+ADSENSE_PUBLISHER_ID = "ca-pub-2934063890442014"  # Your publisher ID
+BANNER_AD_SLOT = "YOUR_BANNER_SLOT_ID"
+SIDEBAR_AD_SLOT = "YOUR_SIDEBAR_SLOT_ID"
+
+# Amazon Associates
+AFFILIATE_ID = "YOUR_AFFILIATE_ID"
+
+# Font Awesome
+FONTAWESOME_KIT = "https://kit.fontawesome.com/YOUR_KIT_ID.js"
 ```
 
-## 🚀 Deployment Steps
+### 2. Update ads.txt
+The application serves ads.txt at `/ads.txt`:
+```
+google.com, pub-2934063890442014, DIRECT, f08c47fec0942fa0
+```
 
-### 1. Quick Deployment (Recommended)
+## 🚀 Deployment Methods
+
+### Quick Deployment (Recommended)
 ```bash
-# Navigate to project directory
+# Ensure advertisement IDs are configured
 cd /path/to/ibkr-tax-calculator
 
-# Run deployment script
+# Run automated deployment
 ./deployment/deploy.sh
 ```
 
-### 2. Manual Deployment (Alternative)
+### Manual Deployment Steps
 
-#### Step 2a: Create Deployment Package
+#### 1. Package Lambda Function
 ```bash
-# Create deployment directory
-mkdir deployment_package
-cd deployment_package
+# Create deployment package
+mkdir lambda_package
+cd lambda_package
 
-# Copy source code
+# Copy source files
 cp -r ../src/ .
 cp ../deployment/lambda_handler.py .
 cp -r ../deployment/templates/ .
@@ -123,189 +87,168 @@ cp -r ../deployment/templates/ .
 # Install dependencies
 pip install -r ../deployment/requirements.txt -t .
 
-# Create ZIP package
-zip -r ../lambda-deployment.zip . -x "*.pyc" "*/__pycache__/*"
-cd ..
+# Create ZIP
+zip -r ../lambda-deployment.zip . -x "*.pyc" "__pycache__/*"
 ```
 
-#### Step 2b: Deploy CloudFormation Stack
+#### 2. Deploy Infrastructure
 ```bash
+# Deploy CloudFormation stack
 aws cloudformation deploy \
     --template-file deployment/cloudformation-template.yaml \
     --stack-name ibkr-tax-calculator \
     --parameter-overrides ProjectName=ibkr-tax-calculator Stage=prod \
     --capabilities CAPABILITY_NAMED_IAM \
-    --region us-east-1
-```
-
-#### Step 2c: Update Lambda Function
-```bash
-aws lambda update-function-code \
-    --function-name ibkr-tax-calculator-prod \
-    --zip-file fileb://lambda-deployment.zip \
-    --region us-east-1
-```
-
-## 🌐 Post-Deployment Configuration
-
-### 1. Get Your Application URL
-```bash
-aws cloudformation describe-stacks \
-    --stack-name ibkr-tax-calculator \
     --region us-east-1 \
-    --query 'Stacks[0].Outputs[?OutputKey==`ApiUrl`].OutputValue' \
-    --output text
+    --profile goker
+
+# Update Lambda code
+aws lambda update-function-code \
+    --function-name ibkr-tax-calculator-prod-us-east-1 \
+    --zip-file fileb://lambda-deployment.zip \
+    --region us-east-1 \
+    --profile goker
 ```
 
-### 2. Test Your Application
-1. Visit the URL from step 1
-2. Upload a sample CSV file
-3. Verify tax calculations work
-4. Check that ads are displaying correctly
-
-### 3. Set Up Custom Domain (Automated)
-
-#### Quick Custom Domain Setup
+#### 3. Deploy Static Files
 ```bash
-# Deploy custom domain using CloudFormation
+# Sync static files to S3
+aws s3 sync static/ s3://ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo/ \
+    --profile goker \
+    --delete \
+    --cache-control "max-age=3600"
+
+# Invalidate CloudFront cache
+aws cloudfront create-invalidation \
+    --distribution-id E3CPZK9XL7GR6Q \
+    --paths "/*" \
+    --profile goker
+```
+
+## 🌐 Custom Domain Setup
+
+### Automated Setup
+```bash
 ./deployment/deploy-custom-domain.sh
 ```
 
-#### Manual Custom Domain Setup (Alternative)
-1. **Request SSL certificate** in ACM (same region as API Gateway)
-2. **Create custom domain** in API Gateway
-3. **Create base path mapping** to connect domain to API
-4. **Create Route 53 A records** pointing to API Gateway
+### Manual Setup
+1. Request ACM certificate for your domain
+2. Create API Gateway custom domain
+3. Configure Route 53 DNS records
+4. Update CloudFront distribution
 
-#### Verify Custom Domain
+## � Monetization Optimization
+
+### AdSense Best Practices
+- **Placement**: Above fold, near content, strategic locations
+- **Responsive**: Use responsive ad units for mobile
+- **Balance**: Avoid overwhelming users with ads
+- **Content**: High-quality content improves RPM
+
+### Amazon Associates Strategy
+- **Relevant Products**: Tax planning, investment books, software
+- **FTC Compliance**: Clear affiliate disclosures
+- **Performance Tracking**: Monitor conversion rates
+- **Content Integration**: Natural product recommendations
+
+## 📊 Monitoring & Analytics
+
+### AWS Monitoring
 ```bash
-# Test the domain
-curl -I https://cgttaxtool.uk
-curl https://cgttaxtool.uk/ads.txt
+# Check CloudWatch logs
+aws logs tail /aws/lambda/ibkr-tax-calculator-prod-us-east-1 --follow --profile goker
 
-# Should return:
-# - 200 OK for main site
-# - ads.txt content: google.com, pub-2934063890442014, DIRECT, f08c47fec0942fa0
+# Monitor API Gateway metrics
+aws cloudwatch get-metric-statistics \
+    --namespace AWS/ApiGateway \
+    --metric-name Count \
+    --start-time 2025-01-01T00:00:00Z \
+    --end-time 2025-12-31T23:59:59Z \
+    --period 86400 \
+    --statistics Sum
 ```
 
-## 💡 Monetization Optimization
+### Revenue Tracking
+- **AdSense Dashboard**: Daily/monthly revenue reports
+- **Amazon Associates**: Commission tracking and reports
+- **Analytics**: Google Analytics for user behavior
 
-### 1. AdSense Optimization
-- **Ad Placement**: Place ads above the fold and near content
-- **Responsive Ads**: Use responsive ad units for mobile compatibility
-- **Ad Balance**: Don't overwhelm users with too many ads
-- **Content Quality**: High-quality content improves ad revenue
+## 🔒 Security & Compliance
 
-### 2. Amazon Associates Optimization
-- **Relevant Products**: Only recommend tax/finance related products
-- **Product Reviews**: Add brief descriptions to increase click-through
-- **Seasonal Promotions**: Update links during tax season
-- **Track Performance**: Monitor which products generate revenue
-
-### 3. Revenue Maximization Tips
-- **Target Keywords**: Optimize for "UK tax calculator", "IBKR tax", etc.
-- **SEO Optimization**: Add meta tags, structured data
-- **Social Sharing**: Add social media sharing buttons
-- **Email Capture**: Consider newsletter signup for return visitors
-
-## 📊 Monitoring and Analytics
-
-### 1. AWS CloudWatch
-- Monitor Lambda function performance
-- Set up alerts for errors or high latency
-- Track API Gateway metrics
-
-### 2. Google Analytics
-Add Google Analytics to track:
-- User behavior and engagement
-- Popular pages and features
-- Conversion rates for ads
-
-### 3. Revenue Tracking
-- **AdSense Dashboard**: Monitor daily/monthly revenue
-- **Amazon Associates Dashboard**: Track affiliate commissions
-- **Performance Reports**: Analyze which content drives revenue
-
-## 🔒 Security and Compliance
-
-### 1. Data Protection
+### Data Protection
 - No permanent data storage (GDPR compliant)
 - HTTPS encryption for all communications
-- Secure file processing in Lambda
+- Secure Lambda execution environment
+- Privacy policy and terms of service included
 
-### 2. Legal Requirements
-- **Privacy Policy**: Update with your contact information
-- **Terms of Service**: Review and customize for your jurisdiction
-- **Cookie Consent**: Consider adding cookie consent banner
-- **Tax Disclaimer**: Ensure proper disclaimers are prominent
-
-## 💰 Cost Estimation (AWS Free Tier)
-
-### Monthly Costs (First 12 months - FREE)
-- **Lambda**: 1M requests + 400,000 GB-seconds FREE
-- **API Gateway**: 1M API calls FREE
-- **CloudWatch**: Basic monitoring FREE
-- **Data Transfer**: 1GB outbound FREE
-
-### After Free Tier (Estimated for 10,000 monthly users)
-- **Lambda**: ~$5-10/month
-- **API Gateway**: ~$3-5/month
-- **CloudWatch**: ~$1-2/month
-- **Total**: ~$10-20/month
-
-### Revenue Potential
-- **AdSense**: $1-5 per 1,000 page views (RPM)
-- **Amazon Associates**: 1-10% commission on sales
-- **Target**: 10,000 monthly users = $50-200/month potential
+### Cost Optimization
+- **Free Tier**: 1M Lambda requests, 1M API calls free
+- **Estimated Cost**: $10-20/month after free tier
+- **Revenue Potential**: $50-200/month from ads
 
 ## 🆘 Troubleshooting
 
 ### Common Issues
 
-#### 1. Lambda Function Timeout
+#### Lambda Function Errors
 ```bash
-# Increase timeout
-aws lambda update-function-configuration \
-    --function-name ibkr-tax-calculator-prod \
-    --timeout 60
+# Check recent logs
+aws logs filter-log-events \
+    --log-group-name /aws/lambda/ibkr-tax-calculator-prod-us-east-1 \
+    --start-time $(date -d '1 hour ago' +%s) \
+    --profile goker
 ```
 
-#### 2. Memory Issues
+#### CloudFront Issues
 ```bash
-# Increase memory
-aws lambda update-function-configuration \
-    --function-name ibkr-tax-calculator-prod \
-    --memory-size 2048
+# Check distribution status
+aws cloudfront get-distribution --id E3CPZK9XL7GR6Q --profile goker
 ```
 
-#### 3. Import Errors
-- Ensure all dependencies are in the deployment package
-- Check Python version compatibility (3.10)
-- Verify file paths in lambda_handler.py
+#### Ad Display Problems
+- Verify AdSense publisher ID is correct
+- Check that ads are enabled in AdSense dashboard
+- Ensure CSP headers allow Google domains
 
-#### 4. CORS Issues
-- Check API Gateway CORS configuration
-- Verify headers in Lambda responses
+### Performance Issues
+- Increase Lambda memory if timeout occurs
+- Check API Gateway throttling limits
+- Monitor CloudWatch metrics for bottlenecks
 
-### Getting Help
+## � Scaling & Optimization
+
+### Performance Tuning
+- **Lambda Memory**: Increase from 1024MB if needed
+- **Timeout**: Extend to 60 seconds for large files
+- **Caching**: Implement CloudFront caching strategies
+
+### Feature Enhancements
+- **File Size Limits**: Consider pre-signed S3 URLs for large files
+- **Rate Limiting**: Implement API Gateway usage plans
+- **Monitoring**: Add custom CloudWatch dashboards
+
+## 🎯 Success Metrics
+
+### Technical KPIs
+- **Uptime**: 99.9%+ availability
+- **Response Time**: <2 seconds for calculations
+- **Error Rate**: <1% of requests
+
+### Business KPIs
+- **Monthly Revenue**: $50-200 from advertisements
+- **User Growth**: 10,000+ monthly visitors
+- **Conversion Rate**: 5%+ ad click-through rate
+
+## 📞 Support Resources
+
 - **AWS Documentation**: https://docs.aws.amazon.com/
-- **AWS Support**: Use AWS Support Center for technical issues
-- **Community Forums**: Stack Overflow, AWS Forums
+- **AdSense Help**: https://support.google.com/adsense/
+- **Amazon Associates**: https://affiliate-program.amazon.com/help/
+- **UK Tax Rules**: https://www.gov.uk/government/organisations/hm-revenue-customs
 
-## 🎯 Next Steps
+---
 
-1. **Deploy and Test**: Follow this guide to deploy your application
-2. **Optimize Ads**: Monitor performance and adjust ad placements
-3. **SEO Optimization**: Improve search engine visibility
-4. **Feature Enhancements**: Add new features based on user feedback
-5. **Scale Up**: Consider upgrading to paid tiers as usage grows
+*This guide consolidates deployment information from DEPLOYMENT_GUIDE.md, DEPLOYMENT_SUMMARY.md, and AWS_DEPLOYMENT_REFERENCE.md into a single comprehensive reference.*
 
-## 📞 Support
-
-If you encounter issues during deployment:
-1. Check AWS CloudWatch logs for error details
-2. Verify all placeholder values have been replaced
-3. Ensure AWS credentials have proper permissions
-4. Test with a simple CSV file first
-
-Good luck with your deployment! 🚀
+*Last Updated: 2025-10-14*

@@ -16,6 +16,28 @@
 - **API Endpoint**: https://qzbkgopzi3.execute-api.eu-west-1.amazonaws.com/prod/
 - **Status**: Production-ready, actively serving users
 
+## 🏗️ Business Feature Definitions
+
+### Core Business Logic
+- **Capital Gains Tax Calculation**: HMRC-compliant CGT calculations with proper matching rules
+- **Share Pool Management**: Section 104 holding pools with average cost basis
+- **Transaction Matching**: Same-day, 30-day bed & breakfast, and pool matching rules
+- **Currency Conversion**: Multi-currency support with proper GBP conversion
+- **Annual Exemption**: £3,000 tax-free allowance application
+- **Report Generation**: CSV/JSON export formats for tax records
+
+### File Processing
+- **QFX Parser**: Quicken format support for Interactive Brokers exports
+- **CSV Parser**: Sharesight and similar broker CSV format support
+- **Error Recovery**: Robust parsing with fallback strategies
+- **Validation**: Comprehensive data validation and error reporting
+
+### Web Interface
+- **File Upload**: Drag-and-drop interface with progress indicators
+- **Results Display**: Interactive tables with sorting and filtering
+- **Responsive Design**: Mobile-first Bootstrap implementation
+- **Error Handling**: User-friendly error messages and recovery options
+
 ## 🏗️ Architecture Overview
 
 ### Backend (Python 3.10+)
@@ -308,59 +330,13 @@ aws cloudfront create-invalidation \
     --paths "/*"
 ```
 
-## 🐛 Critical Bug Fixes & Lessons Learned
+## 🐛 Historical Bug Fixes (Archived)
 
-### Duplicate File Upload Bug (January 2025)
-
-**Issue**: Tax calculation results showing single aggregated holding instead of individual securities
-- **Symptoms**: 6 individual stocks (ASM, ASML, RR., BSX, NVDA, TSLA) appeared as 1 aggregated row
-- **Impact**: Users couldn't see detailed breakdown of their holdings
-- **Root Cause**: Duplicate file form fields in JavaScript causing backend to aggregate data
-
-**Investigation Process**:
-1. ✅ Backend API verification: `curl` tests confirmed API returns 6 holdings correctly
-2. ✅ Network layer: Browser DevTools showed API response contains 6 holdings  
-3. ✅ Data processing: Frontend correctly processes 6 holdings from API response
-4. 🔍 **Root Cause Found**: JavaScript form handling bug with duplicate `FormData.append()`
-
-**Technical Details**:
-```javascript
-// BUG: Duplicate file form fields in static/js/app.js
-const formData = new FormData(form);        // Adds file from form input
-formData.append('file', uploadedFile);      // DUPLICATE: Adds same file again
-formData.append('tax_year', taxYear);
-
-// Backend receives duplicate files, returns aggregated data instead of individual holdings
-```
-
-**Fix Applied**:
-```javascript
-// FIXED: Single file source with proper form synchronization
-function handleFileSelection(file) {
-    uploadedFile = file;
-    // Synchronize HTML form input with selected file
-    const fileInput = document.getElementById('file-input');
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    fileInput.files = dt.files;
-}
-
-// Form submission uses only form data (no duplicate append)
-const formData = new FormData(form);
-formData.append('tax_year', taxYear);
-```
-
-**Verification**:
-- ✅ Portfolio table: Now displays 6 individual holdings with correct symbols
-- ✅ Disposal table: Shows 3 disposals (RR., NXE, AMZN) with proper symbols  
-- ✅ Dividend table: Displays 7 dividends with correct company symbols
-- ✅ End-to-end test: Playwright automation confirms full workflow
-
-**Key Lessons**:
-1. **Frontend form bugs can cause backend data aggregation** - Always check form data structure
-2. **Systematic debugging approach**: Backend → Network → Frontend → Form handling
-3. **Browser DevTools are crucial**: Network tab shows actual API responses vs UI display
-4. **Test automation prevents regression**: Comprehensive E2E tests catch similar issues
+### Duplicate File Upload Bug (January 2025) - RESOLVED
+**Issue**: Fixed critical frontend form handling bug causing data aggregation
+**Impact**: Users now see individual securities instead of aggregated holdings
+**Resolution**: Removed duplicate FormData.append() calls in static/js/app.js
+**Verification**: Comprehensive E2E tests prevent regression
 
 ## 🧪 Test Automation Infrastructure
 

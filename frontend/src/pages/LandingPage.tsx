@@ -3,7 +3,10 @@ import { Card } from '../components/ui/Card';
 import AffiliateGrid from '../components/affiliate/AffiliateGrid';
 
 const LandingPage: React.FC = () => {
+  console.log('[LandingPage] Component rendering');
+  
   const handleGetStarted = () => {
+    console.log('[LandingPage] Start Calculation button clicked');
     window.location.hash = 'calculator';
   };
 
