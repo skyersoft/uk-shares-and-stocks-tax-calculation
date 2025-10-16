@@ -159,6 +159,9 @@ const AffiliateGrid: React.FC<AffiliateGridProps> = ({
               No products found in the "{category}" category.
             </p>
           )}
+          <p className="text-muted small mt-2">
+            📚 Tax resources will be available soon. Check back later!
+          </p>
         </div>
       </div>
     );

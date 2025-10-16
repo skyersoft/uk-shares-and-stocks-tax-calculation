@@ -1,4 +1,5 @@
 import React from 'react';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { CalculationProvider } from './context/CalculationContext';
 import { ToastProvider } from './components/ui/ToastContext';
 import { Layout } from './components/layout/Layout';
@@ -12,60 +13,29 @@ import BlogPage from './pages/BlogPage';
 import AffiliateDemo from './pages/AffiliateDemo';
 
 const App: React.FC = () => {
-  console.log('[SPA] App component rendering...');
-  const [currentRoute, setCurrentRoute] = React.useState(() => {
-    const hash = typeof window !== 'undefined' ? window.location.hash.slice(1) : '';
-    return hash || 'home';
-  });
-  
-  // Listen for hash changes
-  React.useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.slice(1) || 'home';
-      console.log('[SPA] Hash changed to:', hash);
-      setCurrentRoute(hash);
-    };
-    
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-  
-  console.log('[SPA] Current route:', currentRoute);
-  
-  const renderContent = () => {
-    // Normalize route patterns for switch simplicity
-    if (currentRoute.startsWith('blog')) {
-      return <BlogPage />;
-    }
-    if (currentRoute.startsWith('results')) {
-      return <ResultsPage />;
-    }
-    switch (currentRoute) {
-      case 'calculator':
-        return <CalculatorPage />;
-      case 'about':
-        return <AboutPage />;
-      case 'help':
-        return <HelpPage />;
-      case 'guide':
-        return <GuidePage />;
-      case 'affiliate-demo':
-        return <AffiliateDemo />;
-      default:
-        return <LandingPage />;
-    }
-  };
-  
+  console.log('[SPA] App component rendering with HashRouter...');
+
   return (
-    <ToastProvider position="top-end">
-      <CalculationProvider>
-        <div className="min-vh-100 bg-light">
-          <Layout>
-            {renderContent()}
-          </Layout>
-        </div>
-      </CalculationProvider>
-    </ToastProvider>
+    <Router>
+      <ToastProvider position="top-end">
+        <CalculationProvider>
+          <div className="min-vh-100 bg-light">
+            <Layout>
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/calculator" element={<CalculatorPage />} />
+                <Route path="/results" element={<ResultsPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/guide" element={<GuidePage />} />
+                <Route path="/blog/*" element={<BlogPage />} />
+                <Route path="/affiliate-demo" element={<AffiliateDemo />} />
+              </Routes>
+            </Layout>
+          </div>
+        </CalculationProvider>
+      </ToastProvider>
+    </Router>
   );
 }
 

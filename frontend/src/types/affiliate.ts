@@ -6,21 +6,24 @@
 export interface AffiliateProduct {
   /** Unique identifier for the product */
   id: string;
-  
+
   /** Product title/name */
   title: string;
-  
+
   /** Product description */
   description: string;
-  
+
   /** Amazon ASIN (product identifier) */
   asin: string;
-  
+
   /** Amazon affiliate URL with tracking */
   affiliateUrl: string;
-  
+
   /** Product image URL */
   imageUrl: string;
+
+  /** Fallback image URL for when main image fails to load */
+  fallbackImageUrl?: string;
   
   /** Product category */
   category: 'tax' | 'trading' | 'finance' | 'business';

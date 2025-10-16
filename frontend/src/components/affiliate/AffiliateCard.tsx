@@ -63,7 +63,10 @@ const AffiliateCard: React.FC<AffiliateCardProps> = ({
           loading="lazy"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = '/images/book-placeholder.jpg';
+            // Use fallback image from product data, or default placeholder
+            if (target.src !== (product.fallbackImageUrl || '/images/book-placeholder.jpg')) {
+              target.src = product.fallbackImageUrl || '/images/book-placeholder.jpg';
+            }
           }}
         />
       </div>
@@ -118,7 +121,9 @@ const AffiliateCard: React.FC<AffiliateCardProps> = ({
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = '/images/book-placeholder.jpg';
+              if (target.src !== (product.fallbackImageUrl || '/images/book-placeholder.jpg')) {
+                target.src = product.fallbackImageUrl || '/images/book-placeholder.jpg';
+              }
             }}
           />
         </div>

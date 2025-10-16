@@ -129,6 +129,77 @@ const CalculatorPage: React.FC = () => {
           </div>
         </section>
 
+        {/* Input Requirements Section */}
+        <section className="input-requirements-section py-4 mb-4 bg-light">
+          <div className="container">
+            <div className="row justify-content-center">
+              <div className="col-lg-10">
+                <div className="bg-white p-4 rounded shadow-sm">
+                  <h3 className="h5 mb-3 text-primary">
+                    <i className="fas fa-info-circle me-2"></i>
+                    Input File Requirements
+                  </h3>
+                  <p className="mb-3 small text-muted">
+                    The calculator supports QFX files from Interactive Brokers and CSV files from multiple brokers.
+                    Your file should contain all buy/sell transactions for accurate tax calculations.
+                  </p>
+
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <div className="border-start border-primary border-4 ps-3">
+                        <h6 className="fw-bold text-primary mb-2">
+                          <i className="fas fa-file-code me-1"></i>
+                          QFX Format (Interactive Brokers)
+                        </h6>
+                        <ul className="small mb-2">
+                          <li>Export from IBKR Client Portal → Reports → Third-Party Downloads → Quicken</li>
+                          <li>Includes currency conversions and fees automatically</li>
+                          <li>Handles stock splits and corporate actions</li>
+                          <li>Best for comprehensive IBKR accounts</li>
+                        </ul>
+                        <button
+                          className="btn btn-link btn-sm p-0 text-decoration-none"
+                          onClick={() => window.location.hash = 'guide'}
+                        >
+                          Detailed IBKR Export Guide →
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6">
+                      <div className="border-start border-success border-4 ps-3">
+                        <h6 className="fw-bold text-success mb-2">
+                          <i className="fas fa-file-csv me-1"></i>
+                          CSV Format (Multiple Brokers)
+                        </h6>
+                        <ul className="small mb-2">
+                          <li>Works with Sharesight, Hargreaves Lansdown, Fidelity, etc.</li>
+                          <li>Requires specific column format (see guide below)</li>
+                          <li>Manual currency conversion may be needed</li>
+                          <li>Good for non-IBKR brokers or custom data</li>
+                        </ul>
+                        <button
+                          className="btn btn-link btn-sm p-0 text-decoration-none"
+                          onClick={() => window.location.hash = 'guide'}
+                        >
+                          CSV Format Specification →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="alert alert-warning border-0 mt-3 mb-0">
+                    <small>
+                      <strong>Important:</strong> For accurate results, export data covering complete tax years.
+                      Include all transactions (buys, sells, dividends, fees) from your chosen period.
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Main Content */}
         <div className="container">
           <div className="row justify-content-center">
@@ -460,7 +531,7 @@ const CalculatorPage: React.FC = () => {
                 <AffiliateGrid
                   category="tax"
                   limit={3}
-                  columns={{ xs: 1, sm: 2, md: 3 }}
+                  columns={{ xs: 1, sm: 3, md: 3, lg: 3, xl: 3 }}
                   showRatings={true}
                   showCategories={false}
                   layout="vertical"

@@ -1,62 +1,36 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import AffiliateGrid from '../components/affiliate/AffiliateGrid';
+import { AffiliateProduct } from '../types/affiliate';
+import affiliateProductsData from '../data/affiliateProducts.json';
 
 const LandingPage: React.FC = () => {
   console.log('[LandingPage] Component rendering');
-  
+  const navigate = useNavigate();
+
   const handleGetStarted = () => {
     console.log('[LandingPage] Start Calculation button clicked');
-    window.location.hash = 'calculator';
+    navigate('/calculator');
   };
 
   const handleViewBlog = () => {
-    window.location.hash = 'blog';
+    navigate('/blog');
   };
 
   const handleViewGuide = () => {
-    window.location.hash = 'guide';
+    navigate('/guide');
   };
 
-  // Featured affiliate products for landing page
-  const featuredProducts = [
-    {
-      id: 'taxtopia-book',
-      title: 'Taxtopia: How I Fell in Love with Tax',
-      description: 'Essential reading for UK taxpayers - learn how the tax system really works',
-      asin: 'B01MXDQ6Q7',
-      price: '£8.99',
-      rating: 4.5,
-      category: 'tax' as const,
-      tags: ['tax', 'education', 'uk'],
-      affiliateUrl: 'https://amzn.to/3HxSIlP',
-      imageUrl: '/api/placeholder/200/280'
-    },
-    {
-      id: 'interactive-brokers-guide',
-      title: 'The Complete Guide to Interactive Brokers',
-      description: 'Master IBKR platform for UK investors with tax-efficient strategies',
-      asin: 'B08XQJK2N1',
-      price: '£12.99',
-      rating: 4.7,
-      category: 'trading' as const,
-      tags: ['ibkr', 'trading', 'investment'],
-      affiliateUrl: 'https://amzn.to/4myUMZI',
-      imageUrl: '/api/placeholder/200/280'
-    },
-    {
-      id: 'tax-free-income',
-      title: 'Tax-Free Income for Life',
-      description: 'Proven strategies to minimize your UK tax burden legally',
-      asin: 'B07QG8K3N2',
-      price: '£9.99',
-      rating: 4.6,
-      category: 'tax' as const,
-      tags: ['tax', 'strategy', 'planning'],
-      affiliateUrl: 'https://amzn.to/3YvW2tX',
-      imageUrl: '/api/placeholder/200/280'
-    }
-  ];
+  // Get featured products from the JSON data
+  const featuredProducts = affiliateProductsData.products
+    .filter(product => product.featured)
+    .slice(0, 6) // Show up to 6 featured products
+    .map(product => ({
+      ...product,
+      // Ensure all required fields are present and properly typed
+      fallbackImageUrl: (product as any).fallbackImageUrl || '/images/book-placeholder.jpg'
+    })) as AffiliateProduct[];
 
   return (
     <div className="landing-page">
@@ -147,11 +121,12 @@ const LandingPage: React.FC = () => {
         </div>
 
         {/* Background Pattern */}
-        <div 
+        <div
           className="position-absolute top-0 start-0 w-100 h-100 opacity-10"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundRepeat: 'repeat'
+            backgroundRepeat: 'repeat',
+            pointerEvents: 'none'
           }}
         />
       </section>
@@ -217,52 +192,190 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works Section - Enhanced with Tax Process Explanation */}
       <section className="py-5 mb-5 bg-light">
         <div className="container">
           <div className="row text-center mb-5">
-            <div className="col-lg-8 mx-auto">
-              <h2 className="display-5 fw-bold mb-3">How It Works</h2>
-              <p className="lead text-muted">
-                Get your tax calculations done in 3 simple steps
+            <div className="col-lg-10 mx-auto">
+              <h2 className="display-5 fw-bold mb-3">How UK Capital Gains Tax Calculation Works</h2>
+              <p className="lead text-muted mb-4">
+                Understanding the tax calculation process helps you prepare the right data and interpret your results
               </p>
             </div>
           </div>
-          
+
+          <div className="row mb-5">
+            <div className="col-lg-8 mx-auto">
+              <div className="bg-white p-4 rounded shadow-sm mb-4">
+                <h4 className="fw-bold mb-3 text-primary">📊 The Tax Calculation Process</h4>
+                <p className="mb-3">
+                  UK Capital Gains Tax (CGT) is calculated on the profit you make when you sell (dispose of) shares or other assets.
+                  The calculator follows HMRC rules to determine your taxable gains:
+                </p>
+                <ul className="mb-3">
+                  <li><strong>Identify Disposals:</strong> Track when you sell shares and match them with acquisition costs</li>
+                  <li><strong>Calculate Base Cost:</strong> Use purchase price, fees, and allowable costs to determine your base cost</li>
+                  <li><strong>Apply Section 104 Pooling:</strong> For remaining shares, use average cost from your share pool</li>
+                  <li><strong>Calculate Gain/Loss:</strong> Subtract base cost from disposal proceeds</li>
+                  <li><strong>Apply Reliefs & Allowances:</strong> Subtract annual exemption (£12,300 for 2024-25)</li>
+                  <li><strong>Apply Tax Rates:</strong> 10% or 20% on remaining gains (18% or 24% from Oct 2024)</li>
+                </ul>
+                <div className="alert alert-info border-0">
+                  <small><strong>Note:</strong> The calculator processes your transaction history to apply the correct matching rules
+                  (same-day, 30-day bed & breakfast, and Section 104 pooling) as required by HMRC.</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="row g-4">
-            <div className="col-md-4">
-              <div className="text-center">
+            <div className="col-md-6 col-lg-3">
+              <div className="text-center h-100">
                 <div className="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fw-bold fs-3" style={{ width: '80px', height: '80px' }}>
                   1
                 </div>
-                <h5 className="fw-bold mb-3">Upload Your Data</h5>
-                <p className="text-muted">
-                  Upload your IBKR activity statement or manually enter transaction data
+                <h5 className="fw-bold mb-3">Export Your Data</h5>
+                <p className="text-muted mb-3">
+                  Download transaction reports from your broker (IBKR, Hargreaves Lansdown, etc.) in QFX or CSV format
                 </p>
+                <small className="text-muted">
+                  <a href="#guide" className="text-decoration-none">📖 View detailed guides →</a>
+                </small>
               </div>
             </div>
-            
-            <div className="col-md-4">
-              <div className="text-center">
+
+            <div className="col-md-6 col-lg-3">
+              <div className="text-center h-100">
                 <div className="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fw-bold fs-3" style={{ width: '80px', height: '80px' }}>
                   2
                 </div>
-                <h5 className="fw-bold mb-3">Automatic Calculation</h5>
-                <p className="text-muted">
-                  Our system automatically calculates CGT, dividend tax, and currency gains
+                <h5 className="fw-bold mb-3">Upload & Calculate</h5>
+                <p className="text-muted mb-3">
+                  Upload your file and select tax year. The calculator processes all transactions and applies HMRC rules
                 </p>
+                <small className="text-muted">
+                  <a href="#calculator" className="text-decoration-none">🧮 Start calculation →</a>
+                </small>
               </div>
             </div>
-            
-            <div className="col-md-4">
-              <div className="text-center">
+
+            <div className="col-md-6 col-lg-3">
+              <div className="text-center h-100">
                 <div className="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fw-bold fs-3" style={{ width: '80px', height: '80px' }}>
                   3
                 </div>
-                <h5 className="fw-bold mb-3">Get Your Report</h5>
-                <p className="text-muted">
-                  Download comprehensive reports ready for HMRC submission
+                <h5 className="fw-bold mb-3">Review Results</h5>
+                <p className="text-muted mb-3">
+                  Get detailed breakdown of gains, losses, tax owed, and portfolio performance analysis
                 </p>
+                <small className="text-muted">
+                  Includes Section 104 pools and disposal matching details
+                </small>
+              </div>
+            </div>
+
+            <div className="col-md-6 col-lg-3">
+              <div className="text-center h-100">
+                <div className="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fw-bold fs-3" style={{ width: '80px', height: '80px' }}>
+                  4
+                </div>
+                <h5 className="fw-bold mb-3">File Your Return</h5>
+                <p className="text-muted mb-3">
+                  Use the detailed reports to complete your Self Assessment tax return with confidence
+                </p>
+                <small className="text-muted">
+                  Download CSV/JSON reports for your records
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What You Need Section */}
+      <section className="py-5 mb-5">
+        <div className="container">
+          <div className="row text-center mb-5">
+            <div className="col-lg-8 mx-auto">
+              <h2 className="display-5 fw-bold mb-3">What Data Do You Need?</h2>
+              <p className="lead text-muted">
+                The calculator supports multiple formats - choose what works best for your broker
+              </p>
+            </div>
+          </div>
+
+          <div className="row g-4 mb-4">
+            <div className="col-lg-6">
+              <Card className="h-100 border-primary">
+                <div className="card-header bg-primary text-white">
+                  <h5 className="mb-0">
+                    <i className="fas fa-file-code me-2"></i>
+                    Interactive Brokers (QFX Format)
+                  </h5>
+                </div>
+                <div className="card-body">
+                  <p className="card-text">
+                    Export your activity statement in Quicken (QFX) format from IBKR's Client Portal.
+                    This format includes all transaction details, currency conversions, and fees.
+                  </p>
+                  <h6>What it contains:</h6>
+                  <ul className="small mb-3">
+                    <li>Buy/sell transactions with exact dates and prices</li>
+                    <li>Currency conversion rates</li>
+                    <li>Commission and fees</li>
+                    <li>Stock splits and corporate actions</li>
+                  </ul>
+                  <button
+                    onClick={() => window.location.hash = 'guide'}
+                    className="btn btn-outline-primary btn-sm"
+                  >
+                    How to Export from IBKR →
+                  </button>
+                </div>
+              </Card>
+            </div>
+
+            <div className="col-lg-6">
+              <Card className="h-100 border-success">
+                <div className="card-header bg-success text-white">
+                  <h5 className="mb-0">
+                    <i className="fas fa-file-csv me-2"></i>
+                    CSV Format (Multiple Brokers)
+                  </h5>
+                </div>
+                <div className="card-body">
+                  <p className="card-text">
+                    Use CSV exports from Sharesight, Hargreaves Lansdown, Fidelity, or create your own
+                    CSV file following our standard format specification.
+                  </p>
+                  <h6>Required columns:</h6>
+                  <ul className="small mb-3">
+                    <li>Date, Symbol, Quantity, Price</li>
+                    <li>Total Amount, Currency</li>
+                    <li>Transaction Type (BUY/SELL)</li>
+                    <li>Optional: Fees, Exchange Rates</li>
+                  </ul>
+                  <button
+                    onClick={() => window.location.hash = 'guide'}
+                    className="btn btn-outline-success btn-sm"
+                  >
+                    CSV Format Guide →
+                  </button>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="col-lg-8 mx-auto text-center">
+              <div className="alert alert-light border">
+                <h6 className="fw-bold mb-2">💡 Pro Tips for Better Results</h6>
+                <ul className="text-start d-inline-block mb-0 small">
+                  <li>Export data for complete tax years to ensure accurate calculations</li>
+                  <li>Include all transactions (buys, sells, dividends, fees) for comprehensive analysis</li>
+                  <li>Check for corporate actions (splits, mergers) that may affect your cost basis</li>
+                  <li>Keep records of any additional costs (stamp duty, transfer fees) for manual adjustment</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -362,7 +475,7 @@ const LandingPage: React.FC = () => {
           
           <AffiliateGrid
             products={featuredProducts}
-            columns={{ xs: 1, sm: 2, md: 3 }}
+            columns={{ xs: 1, sm: 3, md: 3, lg: 3, xl: 3 }}
             showRatings={true}
             showCategories={true}
             layout="vertical"
