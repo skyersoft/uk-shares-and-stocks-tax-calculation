@@ -55,21 +55,20 @@ src/main/python/
 └── utils/                      # Helper functions and utilities
 ```
 
-### Frontend (Static HTML/JS + React SPA in development)
+### Frontend (React SPA)
 ```
-static/
-├── index.html                 # Landing page
-├── calculate.html             # File upload interface  
-├── results.html               # Tax calculation results display
-├── js/
-│   ├── app.js                # Main application logic and API calls
-│   ├── results.js            # Results page data processing and display
-│   └── file-upload.js        # Drag & drop file upload handling
-└── css/                      # Bootstrap-based styling
-
-frontend/                     # React SPA (in development)
-├── src/                      # React components and context
-└── vite.config.js           # Vite build configuration
+frontend/
+├── src/
+│   ├── components/           # React components
+│   ├── pages/                # Page components (Landing, Calculator, Results)
+│   ├── context/              # React context providers
+│   ├── services/             # API client and services
+│   ├── types/                # TypeScript type definitions
+│   ├── utils/                # Helper functions
+│   └── index.html            # SPA entry point
+├── public/                   # Static assets (favicon, ads.txt)
+├── dist/                     # Production build output
+└── vite.config.ts            # Vite build configuration
 ```
 
 ### AWS Infrastructure
@@ -119,9 +118,11 @@ src/main/python/capital_gains_calculator.py
 src/main/python/parsers/qfx_parser.py
 src/main/python/parsers/csv_parser.py
 
-# Frontend API integration
-static/js/app.js       # File upload and API calls
-static/js/results.js   # Results display and data processing
+# Frontend SPA
+frontend/src/pages/CalculatorPage.tsx  # File upload and calculation
+frontend/src/pages/ResultsPage.tsx     # Results display
+frontend/src/services/api.ts           # API client
+frontend/src/types/calculation.ts      # Type definitions
 
 # Tests
 tests/unit/           # Python unit tests
@@ -146,8 +147,9 @@ aws lambda update-function-code \
 ### Deployment Components
 1. **Package Lambda**: Creates `lambda-deployment.zip` with all dependencies
 2. **CloudFormation Stack**: Deploys/updates AWS infrastructure
-3. **Static Assets**: Syncs HTML/CSS/JS files to S3
-4. **CloudFront Invalidation**: Clears CDN cache for immediate updates
+3. **Build SPA**: `npm run build` in frontend directory creates production bundle
+4. **Sync Frontend**: Upload `frontend/dist/` to S3 bucket
+5. **CloudFront Invalidation**: Clears CDN cache for immediate updates
 
 ### Environment Configuration
 ```bash
@@ -165,24 +167,9 @@ aws configure
 aws sso login --profile goker
 ```
 
-## 🔧 Current Issues & Debugging
+## 🔧 Common Development Issues
 
-### Critical Bug: Results Display
-**Issue**: Tax calculation API returns correct data but frontend shows aggregated results instead of individual holdings.
-
-**Debugging Steps**:
-1. API test: `curl https://cgttaxtool.uk/prod/health` ✅ Working
-2. Calculation test: Upload sample QFX file ✅ API returns 4 holdings
-3. Frontend display: Shows 1 aggregated row ❌ Bug in results.js
-
-**Investigation Points**:
-- `static/js/results.js` - `normalizeData()` function
-- Symbol extraction from API response structure
-- Holdings aggregation logic
-
-### Common Development Issues
-
-#### Import Errors in Lambda
+### Import Errors in Lambda
 ```python
 # Lambda handler structure
 sys.path.append('/opt/python')  # Lambda layer path
@@ -268,12 +255,11 @@ data/sample_files/
 ## 🚀 Future Roadmap
 
 ### Immediate (Next 1-2 weeks)
-- [ ] Fix results display bug in `results.js`
-- [ ] Add comprehensive error handling
+- [ ] Add comprehensive error handling in SPA
 - [ ] Implement loading states and user feedback
+- [ ] Enhanced results visualization
 
 ### Short Term (1-3 months)  
-- [ ] Complete React SPA migration
 - [ ] Add support for additional file formats
 - [ ] Implement user account system (optional)
 - [ ] Enhanced tax optimization suggestions
@@ -291,7 +277,7 @@ data/sample_files/
 #### New File Format Support
 1. Create parser in `src/main/python/parsers/new_format_parser.py`
 2. Add to factory in `capital_gains_calculator.py`
-3. Update frontend validation in `static/js/app.js`
+3. Update frontend validation in `frontend/src/config/fileUpload.ts`
 4. Add test files to `data/sample_files/`
 
 #### New Tax Rules
@@ -300,14 +286,14 @@ data/sample_files/
 3. Update documentation in `README.md`
 
 #### Frontend Changes
-1. Test locally with `python run_webapp.py`
-2. Update static files in `static/` directory
-3. Deploy with `./deployment/deploy.sh`
+1. Test locally with `npm run dev` in frontend directory
+2. Build production bundle with `npm run build`
+3. Deploy with `./deployment/deploy-useast1.sh`
 4. Verify with E2E tests
 
 ### Code Quality Standards
 - **Python**: Follow PEP 8, use type hints
-- **JavaScript**: ES6+, async/await for API calls
+- **TypeScript/JavaScript**: Use TypeScript, async/await for API calls
 - **Tests**: Minimum 80% coverage for new code
 - **Documentation**: Update README for user-facing changes
 
@@ -329,14 +315,6 @@ aws cloudfront create-invalidation \
     --distribution-id E3CPZK9XL7GR6Q \
     --paths "/*"
 ```
-
-## 🐛 Historical Bug Fixes (Archived)
-
-### Duplicate File Upload Bug (January 2025) - RESOLVED
-**Issue**: Fixed critical frontend form handling bug causing data aggregation
-**Impact**: Users now see individual securities instead of aggregated holdings
-**Resolution**: Removed duplicate FormData.append() calls in static/js/app.js
-**Verification**: Comprehensive E2E tests prevent regression
 
 ## 🧪 Test Automation Infrastructure
 

@@ -1,16 +1,16 @@
-<testsuites id="" name="" tests="106" failures="55" skipped="7" errors="0" time="189.464786">
-<testsuite name="advertising.spec.ts" timestamp="2025-10-16T21:33:41.300Z" hostname="chromium" tests="16" failures="4" skipped="0" time="171.532" errors="0">
-<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should load AdSense script correctly" classname="advertising.spec.ts" time="6.372">
+<testsuites id="" name="" tests="106" failures="58" skipped="2" errors="0" time="199.12306099999998">
+<testsuite name="advertising.spec.ts" timestamp="2025-11-13T01:47:08.703Z" hostname="chromium" tests="16" failures="4" skipped="0" time="184.806" errors="0">
+<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should load AdSense script correctly" classname="advertising.spec.ts" time="8.175">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should display ad units in correct positions" classname="advertising.spec.ts" time="5.876">
+<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should display ad units in correct positions" classname="advertising.spec.ts" time="7.608">
 <system-out>
 <![CDATA[Found 1 ad units
 ]]>
 </system-out>
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should have proper ad placements on different pages" classname="advertising.spec.ts" time="17.708">
+<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should have proper ad placements on different pages" classname="advertising.spec.ts" time="18.874">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should handle ad blocker detection" classname="advertising.spec.ts" time="14.388">
+<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should handle ad blocker detection" classname="advertising.spec.ts" time="16.307">
 <failure message="advertising.spec.ts:108:9 should handle ad blocker detection" type="FAILURE">
 <![CDATA[  [chromium] › advertising.spec.ts:108:9 › Advertising & Monetization Tests › Google AdSense Integration › should handle ad blocker detection 
 
@@ -56,7 +56,7 @@
 ]]>
 </system-out>
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should respect user privacy and GDPR compliance" classname="advertising.spec.ts" time="31.543">
+<testcase name="Advertising &amp; Monetization Tests › Google AdSense Integration › should respect user privacy and GDPR compliance" classname="advertising.spec.ts" time="31.629">
 <failure message="advertising.spec.ts:132:9 should respect user privacy and GDPR compliance" type="FAILURE">
 <![CDATA[  [chromium] › advertising.spec.ts:132:9 › Advertising & Monetization Tests › Google AdSense Integration › should respect user privacy and GDPR compliance 
 
@@ -97,21 +97,21 @@
 ]]>
 </system-out>
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Ad Performance and User Experience › ads should not significantly impact page load performance" classname="advertising.spec.ts" time="11.979">
+<testcase name="Advertising &amp; Monetization Tests › Ad Performance and User Experience › ads should not significantly impact page load performance" classname="advertising.spec.ts" time="13.649">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Ad Performance and User Experience › ads should not interfere with main functionality" classname="advertising.spec.ts" time="9.039">
+<testcase name="Advertising &amp; Monetization Tests › Ad Performance and User Experience › ads should not interfere with main functionality" classname="advertising.spec.ts" time="10.648">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Ad Performance and User Experience › ads should be clearly distinguishable from content" classname="advertising.spec.ts" time="5.875">
+<testcase name="Advertising &amp; Monetization Tests › Ad Performance and User Experience › ads should be clearly distinguishable from content" classname="advertising.spec.ts" time="7.873">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Affiliate Marketing › should have properly attributed affiliate links" classname="advertising.spec.ts" time="4.137">
+<testcase name="Advertising &amp; Monetization Tests › Affiliate Marketing › should have properly attributed affiliate links" classname="advertising.spec.ts" time="4.146">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Affiliate Marketing › should disclose affiliate relationships" classname="advertising.spec.ts" time="4.134">
+<testcase name="Advertising &amp; Monetization Tests › Affiliate Marketing › should disclose affiliate relationships" classname="advertising.spec.ts" time="4.202">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Monetization Compliance › should have ads.txt file for programmatic advertising" classname="advertising.spec.ts" time="4.387">
+<testcase name="Advertising &amp; Monetization Tests › Monetization Compliance › should have ads.txt file for programmatic advertising" classname="advertising.spec.ts" time="4.541">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Monetization Compliance › should comply with advertising standards" classname="advertising.spec.ts" time="3.984">
+<testcase name="Advertising &amp; Monetization Tests › Monetization Compliance › should comply with advertising standards" classname="advertising.spec.ts" time="4.151">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Monetization Compliance › should maintain content-to-ad ratio" classname="advertising.spec.ts" time="31.858">
+<testcase name="Advertising &amp; Monetization Tests › Monetization Compliance › should maintain content-to-ad ratio" classname="advertising.spec.ts" time="32.122">
 <failure message="advertising.spec.ts:393:9 should maintain content-to-ad ratio" type="FAILURE">
 <![CDATA[  [chromium] › advertising.spec.ts:393:9 › Advertising & Monetization Tests › Monetization Compliance › should maintain content-to-ad ratio 
 
@@ -152,7 +152,7 @@
 ]]>
 </system-out>
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Mobile Ad Experience › mobile ads should not interfere with navigation" classname="advertising.spec.ts" time="6.853">
+<testcase name="Advertising &amp; Monetization Tests › Mobile Ad Experience › mobile ads should not interfere with navigation" classname="advertising.spec.ts" time="6.789">
 <failure message="advertising.spec.ts:419:9 mobile ads should not interfere with navigation" type="FAILURE">
 <![CDATA[  [chromium] › advertising.spec.ts:419:9 › Advertising & Monetization Tests › Mobile Ad Experience › mobile ads should not interfere with navigation 
 
@@ -199,13 +199,13 @@
 ]]>
 </system-out>
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Mobile Ad Experience › mobile ads should be appropriately sized" classname="advertising.spec.ts" time="6.728">
+<testcase name="Advertising &amp; Monetization Tests › Mobile Ad Experience › mobile ads should be appropriately sized" classname="advertising.spec.ts" time="7.203">
 </testcase>
-<testcase name="Advertising &amp; Monetization Tests › Mobile Ad Experience › should not have intrusive mobile ad formats" classname="advertising.spec.ts" time="6.671">
+<testcase name="Advertising &amp; Monetization Tests › Mobile Ad Experience › should not have intrusive mobile ad formats" classname="advertising.spec.ts" time="6.889">
 </testcase>
 </testsuite>
-<testsuite name="blog/blog.spec.ts" timestamp="2025-10-16T21:33:41.300Z" hostname="chromium" tests="1" failures="1" skipped="0" time="16.653" errors="0">
-<testcase name="Blog Page › loads blog index with posts" classname="blog/blog.spec.ts" time="16.653">
+<testsuite name="blog/blog.spec.ts" timestamp="2025-11-13T01:47:08.703Z" hostname="chromium" tests="1" failures="1" skipped="0" time="17.013" errors="0">
+<testcase name="Blog Page › loads blog index with posts" classname="blog/blog.spec.ts" time="17.013">
 <failure message="blog.spec.ts:7:7 loads blog index with posts" type="FAILURE">
 <![CDATA[  [chromium] › blog/blog.spec.ts:7:7 › Blog Page › loads blog index with posts ─────────────────────
 
@@ -250,8 +250,8 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 </system-out>
 </testcase>
 </testsuite>
-<testsuite name="content-seo.spec.ts" timestamp="2025-10-16T21:33:41.300Z" hostname="chromium" tests="20" failures="14" skipped="0" time="178.602" errors="0">
-<testcase name="Content &amp; SEO Tests › Static Pages Content › About page should have comprehensive content" classname="content-seo.spec.ts" time="3.512">
+<testsuite name="content-seo.spec.ts" timestamp="2025-11-13T01:47:08.703Z" hostname="chromium" tests="20" failures="14" skipped="0" time="180.716" errors="0">
+<testcase name="Content &amp; SEO Tests › Static Pages Content › About page should have comprehensive content" classname="content-seo.spec.ts" time="3.662">
 <failure message="content-seo.spec.ts:6:9 About page should have comprehensive content" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:6:9 › Content & SEO Tests › Static Pages Content › About page should have comprehensive content 
 
@@ -292,7 +292,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › Static Pages Content › Help page should provide comprehensive assistance" classname="content-seo.spec.ts" time="3.624">
+<testcase name="Content &amp; SEO Tests › Static Pages Content › Help page should provide comprehensive assistance" classname="content-seo.spec.ts" time="3.53">
 <failure message="content-seo.spec.ts:58:9 Help page should provide comprehensive assistance" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:58:9 › Content & SEO Tests › Static Pages Content › Help page should provide comprehensive assistance 
 
@@ -333,7 +333,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › Static Pages Content › Privacy Policy should be comprehensive and legal" classname="content-seo.spec.ts" time="3.494">
+<testcase name="Content &amp; SEO Tests › Static Pages Content › Privacy Policy should be comprehensive and legal" classname="content-seo.spec.ts" time="3.685">
 <failure message="content-seo.spec.ts:113:9 Privacy Policy should be comprehensive and legal" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:113:9 › Content & SEO Tests › Static Pages Content › Privacy Policy should be comprehensive and legal 
 
@@ -374,7 +374,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › Static Pages Content › Terms of Service should be comprehensive" classname="content-seo.spec.ts" time="3.574">
+<testcase name="Content &amp; SEO Tests › Static Pages Content › Terms of Service should be comprehensive" classname="content-seo.spec.ts" time="3.647">
 <failure message="content-seo.spec.ts:156:9 Terms of Service should be comprehensive" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:156:9 › Content & SEO Tests › Static Pages Content › Terms of Service should be comprehensive 
 
@@ -415,7 +415,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › Blog Content › Blog page should display posts with proper structure" classname="content-seo.spec.ts" time="3.518">
+<testcase name="Content &amp; SEO Tests › Blog Content › Blog page should display posts with proper structure" classname="content-seo.spec.ts" time="3.398">
 <failure message="content-seo.spec.ts:199:9 Blog page should display posts with proper structure" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:199:9 › Content & SEO Tests › Blog Content › Blog page should display posts with proper structure 
 
@@ -456,13 +456,13 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › Blog Content › Blog search functionality should work" classname="content-seo.spec.ts" time="3.799">
+<testcase name="Content &amp; SEO Tests › Blog Content › Blog search functionality should work" classname="content-seo.spec.ts" time="3.706">
 </testcase>
-<testcase name="Content &amp; SEO Tests › Blog Content › Individual blog posts should have proper structure" classname="content-seo.spec.ts" time="3.55">
+<testcase name="Content &amp; SEO Tests › Blog Content › Individual blog posts should have proper structure" classname="content-seo.spec.ts" time="4.211">
 </testcase>
-<testcase name="Content &amp; SEO Tests › Blog Content › Blog should have RSS feed or sitemap" classname="content-seo.spec.ts" time="1.011">
+<testcase name="Content &amp; SEO Tests › Blog Content › Blog should have RSS feed or sitemap" classname="content-seo.spec.ts" time="1.133">
 </testcase>
-<testcase name="Content &amp; SEO Tests › SEO Optimization › All pages should have unique and descriptive titles" classname="content-seo.spec.ts" time="2.778">
+<testcase name="Content &amp; SEO Tests › SEO Optimization › All pages should have unique and descriptive titles" classname="content-seo.spec.ts" time="3.119">
 <failure message="content-seo.spec.ts:336:9 All pages should have unique and descriptive titles" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:336:9 › Content & SEO Tests › SEO Optimization › All pages should have unique and descriptive titles 
 
@@ -500,7 +500,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › SEO Optimization › All pages should have meta descriptions" classname="content-seo.spec.ts" time="2.093">
+<testcase name="Content &amp; SEO Tests › SEO Optimization › All pages should have meta descriptions" classname="content-seo.spec.ts" time="2.596">
 <failure message="content-seo.spec.ts:362:9 All pages should have meta descriptions" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:362:9 › Content & SEO Tests › SEO Optimization › All pages should have meta descriptions 
 
@@ -539,7 +539,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › SEO Optimization › All pages should have Open Graph tags" classname="content-seo.spec.ts" time="32.244">
+<testcase name="Content &amp; SEO Tests › SEO Optimization › All pages should have Open Graph tags" classname="content-seo.spec.ts" time="32.539">
 <failure message="content-seo.spec.ts:374:9 All pages should have Open Graph tags" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:374:9 › Content & SEO Tests › SEO Optimization › All pages should have Open Graph tags 
 
@@ -580,7 +580,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › SEO Optimization › All pages should have Twitter Card tags" classname="content-seo.spec.ts" time="32.203">
+<testcase name="Content &amp; SEO Tests › SEO Optimization › All pages should have Twitter Card tags" classname="content-seo.spec.ts" time="32.44">
 <failure message="content-seo.spec.ts:396:9 All pages should have Twitter Card tags" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:396:9 › Content & SEO Tests › SEO Optimization › All pages should have Twitter Card tags 
 
@@ -621,7 +621,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › SEO Optimization › Pages should have proper canonical URLs" classname="content-seo.spec.ts" time="32.75">
+<testcase name="Content &amp; SEO Tests › SEO Optimization › Pages should have proper canonical URLs" classname="content-seo.spec.ts" time="32.179">
 <failure message="content-seo.spec.ts:413:9 Pages should have proper canonical URLs" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:413:9 › Content & SEO Tests › SEO Optimization › Pages should have proper canonical URLs 
 
@@ -662,9 +662,9 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › SEO Optimization › Site should have structured data markup" classname="content-seo.spec.ts" time="1.819">
+<testcase name="Content &amp; SEO Tests › SEO Optimization › Site should have structured data markup" classname="content-seo.spec.ts" time="1.933">
 </testcase>
-<testcase name="Content &amp; SEO Tests › SEO Optimization › Site should have robots.txt" classname="content-seo.spec.ts" time="0.923">
+<testcase name="Content &amp; SEO Tests › SEO Optimization › Site should have robots.txt" classname="content-seo.spec.ts" time="1.002">
 <failure message="content-seo.spec.ts:456:9 Site should have robots.txt" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:456:9 › Content & SEO Tests › SEO Optimization › Site should have robots.txt 
 
@@ -698,7 +698,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › SEO Optimization › Site should have XML sitemap" classname="content-seo.spec.ts" time="0.677">
+<testcase name="Content &amp; SEO Tests › SEO Optimization › Site should have XML sitemap" classname="content-seo.spec.ts" time="1.028">
 <failure message="content-seo.spec.ts:470:9 Site should have XML sitemap" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:470:9 › Content & SEO Tests › SEO Optimization › Site should have XML sitemap 
 
@@ -732,9 +732,9 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › SEO Optimization › Images should have alt text and proper optimization" classname="content-seo.spec.ts" time="7.976">
+<testcase name="Content &amp; SEO Tests › SEO Optimization › Images should have alt text and proper optimization" classname="content-seo.spec.ts" time="7.89">
 </testcase>
-<testcase name="Content &amp; SEO Tests › Content Quality › Content should be well-structured with proper headings" classname="content-seo.spec.ts" time="1.443">
+<testcase name="Content &amp; SEO Tests › Content Quality › Content should be well-structured with proper headings" classname="content-seo.spec.ts" time="1.554">
 <failure message="content-seo.spec.ts:522:9 Content should be well-structured with proper headings" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:522:9 › Content & SEO Tests › Content Quality › Content should be well-structured with proper headings 
 
@@ -773,7 +773,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › Content Quality › Content should have adequate text-to-HTML ratio" classname="content-seo.spec.ts" time="32.744">
+<testcase name="Content &amp; SEO Tests › Content Quality › Content should have adequate text-to-HTML ratio" classname="content-seo.spec.ts" time="32.614">
 <failure message="content-seo.spec.ts:551:9 Content should have adequate text-to-HTML ratio" type="FAILURE">
 <![CDATA[  [chromium] › content-seo.spec.ts:551:9 › Content & SEO Tests › Content Quality › Content should have adequate text-to-HTML ratio 
 
@@ -814,11 +814,11 @@ log: Calculator elements not found - skipping initialization (not on calculator 
 ]]>
 </system-out>
 </testcase>
-<testcase name="Content &amp; SEO Tests › Content Quality › Links should be descriptive and work correctly" classname="content-seo.spec.ts" time="4.87">
+<testcase name="Content &amp; SEO Tests › Content Quality › Links should be descriptive and work correctly" classname="content-seo.spec.ts" time="4.85">
 </testcase>
 </testsuite>
-<testsuite name="landing-page-button.spec.ts" timestamp="2025-10-16T21:33:41.300Z" hostname="chromium" tests="2" failures="2" skipped="0" time="32.47" errors="0">
-<testcase name="Landing Page Start Calculation Button › should navigate to calculator when Start Calculation button is clicked" classname="landing-page-button.spec.ts" time="30.542">
+<testsuite name="landing-page-button.spec.ts" timestamp="2025-11-13T01:47:08.703Z" hostname="chromium" tests="2" failures="2" skipped="0" time="32.75" errors="0">
+<testcase name="Landing Page Start Calculation Button › should navigate to calculator when Start Calculation button is clicked" classname="landing-page-button.spec.ts" time="30.684">
 <failure message="landing-page-button.spec.ts:4:7 should navigate to calculator when Start Calculation button is clicked" type="FAILURE">
 <![CDATA[  [chromium] › landing-page-button.spec.ts:4:7 › Landing Page Start Calculation Button › should navigate to calculator when Start Calculation button is clicked 
 
@@ -847,7 +847,7 @@ log: Calculator elements not found - skipping initialization (not on calculator 
         - element is not stable
       - retrying click action
         - waiting 100ms
-        53 × waiting for element to be visible, enabled and stable
+        52 × waiting for element to be visible, enabled and stable
            - element is visible, enabled and stable
            - scrolling into view if needed
            - done scrolling
@@ -890,7 +890,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Landing Page Start Calculation Button › should have correct debug logging in console" classname="landing-page-button.spec.ts" time="1.928">
+<testcase name="Landing Page Start Calculation Button › should have correct debug logging in console" classname="landing-page-button.spec.ts" time="2.066">
 <failure message="landing-page-button.spec.ts:125:7 should have correct debug logging in console" type="FAILURE">
 <![CDATA[  [chromium] › landing-page-button.spec.ts:125:7 › Landing Page Start Calculation Button › should have correct debug logging in console 
 
@@ -929,20 +929,20 @@ Current URL before click: https://cgttaxtool.uk/
 </system-out>
 </testcase>
 </testsuite>
-<testsuite name="navigation-layout.spec.ts" timestamp="2025-10-16T21:33:41.300Z" hostname="chromium" tests="22" failures="6" skipped="0" time="140.215" errors="0">
-<testcase name="Navigation &amp; Layout Tests › Desktop Navigation › should display main navigation with all required links" classname="navigation-layout.spec.ts" time="4.17">
+<testsuite name="navigation-layout.spec.ts" timestamp="2025-11-13T01:47:08.703Z" hostname="chromium" tests="22" failures="4" skipped="0" time="112.678" errors="0">
+<testcase name="Navigation &amp; Layout Tests › Desktop Navigation › should display main navigation with all required links" classname="navigation-layout.spec.ts" time="4.36">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Desktop Navigation › should highlight active navigation item" classname="navigation-layout.spec.ts" time="6.727">
+<testcase name="Navigation &amp; Layout Tests › Desktop Navigation › should highlight active navigation item" classname="navigation-layout.spec.ts" time="7.405">
 <system-out>
 <![CDATA[Navigation active state check: initial="navbar-brand", new="navbar-brand", hasActive=false
 ]]>
 </system-out>
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Desktop Navigation › should handle external links correctly" classname="navigation-layout.spec.ts" time="3.76">
+<testcase name="Navigation &amp; Layout Tests › Desktop Navigation › should handle external links correctly" classname="navigation-layout.spec.ts" time="4.485">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Mobile Navigation › should display mobile hamburger menu" classname="navigation-layout.spec.ts" time="4.31">
+<testcase name="Navigation &amp; Layout Tests › Mobile Navigation › should display mobile hamburger menu" classname="navigation-layout.spec.ts" time="4.221">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Mobile Navigation › should open and close mobile menu" classname="navigation-layout.spec.ts" time="3.941">
+<testcase name="Navigation &amp; Layout Tests › Mobile Navigation › should open and close mobile menu" classname="navigation-layout.spec.ts" time="4.263">
 <failure message="navigation-layout.spec.ts:135:9 should open and close mobile menu" type="FAILURE">
 <![CDATA[  [chromium] › navigation-layout.spec.ts:135:9 › Navigation & Layout Tests › Mobile Navigation › should open and close mobile menu 
 
@@ -989,7 +989,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Mobile Navigation › should close mobile menu when clicking menu item" classname="navigation-layout.spec.ts" time="4.171">
+<testcase name="Navigation &amp; Layout Tests › Mobile Navigation › should close mobile menu when clicking menu item" classname="navigation-layout.spec.ts" time="4.206">
 <failure message="navigation-layout.spec.ts:153:9 should close mobile menu when clicking menu item" type="FAILURE">
 <![CDATA[  [chromium] › navigation-layout.spec.ts:153:9 › Navigation & Layout Tests › Mobile Navigation › should close mobile menu when clicking menu item 
 
@@ -1036,9 +1036,9 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Layout Structure › should have proper semantic HTML structure" classname="navigation-layout.spec.ts" time="4.17">
+<testcase name="Navigation &amp; Layout Tests › Layout Structure › should have proper semantic HTML structure" classname="navigation-layout.spec.ts" time="4.248">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Layout Structure › should be responsive across different screen sizes" classname="navigation-layout.spec.ts" time="6.412">
+<testcase name="Navigation &amp; Layout Tests › Layout Structure › should be responsive across different screen sizes" classname="navigation-layout.spec.ts" time="6.303">
 <failure message="navigation-layout.spec.ts:198:9 should be responsive across different screen sizes" type="FAILURE">
 <![CDATA[  [chromium] › navigation-layout.spec.ts:198:9 › Navigation & Layout Tests › Layout Structure › should be responsive across different screen sizes 
 
@@ -1090,95 +1090,23 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Layout Structure › should handle page layout without content overflow" classname="navigation-layout.spec.ts" time="4.401">
+<testcase name="Navigation &amp; Layout Tests › Layout Structure › should handle page layout without content overflow" classname="navigation-layout.spec.ts" time="4.424">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Footer › should display footer with required links" classname="navigation-layout.spec.ts" time="19.919">
-<failure message="navigation-layout.spec.ts:258:9 should display footer with required links" type="FAILURE">
-<![CDATA[  [chromium] › navigation-layout.spec.ts:258:9 › Navigation & Layout Tests › Footer › should display footer with required links 
-
-    Error: page.goto: net::ERR_TIMED_OUT at https://cgttaxtool.uk/
-    Call log:
-      - navigating to "https://cgttaxtool.uk/", waiting until "load"
-
-
-       at helpers/page-objects.ts:25
-
-      23 |       url = path.startsWith('/') ? path : `/${path}`;
-      24 |     }
-    > 25 |     await this.page.goto(url);
-         |                     ^
-      26 |   }
-      27 |
-      28 |   async waitForPageLoad() {
-        at BasePage.goto (/Users/myuser/development/ibkr-tax-calculator/tests/ui/helpers/page-objects.ts:25:21)
-        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/navigation-layout.spec.ts:9:20
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/navigation-layout-Navigati-0e38a--footer-with-required-links-chromium/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/navigation-layout-Navigati-0e38a--footer-with-required-links-chromium/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|test-results/navigation-layout-Navigati-0e38a--footer-with-required-links-chromium/test-failed-1.png]]
-
-[[ATTACHMENT|test-results/navigation-layout-Navigati-0e38a--footer-with-required-links-chromium/video.webm]]
-]]>
-</system-out>
+<testcase name="Navigation &amp; Layout Tests › Footer › should display footer with required links" classname="navigation-layout.spec.ts" time="4.339">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Footer › should display copyright information" classname="navigation-layout.spec.ts" time="4.976">
+<testcase name="Navigation &amp; Layout Tests › Footer › should display copyright information" classname="navigation-layout.spec.ts" time="5.123">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Footer › should display social media links if present" classname="navigation-layout.spec.ts" time="5.07">
+<testcase name="Navigation &amp; Layout Tests › Footer › should display social media links if present" classname="navigation-layout.spec.ts" time="4.416">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Accessibility › should have proper ARIA labels and roles" classname="navigation-layout.spec.ts" time="4.677">
+<testcase name="Navigation &amp; Layout Tests › Accessibility › should have proper ARIA labels and roles" classname="navigation-layout.spec.ts" time="4.959">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Accessibility › should support keyboard navigation" classname="navigation-layout.spec.ts" time="5.012">
+<testcase name="Navigation &amp; Layout Tests › Accessibility › should support keyboard navigation" classname="navigation-layout.spec.ts" time="5.013">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Accessibility › should have proper heading hierarchy" classname="navigation-layout.spec.ts" time="20.376">
-<failure message="navigation-layout.spec.ts:386:9 should have proper heading hierarchy" type="FAILURE">
-<![CDATA[  [chromium] › navigation-layout.spec.ts:386:9 › Navigation & Layout Tests › Accessibility › should have proper heading hierarchy 
-
-    Error: page.goto: net::ERR_TIMED_OUT at https://cgttaxtool.uk/
-    Call log:
-      - navigating to "https://cgttaxtool.uk/", waiting until "load"
-
-
-       at helpers/page-objects.ts:25
-
-      23 |       url = path.startsWith('/') ? path : `/${path}`;
-      24 |     }
-    > 25 |     await this.page.goto(url);
-         |                     ^
-      26 |   }
-      27 |
-      28 |   async waitForPageLoad() {
-        at BasePage.goto (/Users/myuser/development/ibkr-tax-calculator/tests/ui/helpers/page-objects.ts:25:21)
-        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/navigation-layout.spec.ts:9:20
-
-    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
-    ../../test-results/navigation-layout-Navigati-d2b00-ve-proper-heading-hierarchy-chromium/test-failed-1.png
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
-    ../../test-results/navigation-layout-Navigati-d2b00-ve-proper-heading-hierarchy-chromium/video.webm
-    ────────────────────────────────────────────────────────────────────────────────────────────────
-]]>
-</failure>
-<system-out>
-<![CDATA[
-[[ATTACHMENT|test-results/navigation-layout-Navigati-d2b00-ve-proper-heading-hierarchy-chromium/test-failed-1.png]]
-
-[[ATTACHMENT|test-results/navigation-layout-Navigati-d2b00-ve-proper-heading-hierarchy-chromium/video.webm]]
-]]>
-</system-out>
+<testcase name="Navigation &amp; Layout Tests › Accessibility › should have proper heading hierarchy" classname="navigation-layout.spec.ts" time="5.035">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Accessibility › should have alt text for all images" classname="navigation-layout.spec.ts" time="4.615">
+<testcase name="Navigation &amp; Layout Tests › Accessibility › should have alt text for all images" classname="navigation-layout.spec.ts" time="4.643">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › SEO &amp; Meta Tags › should have proper SEO meta tags on all pages" classname="navigation-layout.spec.ts" time="10.719">
+<testcase name="Navigation &amp; Layout Tests › SEO &amp; Meta Tags › should have proper SEO meta tags on all pages" classname="navigation-layout.spec.ts" time="10.435">
 <failure message="navigation-layout.spec.ts:441:9 should have proper SEO meta tags on all pages" type="FAILURE">
 <![CDATA[  [chromium] › navigation-layout.spec.ts:441:9 › Navigation & Layout Tests › SEO & Meta Tags › should have proper SEO meta tags on all pages 
 
@@ -1219,25 +1147,25 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › SEO &amp; Meta Tags › should have structured data markup" classname="navigation-layout.spec.ts" time="4.537">
+<testcase name="Navigation &amp; Layout Tests › SEO &amp; Meta Tags › should have structured data markup" classname="navigation-layout.spec.ts" time="4.848">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › SEO &amp; Meta Tags › should have proper canonical URLs" classname="navigation-layout.spec.ts" time="4.384">
+<testcase name="Navigation &amp; Layout Tests › SEO &amp; Meta Tags › should have proper canonical URLs" classname="navigation-layout.spec.ts" time="4.868">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › SEO &amp; Meta Tags › should have favicon and app icons" classname="navigation-layout.spec.ts" time="4.59">
+<testcase name="Navigation &amp; Layout Tests › SEO &amp; Meta Tags › should have favicon and app icons" classname="navigation-layout.spec.ts" time="4.655">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Error Handling › should handle 404 pages gracefully" classname="navigation-layout.spec.ts" time="4.496">
+<testcase name="Navigation &amp; Layout Tests › Error Handling › should handle 404 pages gracefully" classname="navigation-layout.spec.ts" time="5.122">
 </testcase>
-<testcase name="Navigation &amp; Layout Tests › Error Handling › should maintain layout when JavaScript fails" classname="navigation-layout.spec.ts" time="4.782">
+<testcase name="Navigation &amp; Layout Tests › Error Handling › should maintain layout when JavaScript fails" classname="navigation-layout.spec.ts" time="5.307">
 </testcase>
 </testsuite>
-<testsuite name="performance-accessibility.spec.ts" timestamp="2025-10-16T21:33:41.300Z" hostname="chromium" tests="20" failures="9" skipped="2" time="107.547" errors="0">
-<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should have good page load performance" classname="performance-accessibility.spec.ts" time="4.802">
+<testsuite name="performance-accessibility.spec.ts" timestamp="2025-11-13T01:47:08.703Z" hostname="chromium" tests="20" failures="9" skipped="2" time="118.695" errors="0">
+<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should have good page load performance" classname="performance-accessibility.spec.ts" time="4.786">
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should have minimal Cumulative Layout Shift" classname="performance-accessibility.spec.ts" time="7.323">
+<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should have minimal Cumulative Layout Shift" classname="performance-accessibility.spec.ts" time="7.366">
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should optimize resource loading" classname="performance-accessibility.spec.ts" time="4.405">
+<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should optimize resource loading" classname="performance-accessibility.spec.ts" time="4.492">
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should handle slow network conditions" classname="performance-accessibility.spec.ts" time="9.038">
+<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should handle slow network conditions" classname="performance-accessibility.spec.ts" time="9.24">
 <failure message="performance-accessibility.spec.ts:122:9 should handle slow network conditions" type="FAILURE">
 <![CDATA[  [chromium] › performance-accessibility.spec.ts:122:9 › Performance & Accessibility Tests › Core Web Vitals & Performance › should handle slow network conditions 
 
@@ -1284,7 +1212,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should be responsive across different viewport sizes" classname="performance-accessibility.spec.ts" time="9.696">
+<testcase name="Performance &amp; Accessibility Tests › Core Web Vitals &amp; Performance › should be responsive across different viewport sizes" classname="performance-accessibility.spec.ts" time="9.463">
 <failure message="performance-accessibility.spec.ts:146:9 should be responsive across different viewport sizes" type="FAILURE">
 <![CDATA[  [chromium] › performance-accessibility.spec.ts:146:9 › Performance & Accessibility Tests › Core Web Vitals & Performance › should be responsive across different viewport sizes 
 
@@ -1330,7 +1258,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should have proper heading hierarchy" classname="performance-accessibility.spec.ts" time="4.723">
+<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should have proper heading hierarchy" classname="performance-accessibility.spec.ts" time="4.502">
 <failure message="performance-accessibility.spec.ts:191:9 should have proper heading hierarchy" type="FAILURE">
 <![CDATA[  [chromium] › performance-accessibility.spec.ts:191:9 › Performance & Accessibility Tests › Accessibility (WCAG 2.1 AA) › should have proper heading hierarchy 
 
@@ -1369,7 +1297,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should have proper ARIA labels and roles" classname="performance-accessibility.spec.ts" time="9.893">
+<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should have proper ARIA labels and roles" classname="performance-accessibility.spec.ts" time="10.09">
 <failure message="performance-accessibility.spec.ts:220:9 should have proper ARIA labels and roles" type="FAILURE">
 <![CDATA[  [chromium] › performance-accessibility.spec.ts:220:9 › Performance & Accessibility Tests › Accessibility (WCAG 2.1 AA) › should have proper ARIA labels and roles 
 
@@ -1415,7 +1343,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should have sufficient color contrast" classname="performance-accessibility.spec.ts" time="4.717">
+<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should have sufficient color contrast" classname="performance-accessibility.spec.ts" time="4.826">
 <failure message="performance-accessibility.spec.ts:267:9 should have sufficient color contrast" type="FAILURE">
 <![CDATA[  [chromium] › performance-accessibility.spec.ts:267:9 › Performance & Accessibility Tests › Accessibility (WCAG 2.1 AA) › should have sufficient color contrast 
 
@@ -1454,9 +1382,9 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should support keyboard navigation" classname="performance-accessibility.spec.ts" time="4.512">
+<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should support keyboard navigation" classname="performance-accessibility.spec.ts" time="4.47">
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should support screen readers" classname="performance-accessibility.spec.ts" time="4.397">
+<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should support screen readers" classname="performance-accessibility.spec.ts" time="4.258">
 <failure message="performance-accessibility.spec.ts:349:9 should support screen readers" type="FAILURE">
 <![CDATA[  [chromium] › performance-accessibility.spec.ts:349:9 › Performance & Accessibility Tests › Accessibility (WCAG 2.1 AA) › should support screen readers 
 
@@ -1495,11 +1423,11 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should handle focus management properly" classname="performance-accessibility.spec.ts" time="3.668">
+<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should handle focus management properly" classname="performance-accessibility.spec.ts" time="3.619">
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should provide error feedback accessibly" classname="performance-accessibility.spec.ts" time="3.584">
+<testcase name="Performance &amp; Accessibility Tests › Accessibility (WCAG 2.1 AA) › should provide error feedback accessibly" classname="performance-accessibility.spec.ts" time="3.841">
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Cross-Browser Compatibility › should work correctly in chromium" classname="performance-accessibility.spec.ts" time="10.176">
+<testcase name="Performance &amp; Accessibility Tests › Cross-Browser Compatibility › should work correctly in chromium" classname="performance-accessibility.spec.ts" time="9.362">
 <failure message="performance-accessibility.spec.ts:470:11 should work correctly in chromium" type="FAILURE">
 <![CDATA[  [chromium] › performance-accessibility.spec.ts:470:11 › Performance & Accessibility Tests › Cross-Browser Compatibility › should work correctly in chromium 
 
@@ -1545,7 +1473,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Cross-Browser Compatibility › should work correctly in firefox" classname="performance-accessibility.spec.ts" time="0.319">
+<testcase name="Performance &amp; Accessibility Tests › Cross-Browser Compatibility › should work correctly in firefox" classname="performance-accessibility.spec.ts" time="0.216">
 <properties>
 <property name="skip" value="Running only on firefox">
 </property>
@@ -1553,7 +1481,7 @@ Current URL before click: https://cgttaxtool.uk/
 <skipped>
 </skipped>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Cross-Browser Compatibility › should work correctly in webkit" classname="performance-accessibility.spec.ts" time="0.427">
+<testcase name="Performance &amp; Accessibility Tests › Cross-Browser Compatibility › should work correctly in webkit" classname="performance-accessibility.spec.ts" time="0.244">
 <properties>
 <property name="skip" value="Running only on webkit">
 </property>
@@ -1561,30 +1489,26 @@ Current URL before click: https://cgttaxtool.uk/
 <skipped>
 </skipped>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Cross-Browser Compatibility › should handle JavaScript disabled gracefully" classname="performance-accessibility.spec.ts" time="7.02">
+<testcase name="Performance &amp; Accessibility Tests › Cross-Browser Compatibility › should handle JavaScript disabled gracefully" classname="performance-accessibility.spec.ts" time="19.845">
 <failure message="performance-accessibility.spec.ts:506:9 should handle JavaScript disabled gracefully" type="FAILURE">
 <![CDATA[  [chromium] › performance-accessibility.spec.ts:506:9 › Performance & Accessibility Tests › Cross-Browser Compatibility › should handle JavaScript disabled gracefully 
 
-    Error: expect(locator).toBeVisible() failed
-
-    Locator: locator('main')
-    Expected: visible
-    Timeout: 5000ms
-    Error: element(s) not found
-
+    Error: page.goto: net::ERR_TIMED_OUT at https://cgttaxtool.uk/
     Call log:
-      - Expect "toBeVisible" with timeout 5000ms
-      - waiting for locator('main')
+      - navigating to "https://cgttaxtool.uk/", waiting until "load"
 
 
-      513 |       // Basic structure should still be visible
-      514 |       await expect(page.locator('nav')).toBeVisible();
-    > 515 |       await expect(page.locator('main')).toBeVisible();
-          |                                          ^
-      516 |       await expect(page.locator('footer')).toBeVisible();
-      517 |
-      518 |       // Links should still work
-        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/performance-accessibility.spec.ts:515:42
+       at helpers/page-objects.ts:25
+
+      23 |       url = path.startsWith('/') ? path : `/${path}`;
+      24 |     }
+    > 25 |     await this.page.goto(url);
+         |                     ^
+      26 |   }
+      27 |
+      28 |   async waitForPageLoad() {
+        at BasePage.goto (/Users/myuser/development/ibkr-tax-calculator/tests/ui/helpers/page-objects.ts:25:21)
+        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/performance-accessibility.spec.ts:511:22
 
     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
     ../../test-results/performance-accessibility--ae9b1-aScript-disabled-gracefully-chromium/test-failed-1.png
@@ -1593,8 +1517,6 @@ Current URL before click: https://cgttaxtool.uk/
     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
     ../../test-results/performance-accessibility--ae9b1-aScript-disabled-gracefully-chromium/video.webm
     ────────────────────────────────────────────────────────────────────────────────────────────────
-
-    Error Context: ../../test-results/performance-accessibility--ae9b1-aScript-disabled-gracefully-chromium/error-context.md
 ]]>
 </failure>
 <system-out>
@@ -1602,16 +1524,14 @@ Current URL before click: https://cgttaxtool.uk/
 [[ATTACHMENT|test-results/performance-accessibility--ae9b1-aScript-disabled-gracefully-chromium/test-failed-1.png]]
 
 [[ATTACHMENT|test-results/performance-accessibility--ae9b1-aScript-disabled-gracefully-chromium/video.webm]]
-
-[[ATTACHMENT|test-results/performance-accessibility--ae9b1-aScript-disabled-gracefully-chromium/error-context.md]]
 ]]>
 </system-out>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Mobile Performance › should load quickly on mobile devices" classname="performance-accessibility.spec.ts" time="4.402">
+<testcase name="Performance &amp; Accessibility Tests › Mobile Performance › should load quickly on mobile devices" classname="performance-accessibility.spec.ts" time="4.173">
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Mobile Performance › should be touch-friendly" classname="performance-accessibility.spec.ts" time="4.806">
+<testcase name="Performance &amp; Accessibility Tests › Mobile Performance › should be touch-friendly" classname="performance-accessibility.spec.ts" time="4.506">
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Mobile Performance › should handle mobile interactions" classname="performance-accessibility.spec.ts" time="4.723">
+<testcase name="Performance &amp; Accessibility Tests › Mobile Performance › should handle mobile interactions" classname="performance-accessibility.spec.ts" time="4.464">
 <failure message="performance-accessibility.spec.ts:574:9 should handle mobile interactions" type="FAILURE">
 <![CDATA[  [chromium] › performance-accessibility.spec.ts:574:9 › Performance & Accessibility Tests › Mobile Performance › should handle mobile interactions 
 
@@ -1658,15 +1578,15 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Performance &amp; Accessibility Tests › Performance Monitoring › should track Core Web Vitals" classname="performance-accessibility.spec.ts" time="4.916">
+<testcase name="Performance &amp; Accessibility Tests › Performance Monitoring › should track Core Web Vitals" classname="performance-accessibility.spec.ts" time="4.932">
 <system-out>
-<![CDATA[Core Web Vitals: { lcp: [33m684[39m, cls: [33m0.05922744920518663[39m }
+<![CDATA[Core Web Vitals: { lcp: [33m644[39m, cls: [33m0.03269709862603082[39m }
 ]]>
 </system-out>
 </testcase>
 </testsuite>
-<testsuite name="tax-calculator.spec.ts" timestamp="2025-10-16T21:33:41.300Z" hostname="chromium" tests="25" failures="19" skipped="5" time="732.763" errors="0">
-<testcase name="Tax Calculator Tests › File Upload Functionality › should display file upload interface" classname="tax-calculator.spec.ts" time="9.005">
+<testsuite name="tax-calculator.spec.ts" timestamp="2025-11-13T01:47:08.703Z" hostname="chromium" tests="25" failures="24" skipped="0" time="749.214" errors="0">
+<testcase name="Tax Calculator Tests › File Upload Functionality › should display file upload interface" classname="tax-calculator.spec.ts" time="8.741">
 <failure message="tax-calculator.spec.ts:15:9 should display file upload interface" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:15:9 › Tax Calculator Tests › File Upload Functionality › should display file upload interface 
 
@@ -1712,7 +1632,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › File Upload Functionality › should accept CSV file upload" classname="tax-calculator.spec.ts" time="31.475">
+<testcase name="Tax Calculator Tests › File Upload Functionality › should accept CSV file upload" classname="tax-calculator.spec.ts" time="31.859">
 <failure message="tax-calculator.spec.ts:29:9 should accept CSV file upload" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:29:9 › Tax Calculator Tests › File Upload Functionality › should accept CSV file upload 
 
@@ -1756,7 +1676,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › File Upload Functionality › should validate file format" classname="tax-calculator.spec.ts" time="31.435">
+<testcase name="Tax Calculator Tests › File Upload Functionality › should validate file format" classname="tax-calculator.spec.ts" time="31.894">
 <failure message="tax-calculator.spec.ts:45:9 should validate file format" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:45:9 › Tax Calculator Tests › File Upload Functionality › should validate file format 
 
@@ -1797,7 +1717,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › File Upload Functionality › should handle large files appropriately" classname="tax-calculator.spec.ts" time="31.85">
+<testcase name="Tax Calculator Tests › File Upload Functionality › should handle large files appropriately" classname="tax-calculator.spec.ts" time="31.896">
 <failure message="tax-calculator.spec.ts:63:9 should handle large files appropriately" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:63:9 › Tax Calculator Tests › File Upload Functionality › should handle large files appropriately 
 
@@ -1841,7 +1761,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Calculation Process › should perform tax calculation with valid data" classname="tax-calculator.spec.ts" time="31.781">
+<testcase name="Tax Calculator Tests › Calculation Process › should perform tax calculation with valid data" classname="tax-calculator.spec.ts" time="32.315">
 <failure message="tax-calculator.spec.ts:90:9 should perform tax calculation with valid data" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:90:9 › Tax Calculator Tests › Calculation Process › should perform tax calculation with valid data 
 
@@ -1885,7 +1805,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Calculation Process › should show loading state during calculation" classname="tax-calculator.spec.ts" time="31.701">
+<testcase name="Tax Calculator Tests › Calculation Process › should show loading state during calculation" classname="tax-calculator.spec.ts" time="32.231">
 <failure message="tax-calculator.spec.ts:103:9 should show loading state during calculation" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:103:9 › Tax Calculator Tests › Calculation Process › should show loading state during calculation 
 
@@ -1929,7 +1849,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Calculation Process › should handle calculation errors gracefully" classname="tax-calculator.spec.ts" time="31.742">
+<testcase name="Tax Calculator Tests › Calculation Process › should handle calculation errors gracefully" classname="tax-calculator.spec.ts" time="32.048">
 <failure message="tax-calculator.spec.ts:124:9 should handle calculation errors gracefully" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:124:9 › Tax Calculator Tests › Calculation Process › should handle calculation errors gracefully 
 
@@ -1973,7 +1893,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Calculation Process › should validate calculation accuracy" classname="tax-calculator.spec.ts" time="31.847">
+<testcase name="Tax Calculator Tests › Calculation Process › should validate calculation accuracy" classname="tax-calculator.spec.ts" time="31.851">
 <failure message="tax-calculator.spec.ts:139:9 should validate calculation accuracy" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:139:9 › Tax Calculator Tests › Calculation Process › should validate calculation accuracy 
 
@@ -2017,7 +1937,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Calculation Process › should display calculation breakdown" classname="tax-calculator.spec.ts" time="31.896">
+<testcase name="Tax Calculator Tests › Calculation Process › should display calculation breakdown" classname="tax-calculator.spec.ts" time="31.819">
 <failure message="tax-calculator.spec.ts:158:9 should display calculation breakdown" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:158:9 › Tax Calculator Tests › Calculation Process › should display calculation breakdown 
 
@@ -2061,7 +1981,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Results Display › should display results in organized tables" classname="tax-calculator.spec.ts" time="31.327">
+<testcase name="Tax Calculator Tests › Results Display › should display results in organized tables" classname="tax-calculator.spec.ts" time="31.842">
 <failure message="tax-calculator.spec.ts:191:9 should display results in organized tables" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:191:9 › Tax Calculator Tests › Results Display › should display results in organized tables 
 
@@ -2114,7 +2034,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Results Display › should show summary cards with key metrics" classname="tax-calculator.spec.ts" time="31.433">
+<testcase name="Tax Calculator Tests › Results Display › should show summary cards with key metrics" classname="tax-calculator.spec.ts" time="31.877">
 <failure message="tax-calculator.spec.ts:206:9 should show summary cards with key metrics" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:206:9 › Tax Calculator Tests › Results Display › should show summary cards with key metrics 
 
@@ -2167,7 +2087,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Results Display › should display capital gains tax calculation" classname="tax-calculator.spec.ts" time="32.049">
+<testcase name="Tax Calculator Tests › Results Display › should display capital gains tax calculation" classname="tax-calculator.spec.ts" time="32.07">
 <failure message="tax-calculator.spec.ts:218:9 should display capital gains tax calculation" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:218:9 › Tax Calculator Tests › Results Display › should display capital gains tax calculation 
 
@@ -2220,7 +2140,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Results Display › should show dividend information if present" classname="tax-calculator.spec.ts" time="31.847">
+<testcase name="Tax Calculator Tests › Results Display › should show dividend information if present" classname="tax-calculator.spec.ts" time="32.379">
 <failure message="tax-calculator.spec.ts:235:9 should show dividend information if present" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:235:9 › Tax Calculator Tests › Results Display › should show dividend information if present 
 
@@ -2273,7 +2193,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Results Display › should allow export of results" classname="tax-calculator.spec.ts" time="31.808">
+<testcase name="Tax Calculator Tests › Results Display › should allow export of results" classname="tax-calculator.spec.ts" time="32.365">
 <failure message="tax-calculator.spec.ts:247:9 should allow export of results" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:247:9 › Tax Calculator Tests › Results Display › should allow export of results 
 
@@ -2326,7 +2246,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Results Display › should display results in responsive format" classname="tax-calculator.spec.ts" time="31.629">
+<testcase name="Tax Calculator Tests › Results Display › should display results in responsive format" classname="tax-calculator.spec.ts" time="32.102">
 <failure message="tax-calculator.spec.ts:259:9 should display results in responsive format" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:259:9 › Tax Calculator Tests › Results Display › should display results in responsive format 
 
@@ -2379,7 +2299,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Data Validation › should validate required columns in CSV" classname="tax-calculator.spec.ts" time="31.618">
+<testcase name="Tax Calculator Tests › Data Validation › should validate required columns in CSV" classname="tax-calculator.spec.ts" time="32.14">
 <failure message="tax-calculator.spec.ts:284:9 should validate required columns in CSV" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:284:9 › Tax Calculator Tests › Data Validation › should validate required columns in CSV 
 
@@ -2423,7 +2343,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Data Validation › should validate date formats" classname="tax-calculator.spec.ts" time="31.642">
+<testcase name="Tax Calculator Tests › Data Validation › should validate date formats" classname="tax-calculator.spec.ts" time="31.81">
 <failure message="tax-calculator.spec.ts:304:9 should validate date formats" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:304:9 › Tax Calculator Tests › Data Validation › should validate date formats 
 
@@ -2467,7 +2387,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Data Validation › should validate numeric fields" classname="tax-calculator.spec.ts" time="31.389">
+<testcase name="Tax Calculator Tests › Data Validation › should validate numeric fields" classname="tax-calculator.spec.ts" time="32.008">
 <failure message="tax-calculator.spec.ts:325:9 should validate numeric fields" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:325:9 › Tax Calculator Tests › Data Validation › should validate numeric fields 
 
@@ -2511,7 +2431,7 @@ Current URL before click: https://cgttaxtool.uk/
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Data Validation › should handle empty files" classname="tax-calculator.spec.ts" time="31.452">
+<testcase name="Tax Calculator Tests › Data Validation › should handle empty files" classname="tax-calculator.spec.ts" time="32.057">
 <failure message="tax-calculator.spec.ts:346:9 should handle empty files" type="FAILURE">
 <![CDATA[  [chromium] › tax-calculator.spec.ts:346:9 › Tax Calculator Tests › Data Validation › should handle empty files 
 
@@ -2538,6 +2458,10 @@ Current URL before click: https://cgttaxtool.uk/
     ../../test-results/tax-calculator-Tax-Calcula-b6775-n-should-handle-empty-files-chromium/test-failed-1.png
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-b6775-n-should-handle-empty-files-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
     Error Context: ../../test-results/tax-calculator-Tax-Calcula-b6775-n-should-handle-empty-files-chromium/error-context.md
 ]]>
 </failure>
@@ -2545,31 +2469,233 @@ Current URL before click: https://cgttaxtool.uk/
 <![CDATA[
 [[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-b6775-n-should-handle-empty-files-chromium/test-failed-1.png]]
 
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-b6775-n-should-handle-empty-files-chromium/video.webm]]
+
 [[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-b6775-n-should-handle-empty-files-chromium/error-context.md]]
 ]]>
 </system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › User Experience › should provide clear instructions and help" classname="tax-calculator.spec.ts" time="3.598">
+<testcase name="Tax Calculator Tests › User Experience › should provide clear instructions and help" classname="tax-calculator.spec.ts" time="3.882">
 </testcase>
-<testcase name="Tax Calculator Tests › User Experience › should maintain state during navigation" classname="tax-calculator.spec.ts" time="32.029">
-<skipped>
-</skipped>
+<testcase name="Tax Calculator Tests › User Experience › should maintain state during navigation" classname="tax-calculator.spec.ts" time="31.992">
+<failure message="tax-calculator.spec.ts:386:9 should maintain state during navigation" type="FAILURE">
+<![CDATA[  [chromium] › tax-calculator.spec.ts:386:9 › Tax Calculator Tests › User Experience › should maintain state during navigation 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.setInputFiles: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="file"]')
+
+
+       at helpers/page-objects.ts:196
+
+      194 |
+      195 |   async uploadFile(filePath: string) {
+    > 196 |     await this.fileInput.setInputFiles(filePath);
+          |     ^
+      197 |     if (await this.uploadButton.isVisible()) {
+      198 |       await this.uploadButton.click();
+      199 |     }
+        at CalculatorPage.uploadFile (/Users/myuser/development/ibkr-tax-calculator/tests/ui/helpers/page-objects.ts:196:5)
+        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/tax-calculator.spec.ts:390:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-96526-ain-state-during-navigation-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-96526-ain-state-during-navigation-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/tax-calculator-Tax-Calcula-96526-ain-state-during-navigation-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-96526-ain-state-during-navigation-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-96526-ain-state-during-navigation-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-96526-ain-state-during-navigation-chromium/error-context.md]]
+]]>
+</system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › User Experience › should provide progress feedback for long operations" classname="tax-calculator.spec.ts" time="32.007">
-<skipped>
-</skipped>
+<testcase name="Tax Calculator Tests › User Experience › should provide progress feedback for long operations" classname="tax-calculator.spec.ts" time="31.987">
+<failure message="tax-calculator.spec.ts:409:9 should provide progress feedback for long operations" type="FAILURE">
+<![CDATA[  [chromium] › tax-calculator.spec.ts:409:9 › Tax Calculator Tests › User Experience › should provide progress feedback for long operations 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.setInputFiles: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="file"]')
+
+
+       at helpers/page-objects.ts:196
+
+      194 |
+      195 |   async uploadFile(filePath: string) {
+    > 196 |     await this.fileInput.setInputFiles(filePath);
+          |     ^
+      197 |     if (await this.uploadButton.isVisible()) {
+      198 |       await this.uploadButton.click();
+      199 |     }
+        at CalculatorPage.uploadFile (/Users/myuser/development/ibkr-tax-calculator/tests/ui/helpers/page-objects.ts:196:5)
+        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/tax-calculator.spec.ts:421:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-4a9ed-eedback-for-long-operations-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-4a9ed-eedback-for-long-operations-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/tax-calculator-Tax-Calcula-4a9ed-eedback-for-long-operations-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-4a9ed-eedback-for-long-operations-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-4a9ed-eedback-for-long-operations-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-4a9ed-eedback-for-long-operations-chromium/error-context.md]]
+]]>
+</system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Edge Cases › should handle same-day buy and sell transactions" classname="tax-calculator.spec.ts" time="29.087">
-<skipped>
-</skipped>
+<testcase name="Tax Calculator Tests › Edge Cases › should handle same-day buy and sell transactions" classname="tax-calculator.spec.ts" time="31.973">
+<failure message="tax-calculator.spec.ts:446:9 should handle same-day buy and sell transactions" type="FAILURE">
+<![CDATA[  [chromium] › tax-calculator.spec.ts:446:9 › Tax Calculator Tests › Edge Cases › should handle same-day buy and sell transactions 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.setInputFiles: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="file"]')
+
+
+       at helpers/page-objects.ts:196
+
+      194 |
+      195 |   async uploadFile(filePath: string) {
+    > 196 |     await this.fileInput.setInputFiles(filePath);
+          |     ^
+      197 |     if (await this.uploadButton.isVisible()) {
+      198 |       await this.uploadButton.click();
+      199 |     }
+        at CalculatorPage.uploadFile (/Users/myuser/development/ibkr-tax-calculator/tests/ui/helpers/page-objects.ts:196:5)
+        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/tax-calculator.spec.ts:456:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-2fecd-y-buy-and-sell-transactions-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-2fecd-y-buy-and-sell-transactions-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/tax-calculator-Tax-Calcula-2fecd-y-buy-and-sell-transactions-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-2fecd-y-buy-and-sell-transactions-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-2fecd-y-buy-and-sell-transactions-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-2fecd-y-buy-and-sell-transactions-chromium/error-context.md]]
+]]>
+</system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Edge Cases › should handle fractional shares" classname="tax-calculator.spec.ts" time="28.464">
-<skipped>
-</skipped>
+<testcase name="Tax Calculator Tests › Edge Cases › should handle fractional shares" classname="tax-calculator.spec.ts" time="32.065">
+<failure message="tax-calculator.spec.ts:466:9 should handle fractional shares" type="FAILURE">
+<![CDATA[  [chromium] › tax-calculator.spec.ts:466:9 › Tax Calculator Tests › Edge Cases › should handle fractional shares 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.setInputFiles: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="file"]')
+
+
+       at helpers/page-objects.ts:196
+
+      194 |
+      195 |   async uploadFile(filePath: string) {
+    > 196 |     await this.fileInput.setInputFiles(filePath);
+          |     ^
+      197 |     if (await this.uploadButton.isVisible()) {
+      198 |       await this.uploadButton.click();
+      199 |     }
+        at CalculatorPage.uploadFile (/Users/myuser/development/ibkr-tax-calculator/tests/ui/helpers/page-objects.ts:196:5)
+        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/tax-calculator.spec.ts:476:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-b7c81-ld-handle-fractional-shares-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-b7c81-ld-handle-fractional-shares-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/tax-calculator-Tax-Calcula-b7c81-ld-handle-fractional-shares-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-b7c81-ld-handle-fractional-shares-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-b7c81-ld-handle-fractional-shares-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-b7c81-ld-handle-fractional-shares-chromium/error-context.md]]
+]]>
+</system-out>
 </testcase>
-<testcase name="Tax Calculator Tests › Edge Cases › should handle multiple currencies" classname="tax-calculator.spec.ts" time="28.652">
-<skipped>
-</skipped>
+<testcase name="Tax Calculator Tests › Edge Cases › should handle multiple currencies" classname="tax-calculator.spec.ts" time="32.011">
+<failure message="tax-calculator.spec.ts:486:9 should handle multiple currencies" type="FAILURE">
+<![CDATA[  [chromium] › tax-calculator.spec.ts:486:9 › Tax Calculator Tests › Edge Cases › should handle multiple currencies 
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.setInputFiles: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for locator('input[type="file"]')
+
+
+       at helpers/page-objects.ts:196
+
+      194 |
+      195 |   async uploadFile(filePath: string) {
+    > 196 |     await this.fileInput.setInputFiles(filePath);
+          |     ^
+      197 |     if (await this.uploadButton.isVisible()) {
+      198 |       await this.uploadButton.click();
+      199 |     }
+        at CalculatorPage.uploadFile (/Users/myuser/development/ibkr-tax-calculator/tests/ui/helpers/page-objects.ts:196:5)
+        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/tax-calculator.spec.ts:498:7
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-2ba5e--handle-multiple-currencies-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../test-results/tax-calculator-Tax-Calcula-2ba5e--handle-multiple-currencies-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../test-results/tax-calculator-Tax-Calcula-2ba5e--handle-multiple-currencies-chromium/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-2ba5e--handle-multiple-currencies-chromium/test-failed-1.png]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-2ba5e--handle-multiple-currencies-chromium/video.webm]]
+
+[[ATTACHMENT|test-results/tax-calculator-Tax-Calcula-2ba5e--handle-multiple-currencies-chromium/error-context.md]]
+]]>
+</system-out>
 </testcase>
 </testsuite>
 </testsuites>

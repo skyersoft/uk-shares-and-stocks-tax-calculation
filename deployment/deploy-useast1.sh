@@ -105,20 +105,18 @@ WEBSITE_URL=$(aws cloudformation describe-stacks \
     --query 'Stacks[0].Outputs[?OutputKey==`WebsiteUrl`].OutputValue' \
     --output text)
 
-# Upload static files
-echo -e "${BLUE}Uploading static files to S3...${NC}"
-if [ -d "static" ]; then
+# Upload SPA frontend files
+echo -e "${BLUE}Uploading SPA frontend to S3...${NC}"
+if [ -d "frontend/dist" ]; then
     echo "Uploading files to S3 bucket: $S3_BUCKET"
-    aws s3 sync static/ s3://"$S3_BUCKET"/ \
+    aws s3 sync frontend/dist/ s3://"$S3_BUCKET"/ \
         --profile "$PROFILE" \
         --cache-control "max-age=86400" \
         --delete
-    echo -e "${GREEN}✅ Static files uploaded${NC}"
+    echo -e "${GREEN}✅ Frontend files uploaded${NC}"
 else
-    echo -e "${YELLOW}⚠️  web_app/static directory not found. Uploading test file...${NC}"
-    echo "<html><body><h1>IBKR Tax Calculator</h1><p>Infrastructure deployed successfully!</p></body></html>" > test-index.html
-    aws s3 cp test-index.html s3://"$S3_BUCKET"/index.html --profile "$PROFILE"
-    rm test-index.html
+    echo -e "${YELLOW}⚠️  frontend/dist directory not found. Please run 'npm run build' in frontend directory first.${NC}"
+    exit 1
 fi
 
 # Test endpoints

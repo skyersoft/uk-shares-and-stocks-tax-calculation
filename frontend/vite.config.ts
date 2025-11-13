@@ -11,6 +11,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [react()],
     root: path.resolve(__dirname, 'src'),
+    publicDir: path.resolve(__dirname, 'public'),
     base: './', // Use relative paths for assets
     
     // Environment variables and polyfills
@@ -27,7 +28,7 @@ export default defineConfig(({ command, mode }) => {
     },
     
     build: {
-      outDir: path.resolve(__dirname, '../static/spa'),
+      outDir: path.resolve(__dirname, 'dist'),
       emptyOutDir: true,
       sourcemap: mode !== 'production',
       rollupOptions: {

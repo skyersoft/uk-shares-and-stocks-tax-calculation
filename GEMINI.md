@@ -67,10 +67,13 @@ The full deployment to AWS is orchestrated by shell scripts and CloudFormation.
     *   Deploying or updating the CloudFormation stack (`deployment/single-region-complete.yaml`) which provisions S3, Lambda, API Gateway, and CloudFront.
     *   Updating the Lambda function code.
 
-*   **Frontend Static Site Deployment:**
-    After the CloudFormation stack is deployed, the static frontend files need to be synced to the S3 bucket created by the stack.
+*   **Frontend SPA Deployment:**
+    After the CloudFormation stack is deployed, build and deploy the React SPA to the S3 bucket created by the stack.
     ```bash
-    aws s3 sync ./static s3://<your-s3-bucket-name> --profile <your-aws-profile>
+    # Build the SPA
+    cd frontend && npm run build && cd ..
+    # Deploy to S3
+    aws s3 sync frontend/dist s3://<your-s3-bucket-name> --profile <your-aws-profile>
     ```
     *Note: The S3 bucket name can be retrieved from the CloudFormation stack outputs (e.g., `WebsiteBucketName`).*
 
@@ -113,7 +116,7 @@ If and error occurs about session, use "aws sso login --profile goker".
 You can also use playwright to test ui. Both in python environment and node environment installed.
 For deploying to AWS, there are scripts under deployment folder. 
 01-package-api.sh and 03-deploy-api-code are enough to deploy backend to lambda function.
-aws s3 sync ./static .... is enough to deploy the UI to s3 bucket.
+Build the SPA with 'cd frontend && npm run build' then 'aws s3 sync frontend/dist s3://<bucket-name>' to deploy the UI to s3 bucket.
 Always use the folders properly. Write the tests under tests folder. UI code under static folder. Backend code under src/main/python folder.
 Before finishing a task make sure that code is deployed to aws and deployment is tested. Locally testing an implementation is not enough.
 For real tests use the input files under data folder.

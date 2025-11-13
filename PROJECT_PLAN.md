@@ -67,6 +67,7 @@ This project implements a comprehensive UK capital gains tax calculator for stoc
 - **Monetization**: Google AdSense integration
 
 ### Active Development
+- **Results SPA**: Normalized backend API payloads for disposals, dividends, holdings, and tax metrics so SPA mirrors legacy results tables/charts.
 - **React SPA**: Modern frontend migration (ui_tasks.md)
 - **Affiliate System**: Amazon Associates integration
 - **Content Management**: Blog system with MDX support

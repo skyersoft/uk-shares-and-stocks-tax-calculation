@@ -10,13 +10,13 @@
 ## ✅ Recently Completed (January 2025)
 
 ### Critical Bug Fixes
-- [x] **FIXED: Duplicate file upload bug causing data aggregation** - Critical frontend form handling issue ✅
+- [x] **FIXED: Duplicate file upload bug causing data aggregation** - Critical frontend form handling issue (legacy static HTML) ✅
   - **Issue**: Users saw 1 aggregated holding instead of 6 individual securities (ASM, ASML, RR., BSX, NVDA, TSLA)
   - **Root Cause**: JavaScript form handling created duplicate file form fields, causing backend to aggregate data
-  - **Location**: `static/js/app.js` - duplicate `FormData.append('file', uploadedFile)` calls
+  - **Location**: Legacy `static/js/app.js` (now deleted, migrated to React SPA)
   - **Fix**: Removed duplicate file append, synchronized HTML form input with selected file
   - **Impact**: Portfolio table now correctly shows 6 individual holdings, disposal table shows 3 disposals with proper symbols
-  - **Verification**: Comprehensive Playwright E2E test confirms all functionality working
+  - **Status**: Issue resolved in legacy code; SPA implementation uses proper React patterns
   - **Completed**: 2025-01-28
 
 ### Test Infrastructure & Quality
@@ -28,23 +28,19 @@
   - **Coverage**: Playwright E2E test verifies complete workflow including the duplicate file fix
   - **Completed**: 2025-01-28
 
-- [x] **JavaScript unit tests for duplicate file upload bug prevention** - Comprehensive regression testing ✅
-  - **Component**: `static/js/__tests__/` - Jest-based JavaScript testing
+- [x] **JavaScript unit tests for duplicate file upload bug prevention** - Legacy code testing (now archived) ✅
+  - **Component**: `static/js/__tests__/` - Jest-based JavaScript testing (deleted with legacy static code)
   - **Coverage**: FormData handling, file synchronization, validation logic
-  - **Focus**: Prevents regression of duplicate file upload bug that caused data aggregation
-  - **Architecture**: Mock File/FormData classes, JSDOM DOM simulation, console log verification
-  - **Verification**: Tests confirm individual securities display vs aggregated holdings
-  - **Debug logging**: Enhanced production logging for troubleshooting file upload issues
+  - **Status**: Tests served their purpose for legacy code; SPA uses React Testing Library
   - **Completed**: 2025-01-28
 
 ### Active Development (PRIORITY)
-- [ ] **Complete React SPA migration** - Finish transitioning from static HTML to React components ⚠️ URGENT
-  - **Component**: `frontend/` directory - React + Vite setup
-  - **Status**: Basic structure exists but SPA shows nearly empty content at https://cgttaxtool.uk/spa/
-  - **Issue**: React components are not properly rendering or have missing functionality
-  - **Priority**: HIGH (must complete before monitoring)
-  - **Estimated Effort**: Medium
-  - **Next Steps**: Debug React routing, component rendering, and API integration
+- [x] **Complete React SPA migration** - Fully transitioned from static HTML to React SPA ✅
+  - **Component**: `frontend/` directory - React + TypeScript + Vite
+  - **Status**: SPA is now the primary frontend at https://cgttaxtool.uk/
+  - **Cleanup**: Removed legacy `static/js/` and `static/css/` directories
+  - **Build**: Production builds to `frontend/dist/` and deploys to S3
+  - **Completed**: 2025-11-13
 
 ## 🚀 Technical Debt & Improvements
 
@@ -102,8 +98,9 @@
 ### Key Components
 - **Main Calculator**: `src/main/python/capital_gains_calculator.py`
 - **File Parsers**: `src/main/python/parsers/` (QFX and CSV)
-- **Frontend API**: `static/js/app.js` (handles file upload and API calls)
-- **Results Display**: `static/js/results.js` (processes and displays calculation results)
+- **Frontend SPA**: `frontend/src/` (React + TypeScript components)
+- **API Service**: `frontend/src/services/api.ts` (handles file upload and API calls)
+- **Results Display**: `frontend/src/pages/ResultsPage.tsx` (processes and displays calculation results)
 - **Tests**: `tests/` (unit, integration, and e2e Playwright tests)
 
 ## ✅ Completed Work
@@ -141,7 +138,8 @@
 
 ### Code Standards
 - **Python**: Follow PEP 8, type hints preferred
-- **JavaScript**: ES6+, async/await for API calls
+- **TypeScript**: Strict mode, async/await for API calls
+- **React**: Functional components with hooks
 - **Documentation**: Update README.md for user-facing changes
 - **Security**: No sensitive data in code, use environment variables
 
