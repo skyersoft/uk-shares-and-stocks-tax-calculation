@@ -384,12 +384,6 @@ export const HoldingsTable: React.FC<Omit<TableProps<HoldingData>, 'columns'> & 
       width: '120px'
     },
     {
-      key: 'name',
-      header: 'Security',
-      accessor: (row: HoldingData) => row.security.name || row.security.symbol,
-      sortable: true
-    },
-    {
       key: 'quantity',
       header: 'Quantity',
       accessor: 'quantity',
@@ -415,20 +409,26 @@ export const HoldingsTable: React.FC<Omit<TableProps<HoldingData>, 'columns'> & 
     },
     {
       key: 'gain_loss',
-      header: 'Gain/Loss',
+      header: 'Unrealized Gain/Loss',
       accessor: 'unrealized_gain_loss',
       sortable: true,
       align: 'right',
-      render: (value: number, row: HoldingData) => (
+      render: (value: number) => (
         <span className={value >= 0 ? 'text-success fw-semibold' : 'text-danger fw-semibold'}>
           {value >= 0 ? '+' : ''}£{value.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
-          {row.total_return_pct !== undefined && (
-            <small className="d-block text-muted">
-              ({row.total_return_pct >= 0 ? '+' : ''}{row.total_return_pct.toFixed(2)}%)
-            </small>
-          )}
         </span>
       )
+    },
+    {
+      key: 'return_pct',
+      header: 'Return %',
+      accessor: 'total_return_pct',
+      sortable: true,
+      align: 'right',
+      render: (value?: number) =>
+        typeof value === 'number'
+          ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+          : '-'
     }
   ];
 
@@ -447,18 +447,17 @@ export const DividendsTable: React.FC<Omit<TableProps<DividendData>, 'columns'> 
       render: (value: string) => new Date(value).toLocaleDateString('en-GB')
     },
     {
-      key: 'symbol',
-      header: 'Symbol',
-      accessor: (row: DividendData) => row.security.symbol,
-      sortable: true,
-      width: '120px'
-    },
-    {
       key: 'security',
       header: 'Security',
-      accessor: (row: DividendData) => row.security.name || row.security.symbol,
-      sortable: true,
-      hiddenOnMobile: true
+      accessor: (row: DividendData) => {
+        const symbol = row.security.symbol;
+        const name = row.security.name;
+        if (name && name !== symbol) {
+          return `${name} (${symbol})`;
+        }
+        return symbol;
+      },
+      sortable: true
     },
     {
       key: 'gross_amount',
@@ -475,7 +474,8 @@ export const DividendsTable: React.FC<Omit<TableProps<DividendData>, 'columns'> 
       sortable: true,
       align: 'right',
       hiddenOnMobile: true,
-      render: (value?: number) => value ? `£${value.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '-'
+      render: (value?: number) =>
+        typeof value === 'number' ? `£${value.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '-'
     },
     {
       key: 'net_amount',

@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useReducer } from 'react';
+import { NormalizedResults } from '../types/calculation';
 
 interface CalculationState {
   status: 'idle' | 'submitting' | 'success' | 'error';
   error: string | null;
-  result: any | null;
+  result: NormalizedResults | null;
   raw: any | null;
 }
 

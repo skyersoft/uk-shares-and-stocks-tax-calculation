@@ -6,6 +6,7 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Select } from '../components/ui/Select';
 import { AffiliateGrid } from '../components/affiliate';
 import { IbkrGuide } from '../components/ui/IbkrGuide';
+import { normalizeCalculationResults } from '../utils/resultsNormalizer';
 
 type TaxYear = '2024-2025' | '2023-2024' | '2022-2023' | '2021-2022';
 type AnalysisType = 'both' | 'tax' | 'portfolio';
@@ -72,7 +73,9 @@ const CalculatorPage: React.FC = () => {
         taxYear,
         analysisType
       });
-      dispatch({ type: 'SUBMIT_SUCCESS', payload: results });
+
+      const normalized = normalizeCalculationResults(results.raw);
+      dispatch({ type: 'SUBMIT_SUCCESS', payload: { raw: results.raw, normalized } });
       
       // Navigate to results
       window.location.hash = 'results';

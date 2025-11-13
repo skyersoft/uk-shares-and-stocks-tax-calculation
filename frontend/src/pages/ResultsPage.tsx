@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useCalculation } from '../context/CalculationContext';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
@@ -7,59 +7,112 @@ import { PortfolioSummary } from '../components/results/PortfolioSummary';
 import { ResultsHoldingsTable } from '../components/results/HoldingsTable';
 import { TaxCalculations } from '../components/results/TaxCalculations';
 import DataVisualization from '../components/results/DataVisualization';
-import { PortfolioAnalysis, TaxCalculation } from '../types/calculation';
+import {
+  NormalizedResults,
+  PortfolioAnalysis,
+  TaxCalculation
+} from '../types/calculation';
 import { AffiliateGrid } from '../components/affiliate';
+import { ResultsMetricsSummary } from '../components/results/ResultsMetrics';
+import { ResultsDisposalsTable } from '../components/results/ResultsDisposalsTable';
+import { ResultsDividendsTable } from '../components/results/ResultsDividendsTable';
+import { ResultsCallToAction } from '../components/results/ResultsCallToAction';
+import { AdditionalIncomeInputs } from '../components/results/AdditionalIncomeInputs';
+import { normalizeCalculationResults } from '../utils/resultsNormalizer';
+
+interface AdditionalIncomeData {
+  otherIncome: number;
+  otherDividends: number;
+  otherCapitalGains: number;
+}
 
 const ResultsPage: React.FC = () => {
   const { state } = useCalculation();
+  const [additionalIncome, setAdditionalIncome] = useState<AdditionalIncomeData>({
+    otherIncome: 0,
+    otherDividends: 0,
+    otherCapitalGains: 0
+  });
 
-  // Transform raw data to our typed interfaces
+  const normalizedResults: NormalizedResults | null = useMemo(() => {
+    if (state.result) return state.result;
+    if (state.raw) return normalizeCalculationResults(state.raw);
+    return null;
+  }, [state.result, state.raw]);
+
   const portfolioAnalysis: PortfolioAnalysis | null = useMemo(() => {
-    if (!state.raw?.portfolio_analysis) return null;
-    return state.raw.portfolio_analysis;
-  }, [state.raw]);
+    if (normalizedResults?.portfolioAnalysis) return normalizedResults.portfolioAnalysis;
+    if (state.raw?.portfolio_analysis) return state.raw.portfolio_analysis;
+    return null;
+  }, [normalizedResults, state.raw]);
 
   const taxCalculations: TaxCalculation | null = useMemo(() => {
-    if (!state.raw?.tax_analysis) return null;
+    const taxReport = normalizedResults?.taxReport ?? state.raw?.tax_report;
+    const taxAnalysis = normalizedResults?.taxAnalysis ?? state.raw?.tax_analysis;
 
-    // The backend provides estimated tax figures under tax_report.summary.estimated_tax_liability
-    // but the UI expects a flattened TaxCalculation object with capital_gains_tax, dividend_tax, etc.
-    const estimated = state.raw.tax_report?.summary?.estimated_tax_liability || {};
-    const capitalGains = state.raw.tax_analysis.capital_gains || {};
+    if (!taxReport?.summary?.estimated_tax_liability) return null;
 
-    // Build disposal calculations in the simplified shape expected by the UI
-    const disposal_calculations = (capitalGains.disposals || []).map((d: any) => {
-      const proceeds = Number(d.proceeds) || 0;
-      const cost_basis = Number(d.cost_basis) || 0;
-      const expenses = Number(d.expenses) || 0;
-      const gain_loss = proceeds - cost_basis - expenses;
+    const estimated = taxReport.summary.estimated_tax_liability || {};
+    const sectionPools =
+      taxAnalysis?.capital_gains?.section_104_pools || estimated.section_104_pools || {};
+
+    const disposalSource: any[] = Array.isArray(normalizedResults?.disposals)
+      ? normalizedResults.disposals
+      : Array.isArray(taxAnalysis?.capital_gains?.disposals)
+        ? taxAnalysis.capital_gains.disposals
+        : [];
+
+    const disposal_calculations = disposalSource.map((disposal: any) => {
+      const isNormalized = Object.prototype.hasOwnProperty.call(disposal, 'disposalDate');
+      const proceeds = isNormalized ? disposal.proceeds || 0 : Number(disposal.proceeds) || 0;
+      const expenses = isNormalized ? 0 : Number(disposal.expenses) || 0;
+      const costBasis = isNormalized ? disposal.costBasis || 0 : Number(disposal.cost_basis) || 0;
+      const gainLoss = isNormalized
+        ? disposal.gainLoss || 0
+        : Number(disposal.gain_or_loss) || proceeds - costBasis - expenses;
+
+      const disposalDate = isNormalized
+        ? disposal.disposalDate
+        : disposal.disposal_date || disposal.sell_date || disposal.date || '';
+
       return {
-        symbol: d.security?.symbol || 'UNKNOWN',
-        disposal_date: d.sell_date || d.disposal_date || '',
-        quantity: d.quantity || 0,
+        symbol: isNormalized
+          ? disposal.symbol || 'UNKNOWN'
+          : disposal.security?.symbol || disposal.symbol || 'UNKNOWN',
+        disposal_date: disposalDate,
+        quantity: isNormalized ? disposal.quantity || 0 : Number(disposal.quantity) || 0,
         proceeds,
-        gain_loss,
+        gain_loss: gainLoss
       };
     });
 
-    // Section 104 pools not yet exposed separately by backend summary; keep empty for now
-    const section_104_pools: Record<string, any> = {};
-
+    // Base tax from portfolio
+    const baseCGT = Number(estimated.capital_gains_tax) || 0;
+    const baseDivTax = Number(estimated.dividend_tax) || 0;
+    
+    // Add additional income tax calculations (simplified)
+    // In reality, these would need proper tax bands and calculations
+    const additionalCGT = additionalIncome.otherCapitalGains * 0.2; // Simplified 20% rate
+    const additionalDivTax = additionalIncome.otherDividends * 0.0875; // Simplified 8.75% basic rate
+    
     return {
-      capital_gains_tax: Number(estimated.capital_gains_tax) || 0,
-      dividend_tax: Number(estimated.dividend_tax) || 0,
-      total_tax_liability: (
-        Number(estimated.total_estimated_tax) ||
-        (Number(estimated.capital_gains_tax) || 0) +
-          (Number(estimated.dividend_tax) || 0) +
-          (Number(estimated.currency_gains_tax) || 0)
-      ),
-      section_104_pools,
+      capital_gains_tax: baseCGT + additionalCGT,
+      dividend_tax: baseDivTax + additionalDivTax,
+      total_tax_liability:
+        baseCGT + additionalCGT + baseDivTax + additionalDivTax +
+        (Number(estimated.currency_gains_tax) || 0),
+      section_104_pools: sectionPools,
       disposal_calculations,
+      additional_income: additionalIncome
     } as TaxCalculation;
-  }, [state.raw]);
+  }, [normalizedResults, state.raw, additionalIncome]);
 
-  // Handle loading and error states
+  const handleAdditionalIncomeCalculate = (data: AdditionalIncomeData) => {
+    setAdditionalIncome(data);
+  };
+
+  const taxYearDisplay = normalizedResults?.taxYear ?? 'N/A';
+
   if (state.status === 'submitting') {
     return (
       <div className="container-fluid py-4">
@@ -86,10 +139,12 @@ const ResultsPage: React.FC = () => {
                 <i className="fas fa-exclamation-triangle me-2"></i>
                 <h4 className="mb-0">Calculation Error</h4>
               </div>
-              <p className="mb-3">{state.error || 'An unexpected error occurred while processing your calculation.'}</p>
-              <Button 
+              <p className="mb-3">
+                {state.error || 'An unexpected error occurred while processing your calculation.'}
+              </p>
+              <Button
                 variant="primary"
-                onClick={() => window.location.hash = ''}
+                onClick={() => (window.location.hash = '')}
                 className="me-2"
               >
                 <i className="fas fa-calculator me-2"></i>
@@ -114,10 +169,10 @@ const ResultsPage: React.FC = () => {
             <p className="text-muted mb-4">
               Upload your brokerage files and run a calculation to see your tax results here.
             </p>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               size="lg"
-              onClick={() => window.location.hash = ''}
+              onClick={() => (window.location.hash = '')}
             >
               <i className="fas fa-calculator me-2"></i>
               Start Tax Calculation
@@ -128,16 +183,18 @@ const ResultsPage: React.FC = () => {
     );
   }
 
-  // Success state - show results
-  if (!portfolioAnalysis || !taxCalculations) {
+  if (!normalizedResults || !portfolioAnalysis || !taxCalculations) {
     return (
       <div className="container-fluid py-4">
         <div className="row justify-content-center">
           <div className="col-12 col-md-8">
             <Alert variant="warning" className="text-center">
               <h4>Incomplete Data</h4>
-              <p>The calculation completed but some results data is missing. Please try running the calculation again.</p>
-              <Button variant="primary" onClick={() => window.location.hash = ''}>
+              <p>
+                The calculation completed but some results data is missing. Please try running the
+                calculation again.
+              </p>
+              <Button variant="primary" onClick={() => (window.location.hash = '')}>
                 Run New Calculation
               </Button>
             </Alert>
@@ -147,13 +204,14 @@ const ResultsPage: React.FC = () => {
     );
   }
 
-  // Main results layout
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
-      {/* Page Header */}
+    <div
+      className="container-fluid py-4"
+      style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}
+    >
       <div className="row mb-4">
         <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center bg-white rounded shadow-sm p-4">
+          <div className="d-flex justify-content-between align-items-center bg-white rounded shadow-sm p-4 flex-wrap gap-3">
             <div>
               <h1 className="h2 mb-1 text-primary">
                 <i className="fas fa-chart-line me-3"></i>
@@ -162,18 +220,21 @@ const ResultsPage: React.FC = () => {
               <p className="text-muted mb-0">
                 Comprehensive analysis of your portfolio and UK tax obligations
               </p>
+              <div className="small text-muted mt-2">
+                <strong>Tax Year:</strong> {taxYearDisplay}
+              </div>
             </div>
             <div className="text-end">
-              <Button 
+              <Button
                 variant="outline-primary"
                 size="sm"
-                onClick={() => window.location.hash = ''}
+                onClick={() => (window.location.hash = '')}
                 className="me-2"
               >
                 <i className="fas fa-calculator me-2"></i>
                 New Calculation
               </Button>
-              <Button 
+              <Button
                 variant="outline-secondary"
                 size="sm"
                 onClick={() => window.print()}
@@ -186,7 +247,22 @@ const ResultsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Success Alert for Tax Liability */}
+      <ResultsMetricsSummary
+        metrics={normalizedResults.metrics}
+        taxYear={normalizedResults.taxYear}
+        showCgtWarning={normalizedResults.showCgtWarning}
+        className="mb-4"
+      />
+
+      <div className="row mb-4">
+        <div className="col-12">
+          <AdditionalIncomeInputs
+            onCalculate={handleAdditionalIncomeCalculate}
+            className="shadow-sm border-0"
+          />
+        </div>
+      </div>
+
       {taxCalculations.total_tax_liability > 0 && (
         <div className="row mb-4">
           <div className="col-12">
@@ -212,70 +288,80 @@ const ResultsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Portfolio Summary */}
       <div className="row mb-4">
         <div className="col-12">
-          <PortfolioSummary 
+          <PortfolioSummary
             portfolioAnalysis={portfolioAnalysis}
             className="shadow-sm border-0"
           />
         </div>
       </div>
 
-      {/* Holdings Table */}
       <div className="row mb-4">
         <div className="col-12">
-          <ResultsHoldingsTable 
+          <ResultsDisposalsTable
+            disposals={normalizedResults.disposals}
+            className="shadow-sm border-0"
+          />
+        </div>
+      </div>
+
+      <div className="row mb-4">
+        <div className="col-12">
+          <ResultsDividendsTable
+            dividends={normalizedResults.dividends}
+            className="shadow-sm border-0"
+          />
+        </div>
+      </div>
+
+      <div className="row mb-4">
+        <div className="col-12">
+          <ResultsHoldingsTable
+            holdings={normalizedResults.holdings}
             marketSummaries={portfolioAnalysis.market_summaries}
             className="shadow-sm border-0"
           />
         </div>
       </div>
 
-      {/* Tax Calculations */}
+      {taxCalculations && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <TaxCalculations
+              taxCalculations={taxCalculations}
+              className="shadow-sm border-0"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="row mb-4">
         <div className="col-12">
-          <TaxCalculations 
+          <DataVisualization
+            portfolioAnalysis={portfolioAnalysis}
             taxCalculations={taxCalculations}
-            className="shadow-sm border-0"
           />
         </div>
       </div>
 
-      {/* Data Visualization */}
       <div className="row mb-4">
         <div className="col-12">
-          <div className="bg-white rounded shadow-sm p-4">
-            <div className="d-flex align-items-center mb-4">
-              <i className="fas fa-chart-bar me-3 text-primary" style={{ fontSize: '1.5rem' }}></i>
-              <div>
-                <h4 className="mb-1">Portfolio Analytics</h4>
-                <p className="text-muted mb-0">
-                  Interactive charts and visualizations of your portfolio performance and tax analysis
-                </p>
-              </div>
-            </div>
-            <DataVisualization
-              portfolioAnalysis={portfolioAnalysis}
-              taxCalculations={taxCalculations}
-            />
-          </div>
+          <ResultsCallToAction />
         </div>
       </div>
 
-      {/* Educational Resources Section */}
       <div className="row">
         <div className="col-12">
           <div className="bg-white rounded shadow-sm p-4 mb-4">
             <div className="text-center mb-4">
-              <h4 className="text-dark mb-2">
-                📈 Further Your Tax Knowledge
-              </h4>
+              <h4 className="text-dark mb-2">📈 Further Your Tax Knowledge</h4>
               <p className="text-muted">
-                Based on your calculation complexity, these resources can help you understand tax implications better
+                Based on your calculation complexity, these resources can help you understand tax
+                implications better
               </p>
             </div>
-            
+
             <AffiliateGrid
               featuredOnly={true}
               limit={3}
@@ -289,32 +375,29 @@ const ResultsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer Actions */}
       <div className="row">
         <div className="col-12">
           <div className="bg-white rounded shadow-sm p-4 text-center">
             <div className="mb-3">
               <h5 className="text-muted">Need Help?</h5>
               <p className="small text-muted mb-0">
-                These calculations are estimates. For professional tax advice, consult with a qualified accountant or tax advisor.
+                These calculations are estimates. For professional tax advice, consult with a
+                qualified accountant or tax advisor.
               </p>
             </div>
             <div className="d-flex justify-content-center gap-3 flex-wrap">
-              <Button 
-                variant="primary"
-                onClick={() => window.location.hash = ''}
-              >
+              <Button variant="primary" onClick={() => (window.location.hash = '')}>
                 <i className="fas fa-calculator me-2"></i>
                 Run New Calculation
               </Button>
-              <Button 
+              <Button
                 variant="outline-secondary"
-                onClick={() => window.location.href = '/'}
+                onClick={() => (window.location.href = '/')}
               >
                 <i className="fas fa-home me-2"></i>
                 Back to Home
               </Button>
-              <Button 
+              <Button
                 variant="outline-secondary"
                 onClick={() => window.open('https://www.gov.uk/capital-gains-tax', '_blank')}
               >

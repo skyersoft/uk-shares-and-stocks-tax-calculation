@@ -1,4 +1,5 @@
 import React, { ReactNode, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AffiliateDisclosure } from '../affiliate';
 
 interface LayoutProps {
@@ -12,7 +13,11 @@ export const Layout: React.FC<LayoutProps> = ({
   showSidebar = true,
   className = ''
 }) => {
+  const location = useLocation();
   const [isNavbarExpanded, setIsNavbarExpanded] = useState(false);
+
+  const isLandingPage = location.pathname === '/' || location.pathname === '';
+  const isSidebarVisible = showSidebar && !isLandingPage;
 
   const toggleNavbar = () => {
     setIsNavbarExpanded(!isNavbarExpanded);
@@ -38,13 +43,13 @@ export const Layout: React.FC<LayoutProps> = ({
   }, [isNavbarExpanded]);
 
   return (
-    <div className={`layout ${className}`}>
+    <div className={`layout ${className} ${isLandingPage ? 'layout-landing' : ''}`}>
 
       {/* Header with navigation and header ad */}
       <header className="header-section">
         <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
           <div className="container-fluid">
-            <a className="navbar-brand d-flex align-items-center" href="/">
+            <a className="navbar-brand d-flex align-items-center" href="#/" onClick={closeNavbar}>
               <i className="bi bi-calculator-fill me-2 text-primary"></i>
               <span className="fw-bold">UK Tax Calculator</span>
             </a>
@@ -97,51 +102,50 @@ export const Layout: React.FC<LayoutProps> = ({
 
       {/* Main content area */}
       <main className="main-content">
-        <div className="container-fluid">
-          <div className="row">
-            {/* Main content column */}
-            <div className={`col ${showSidebar ? 'col-lg-9' : 'col-12'}`}>
-              <div className="content-wrapper py-4">
-                {children}
+        {isLandingPage ? (
+          <>{children}</>
+        ) : (
+          <div className="container-fluid">
+            <div className="row">
+              <div className={`col ${isSidebarVisible ? 'col-lg-9' : 'col-12'}`}>
+                <div className="content-wrapper py-4">
+                  {children}
+                </div>
               </div>
-            </div>
+              {isSidebarVisible && (
+                <div className="col-lg-3 d-none d-lg-block">
+                  <aside className="sidebar py-4">
+                    <div className="sidebar-content mt-4">
+                      <div className="card">
+                        <div className="card-body">
+                          <h6 className="card-title">Need Help?</h6>
+                          <p className="card-text small">
+                            Check our comprehensive guide for UK capital gains tax calculations.
+                          </p>
+                          <a href="/help" className="btn btn-sm btn-outline-primary">
+                            Get Help
+                          </a>
+                        </div>
+                      </div>
 
-            {/* Sidebar */}
-            {showSidebar && (
-              <div className="col-lg-3 d-none d-lg-block">
-                <aside className="sidebar py-4">
-                  
-                  {/* Additional sidebar content */}
-                  <div className="sidebar-content mt-4">
-                    <div className="card">
-                      <div className="card-body">
-                        <h6 className="card-title">Need Help?</h6>
-                        <p className="card-text small">
-                          Check our comprehensive guide for UK capital gains tax calculations.
-                        </p>
-                        <a href="/help" className="btn btn-sm btn-outline-primary">
-                          Get Help
-                        </a>
+                      <div className="card mt-3">
+                        <div className="card-body">
+                          <h6 className="card-title">About This Tool</h6>
+                          <p className="card-text small">
+                            Free, accurate UK tax calculations for Interactive Brokers users.
+                          </p>
+                          <a href="/about" className="btn btn-sm btn-outline-secondary">
+                            Learn More
+                          </a>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="card mt-3">
-                      <div className="card-body">
-                        <h6 className="card-title">About This Tool</h6>
-                        <p className="card-text small">
-                          Free, accurate UK tax calculations for Interactive Brokers users.
-                        </p>
-                        <a href="/about" className="btn btn-sm btn-outline-secondary">
-                          Learn More
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                </aside>
-              </div>
-            )}
+                  </aside>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Footer */}
