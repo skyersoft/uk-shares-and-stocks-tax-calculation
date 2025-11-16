@@ -279,20 +279,6 @@ const LandingPage: React.FC = () => {
                   Free to Use
                 </div>
               </div>
-              <div className="alert alert-warning mt-4 d-flex align-items-center border-0 gradient-warning" role="alert">
-                <div className="me-3 display-6" aria-hidden="true">
-                  🚀
-                </div>
-                <div className="flex-grow-1">
-                  <h6 className="alert-heading mb-1">Try Our Modern Interface</h6>
-                  <p className="mb-2">
-                    Enhanced React SPA with faster performance, real-time feedback, and improved usability across devices.
-                  </p>
-                  <button onClick={handleGetStarted} className="btn btn-sm btn-primary">
-                    Try Modern App
-                  </button>
-                </div>
-              </div>
             </div>
             <div className="col-lg-5 d-none d-lg-block">
               <div className="ad-container hero-ad-slot w-100 h-100" aria-hidden="true">
