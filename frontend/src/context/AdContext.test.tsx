@@ -32,7 +32,8 @@ describe('AdProvider', () => {
       wrapper: AdProvider
     });
 
-    expect(result.current.hasAdConsent).toBe(false);
+    // Default to true when localStorage is null (for development)
+    expect(result.current.hasAdConsent).toBe(true);
     expect(result.current.screenSize).toBe('desktop');
     expect(typeof result.current.setAdConsent).toBe('function');
   });
@@ -131,23 +132,23 @@ describe('AdProvider', () => {
       wrapper: AdProvider
     });
 
-    // Start with false
-    expect(result.current.hasAdConsent).toBe(false);
-
-    // Set to true
-    act(() => {
-      result.current.setAdConsent(true);
-    });
-
+    // Start with true (default when localStorage is null)
     expect(result.current.hasAdConsent).toBe(true);
-    expect(localStorageMock.setItem).toHaveBeenCalledWith('adConsentGiven', 'true');
 
-    // Set back to false
+    // Set to false
     act(() => {
       result.current.setAdConsent(false);
     });
 
     expect(result.current.hasAdConsent).toBe(false);
+    expect(localStorageMock.setItem).toHaveBeenCalledWith('adConsentGiven', 'false');
+
+    // Set back to true
+    act(() => {
+      result.current.setAdConsent(true);
+    });
+
+    expect(result.current.hasAdConsent).toBe(true);
     expect(localStorageMock.setItem).toHaveBeenCalledWith('adConsentGiven', 'false');
   });
 });

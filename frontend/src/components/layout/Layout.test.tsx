@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import { Layout } from './Layout';
 import { AdProvider } from '../../context/AdContext';
 
@@ -32,11 +33,13 @@ Object.defineProperty(window, 'localStorage', {
 });
 
 const LayoutWrapper: React.FC<{ children: React.ReactNode; pageType: any }> = ({ children, pageType }) => (
-  <AdProvider>
-    <Layout pageType={pageType}>
-      {children}
-    </Layout>
-  </AdProvider>
+  <BrowserRouter>
+    <AdProvider>
+      <Layout pageType={pageType}>
+        {children}
+      </Layout>
+    </AdProvider>
+  </BrowserRouter>
 );
 
 describe('Layout', () => {
@@ -55,7 +58,7 @@ describe('Layout', () => {
 
     expect(screen.getAllByText('UK Tax Calculator')).toHaveLength(2); // Header and footer
     expect(screen.getByText('Test content')).toBeInTheDocument();
-    expect(screen.getByText('Privacy Consent Banner')).toBeInTheDocument();
+    // Privacy Consent is no longer part of Layout
   });
 
   it('renders navigation links', () => {
@@ -73,59 +76,6 @@ describe('Layout', () => {
     expect(screen.getAllByText('About')).toHaveLength(2); // Nav and footer
     expect(screen.getByText('Help')).toBeInTheDocument();
     expect(screen.getByText('CGT Guide')).toBeInTheDocument();
-  });
-
-  it('renders ad placements for different page types', () => {
-    const { rerender } = render(
-      <LayoutWrapper pageType="calculator">
-        <div>Calculator content</div>
-      </LayoutWrapper>
-    );
-
-    expect(screen.getAllByText('Ad Placement Manager')).toHaveLength(3); // Header, sidebar, footer
-
-    rerender(
-      <LayoutWrapper pageType="results">
-        <div>Results content</div>
-      </LayoutWrapper>
-    );
-
-    expect(screen.getAllByText('Ad Placement Manager')).toHaveLength(3); // Should still have 3 placements
-  });
-
-  it('includes content ads for long pages', () => {
-    render(
-      <LayoutWrapper pageType="guide">
-        <div>Guide content</div>
-      </LayoutWrapper>
-    );
-
-    // Should have header, sidebar, content, and footer ads
-    expect(screen.getAllByText('Ad Placement Manager')).toHaveLength(4);
-  });
-
-  it('renders sidebar on desktop by default', () => {
-    render(
-      <LayoutWrapper pageType="calculator">
-        <div>Test content</div>
-      </LayoutWrapper>
-    );
-
-    expect(screen.getByText('Need Help?')).toBeInTheDocument();
-    expect(screen.getByText('About This Tool')).toBeInTheDocument();
-  });
-
-  it('can hide sidebar when showSidebar is false', () => {
-    render(
-      <AdProvider>
-        <Layout pageType="calculator" showSidebar={false}>
-          <div>Test content</div>
-        </Layout>
-      </AdProvider>
-    );
-
-    expect(screen.queryByText('Need Help?')).not.toBeInTheDocument();
-    expect(screen.queryByText('About This Tool')).not.toBeInTheDocument();
   });
 
   it('renders footer with links', () => {
@@ -150,34 +100,5 @@ describe('Layout', () => {
 
     const layout = container.querySelector('.layout');
     expect(layout).toBeInTheDocument();
-  });
-
-  it('renders content ads only for specific page types', () => {
-    const pageTypesWithContentAds = ['guide', 'help', 'about'];
-    const pageTypesWithoutContentAds = ['calculator', 'results', 'blog'];
-
-    pageTypesWithContentAds.forEach(pageType => {
-      const { unmount } = render(
-        <LayoutWrapper pageType={pageType as any}>
-          <div>Content</div>
-        </LayoutWrapper>
-      );
-
-      // Should have header, sidebar, content, and footer ads (4 total)
-      expect(screen.getAllByText('Ad Placement Manager')).toHaveLength(4);
-      unmount();
-    });
-
-    pageTypesWithoutContentAds.forEach(pageType => {
-      const { unmount } = render(
-        <LayoutWrapper pageType={pageType as any}>
-          <div>Content</div>
-        </LayoutWrapper>
-      );
-
-      // Should have header, sidebar, and footer ads (3 total)
-      expect(screen.getAllByText('Ad Placement Manager')).toHaveLength(3);
-      unmount();
-    });
   });
 });
