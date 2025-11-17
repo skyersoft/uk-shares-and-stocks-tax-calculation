@@ -1,16 +1,23 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { renderWithProviders } from '../__tests__/utils/test-utils';
+import { render, screen } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import CalculatorPage from './CalculatorPage';
-import { submitCalculation } from '../services/api';
 
-// Mock API calls and services
+// Mock the MultiStepCalculator component
+jest.mock('../components/calculator/MultiStepCalculator', () => ({
+  MultiStepCalculator: ({ onComplete }: { onComplete: (data: any) => void }) => (
+    <div data-testid="multi-step-calculator">
+      <button onClick={() => onComplete({ file: new File(['test'], 'test.csv'), taxYear: '2024-2025' })}>
+        Complete Wizard
+      </button>
+    </div>
+  ),
+}));
+
+// Mock API
 jest.mock('../services/api', () => ({
   submitCalculation: jest.fn(),
 }));
-
-const mockSubmitCalculation = submitCalculation as jest.MockedFunction<typeof submitCalculation>;
 
 // Mock CalculationContext
 const mockDispatch = jest.fn();
@@ -22,19 +29,12 @@ jest.mock('../context/CalculationContext', () => ({
     state: mockState,
     dispatch: mockDispatch,
   }),
-  CalculationProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="mock-calculation-provider">{children}</div>
-  ),
 }));
 
-// Helper function to simulate file upload
-const simulateFileUpload = (fileInput: HTMLInputElement, file: File) => {
-  Object.defineProperty(fileInput, 'files', {
-    value: [file],
-    writable: false,
-  });
-  fireEvent.change(fileInput);
-};
+// Mock normalizer
+jest.mock('../utils/resultsNormalizer', () => ({
+  normalizeCalculationResults: jest.fn((data) => data),
+}));
 
 describe('CalculatorPage', () => {
   beforeEach(() => {
@@ -42,34 +42,30 @@ describe('CalculatorPage', () => {
     mockState = { status: 'idle', error: null, result: null };
   });
 
-  describe('Basic Rendering', () => {
-    it('renders calculator page with main heading', () => {
-      renderWithProviders(<CalculatorPage />);
-      
-      expect(screen.getByRole('heading', { name: /UK Tax Calculator/i })).toBeInTheDocument();
-      expect(screen.getByText(/Calculate your Capital Gains Tax for informational purposes/i)).toBeInTheDocument();
-    });
+  const renderPage = () => {
+    return render(
+      <BrowserRouter>
+        <CalculatorPage />
+      </BrowserRouter>
+    );
+  };
 
-    it('renders file upload component', () => {
-      renderWithProviders(<CalculatorPage />);
-      
-      // File input is created dynamically on click, check for upload area
-      expect(screen.getByText(/Choose File to Upload/i)).toBeInTheDocument();
-      expect(screen.getByText(/CSV or QFX files/i)).toBeInTheDocument();
-    });
+  it('renders the page with hero section', () => {
+    renderPage();
+    
+    expect(screen.getByRole('heading', { name: /UK Tax Calculator/i })).toBeInTheDocument();
+    expect(screen.getByText(/Calculate your Capital Gains Tax and income tax for informational purposes/i)).toBeInTheDocument();
+  });
 
-    it('renders form controls', () => {
-      renderWithProviders(<CalculatorPage />);
-      
-      // Tax year dropdown
-      expect(screen.getByText(/Tax Year/)).toBeInTheDocument();
-      
-      // Analysis type dropdown
-      expect(screen.getByText(/Analysis Type/)).toBeInTheDocument();
-      
-      // Submit button
-      const submitButton = screen.getByRole('button', { name: /calculate/i });
-      expect(submitButton).toBeInTheDocument();
-    });
+  it('renders the disclaimer', () => {
+    renderPage();
+    
+    expect(screen.getByText(/This calculator is for informational purposes only/i)).toBeInTheDocument();
+  });
+
+  it('renders the MultiStepCalculator component', () => {
+    renderPage();
+    
+    expect(screen.getByTestId('multi-step-calculator')).toBeInTheDocument();
   });
 });
