@@ -5,9 +5,10 @@ import { Button } from '../../ui/Button';
 interface ReviewStepProps {
   data: WizardData;
   onEdit: (step: number) => void;
+  onCalculate: () => void;
 }
 
-export const ReviewStep: React.FC<ReviewStepProps> = ({ data, onEdit }) => {
+export const ReviewStep: React.FC<ReviewStepProps> = ({ data, onEdit, onCalculate }) => {
   const { incomeSources, brokerFiles, employmentIncome, rentalIncome, savingsInterest, otherDividends, otherCapitalGains, personalDetails } = data;
 
   // Calculate totals
@@ -308,6 +309,18 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ data, onEdit }) => {
                 <div className="fw-bold">{formatCurrency(personalDetails.carriedForwardLosses)}</div>
               </div>
             )}
+            {personalDetails.charitableDonations > 0 && (
+              <div className="col-md-6">
+                <div className="small text-muted">Charitable Donations (Gift Aid)</div>
+                <div className="fw-bold">
+                  {formatCurrency(personalDetails.charitableDonations)}
+                  <span className="small text-success ms-2">
+                    <i className="fas fa-info-circle me-1"></i>
+                    Tax relief applied
+                  </span>
+                </div>
+              </div>
+            )}
             <div className="col-md-6">
               <div className="small text-muted">Self Assessment Registered</div>
               <div className="fw-bold">{personalDetails.isRegisteredForSelfAssessment ? 'Yes' : 'No'}</div>
@@ -331,7 +344,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({ data, onEdit }) => {
               </p>
             </div>
             <div className="col-md-4 text-md-end mt-3 mt-md-0">
-              <Button variant="light" size="lg" onClick={() => {}}>
+              <Button variant="light" size="lg" onClick={onCalculate}>
                 <i className="fas fa-play me-2"></i>
                 Calculate Tax
               </Button>

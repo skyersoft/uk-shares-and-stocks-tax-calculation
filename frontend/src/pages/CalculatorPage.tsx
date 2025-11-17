@@ -11,21 +11,42 @@ const CalculatorPage: React.FC = () => {
   // Handle form completion from MultiStepCalculator
   const handleCalculatorComplete = async (data: any) => {
     console.log('[CalculatorPage] Calculator completed with data:', data);
+    console.log('[CalculatorPage] Broker files:', data.brokerFiles);
+    console.log('[CalculatorPage] Tax year:', data.taxYear);
+    console.log('[CalculatorPage] Analysis type:', data.analysisType);
     
     dispatch({ type: 'SUBMIT_START' });
 
     try {
+      // Extract the first broker file if available
+      const primaryFile = data.brokerFiles && data.brokerFiles.length > 0 
+        ? data.brokerFiles[0].file 
+        : null;
+
+      console.log('[CalculatorPage] Primary file:', primaryFile);
+
+      if (!primaryFile) {
+        console.error('[CalculatorPage] No file uploaded');
+        throw new Error('No file uploaded for calculation');
+      }
+
+      console.log('[CalculatorPage] Submitting calculation...');
       const results = await submitCalculation({
-        file: data.file,
+        file: primaryFile,
         taxYear: data.taxYear,
-        analysisType: 'both' // Default to both for now
+        analysisType: data.analysisType || 'both'
       });
 
+      console.log('[CalculatorPage] Calculation results received:', results);
       const normalized = normalizeCalculationResults(results.raw);
+      console.log('[CalculatorPage] Results normalized:', normalized);
+      
       dispatch({ type: 'SUBMIT_SUCCESS', payload: { raw: results.raw, normalized } });
       
+      console.log('[CalculatorPage] Navigating to results...');
       // Navigate to results
       window.location.hash = 'results';
+      console.log('[CalculatorPage] Navigation complete, hash:', window.location.hash);
     } catch (error: any) {
       console.error('[CalculatorPage] Submission error:', error);
       dispatch({ type: 'SUBMIT_ERROR', payload: error.message || 'An error occurred during calculation' });

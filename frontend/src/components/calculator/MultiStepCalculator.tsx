@@ -38,6 +38,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
       claimMarriageAllowance: false,
       claimBlindPersonAllowance: false,
       carriedForwardLosses: 0,
+      charitableDonations: 0,
       isRegisteredForSelfAssessment: false
     }
   });
@@ -131,8 +132,15 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
   };
 
   const handleSubmit = () => {
+    console.log('[MultiStepCalculator] handleSubmit called');
+    console.log('[MultiStepCalculator] Current step:', currentStep);
+    console.log('[MultiStepCalculator] Wizard data:', wizardData);
+    
     if (validateStep(4)) {
+      console.log('[MultiStepCalculator] Validation passed, calling onComplete');
       onComplete(wizardData as WizardData);
+    } else {
+      console.log('[MultiStepCalculator] Validation failed');
     }
   };
 
@@ -173,6 +181,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
           <ReviewStep
             data={wizardData as WizardData}
             onEdit={(step) => setCurrentStep(step as WizardStep)}
+            onCalculate={handleSubmit}
           />
         );
     }

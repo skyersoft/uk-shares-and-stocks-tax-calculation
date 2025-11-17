@@ -106,6 +106,7 @@ export interface PersonalTaxDetails {
   claimMarriageAllowance: boolean;
   claimBlindPersonAllowance: boolean;
   carriedForwardLosses: number;
+  charitableDonations: number;
   taxCode?: string;
   isRegisteredForSelfAssessment: boolean;
 }

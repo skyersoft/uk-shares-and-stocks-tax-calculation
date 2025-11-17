@@ -229,6 +229,69 @@ export const PersonalDetailsStep: React.FC<PersonalDetailsStepProps> = ({
           </div>
         </div>
 
+        {/* Charitable Donations (Gift Aid) */}
+        <div className="col-12">
+          <h5 className="mb-3 mt-2">
+            <i className="fas fa-hand-holding-heart me-2 text-primary"></i>
+            Charitable Donations
+          </h5>
+          <div className="card border-success">
+            <div className="card-body">
+              <label htmlFor="charitableDonations" className="form-label fw-bold">
+                Gift Aid Donations Made This Tax Year
+              </label>
+              <div className="input-group">
+                <span className="input-group-text">£</span>
+                <input
+                  type="number"
+                  className="form-control"
+                  id="charitableDonations"
+                  value={personalDetails.charitableDonations || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                    if (!isNaN(value) && value >= 0) {
+                      handleChange('charitableDonations', value);
+                    }
+                  }}
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="form-text">
+                <i className="fas fa-info-circle me-1"></i>
+                Donations to UK charities through Gift Aid. The charity claims 25% tax back,
+                and higher rate taxpayers can claim additional relief.
+              </div>
+              
+              {personalDetails.charitableDonations > 0 && (
+                <div className="alert alert-info mt-3 mb-0" role="alert">
+                  <i className="fas fa-lightbulb me-2"></i>
+                  <small>
+                    <strong>How Gift Aid Works:</strong>
+                    <ul className="mb-0 mt-2">
+                      <li>
+                        Your £{new Intl.NumberFormat('en-GB').format(personalDetails.charitableDonations)} donation
+                        becomes £{new Intl.NumberFormat('en-GB').format(personalDetails.charitableDonations * 1.25)} 
+                        {' '}for the charity (25% basic rate tax reclaimed)
+                      </li>
+                      <li>
+                        If you're a higher rate (40%) or additional rate (45%) taxpayer, you can claim
+                        the difference between the higher rate and basic rate
+                      </li>
+                      <li>
+                        Your basic rate tax band is extended by £
+                        {new Intl.NumberFormat('en-GB').format(personalDetails.charitableDonations * 1.25)},
+                        potentially saving you tax on income that would otherwise be taxed at higher rates
+                      </li>
+                    </ul>
+                  </small>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Self Assessment Status */}
         <div className="col-12">
           <h5 className="mb-3 mt-2">

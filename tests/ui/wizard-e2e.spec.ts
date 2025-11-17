@@ -80,6 +80,9 @@ test.describe('Multi-Step Calculator Wizard - End to End', () => {
     // Enter date of birth
     await page.fill('input#dateOfBirth', '1990-01-01');
     
+    // Enter charitable donations
+    await page.fill('input#charitableDonations', '1000');
+    
     // Click Next
     await page.getByRole('button', { name: 'Next' }).click();
     await page.waitForTimeout(500);
@@ -164,6 +167,7 @@ test.describe('Multi-Step Calculator Wizard - End to End', () => {
     
     // Step 3: Personal Details
     await page.fill('input#dateOfBirth', '1990-01-01');
+    await page.fill('input#charitableDonations', '500');
     await page.getByRole('button', { name: 'Next' }).click();
     await page.waitForTimeout(500);
     
@@ -238,7 +242,7 @@ test.describe('Multi-Step Calculator Wizard - End to End', () => {
     await page.waitForTimeout(500);
     
     // STEP 2: Upload QFX file
-    await expect(page.locator('text=/Upload.*File|File Upload/i')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('heading', { name: 'Upload Investment Files' })).toBeVisible({ timeout: 5000 });
     
     const fileInput = page.locator('input[type="file"]').first();
     const qfxFilePath = path.join(process.cwd(), 'data', 'U11075163_202409_202409.qfx');
