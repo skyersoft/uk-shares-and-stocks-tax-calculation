@@ -233,6 +233,15 @@ test.describe('Multi-Step Calculator Wizard - End to End', () => {
   });
 
   test('should complete full wizard flow with QFX file', async ({ page }) => {
+    // Handle cookie consent immediately with force click to bypass overlays
+    try {
+      const consentButton = page.locator('.fc-button-label:has-text("Consent"), button:has-text("Consent")').first();
+      await consentButton.click({ timeout: 2000, force: true });
+      await page.waitForTimeout(1000);
+    } catch (e) {
+      console.log('No cookie consent or already accepted');
+    }
+    
     // Wait for wizard to load
     await expect(page.locator('.multi-step-calculator')).toBeVisible({ timeout: 10000 });
     
@@ -250,8 +259,8 @@ test.describe('Multi-Step Calculator Wizard - End to End', () => {
     
     await page.waitForTimeout(1000);
     
-    // Verify file uploaded
-    await expect(page.locator('text=/U11075163_202409_202409.qfx|uploaded/i')).toBeVisible({ timeout: 5000 });
+    // Verify file uploaded - use more specific selector
+    await expect(page.getByText('U11075163_202409_202409.qfx').last()).toBeVisible({ timeout: 5000 });
     
     await page.locator('button:has-text("Next")').first().click();
     await page.waitForTimeout(500);
@@ -278,6 +287,15 @@ test.describe('Multi-Step Calculator Wizard - End to End', () => {
   });
 
   test('should show validation errors for incomplete wizard', async ({ page }) => {
+    // Handle cookie consent
+    try {
+      const consentButton = page.locator('.fc-button-label:has-text("Consent"), button:has-text("Consent")').first();
+      await consentButton.click({ timeout: 2000, force: true });
+      await page.waitForTimeout(1000);
+    } catch (e) {
+      console.log('No cookie consent or already accepted');
+    }
+    
     // Wait for wizard to load
     await expect(page.locator('.multi-step-calculator')).toBeVisible({ timeout: 10000 });
     
@@ -297,11 +315,20 @@ test.describe('Multi-Step Calculator Wizard - End to End', () => {
     const nextButton = page.locator('button:has-text("Next")').first();
     await nextButton.click();
     
-    // Should show validation error
-    await expect(page.locator('text=/Please select|required|error/i')).toBeVisible({ timeout: 3000 });
+    // Should show validation error - use first match
+    await expect(page.getByText('Please select at least one income source').first()).toBeVisible({ timeout: 3000 });
   });
 
   test('should allow navigation back through wizard steps', async ({ page }) => {
+    // Handle cookie consent
+    try {
+      const consentButton = page.locator('.fc-button-label:has-text("Consent"), button:has-text("Consent")').first();
+      await consentButton.click({ timeout: 2000, force: true });
+      await page.waitForTimeout(1000);
+    } catch (e) {
+      console.log('No cookie consent or already accepted');
+    }
+    
     // Wait for wizard to load
     await expect(page.locator('.multi-step-calculator')).toBeVisible({ timeout: 10000 });
     
@@ -317,11 +344,20 @@ test.describe('Multi-Step Calculator Wizard - End to End', () => {
     await previousButton.first().click();
     await page.waitForTimeout(500);
     
-    // Should be back on step 1
-    await expect(page.locator('text=Income Sources')).toBeVisible();
+    // Should be back on step 1 - use heading selector
+    await expect(page.getByRole('heading', { name: /Select Your Income Sources/i })).toBeVisible();
   });
 
   test('should persist data when navigating back and forth', async ({ page }) => {
+    // Handle cookie consent
+    try {
+      const consentButton = page.locator('.fc-button-label:has-text("Consent"), button:has-text("Consent")').first();
+      await consentButton.click({ timeout: 2000, force: true });
+      await page.waitForTimeout(1000);
+    } catch (e) {
+      console.log('No cookie consent or already accepted');
+    }
+    
     // Wait for wizard to load
     await expect(page.locator('.multi-step-calculator')).toBeVisible({ timeout: 10000 });
     
@@ -346,6 +382,15 @@ test.describe('Multi-Step Calculator Wizard - End to End', () => {
   });
 
   test('should display progress indicator correctly', async ({ page }) => {
+    // Handle cookie consent
+    try {
+      const consentButton = page.locator('.fc-button-label:has-text("Consent"), button:has-text("Consent")').first();
+      await consentButton.click({ timeout: 2000, force: true });
+      await page.waitForTimeout(1000);
+    } catch (e) {
+      console.log('No cookie consent or already accepted');
+    }
+    
     // Wait for wizard to load
     await expect(page.locator('.multi-step-calculator')).toBeVisible({ timeout: 10000 });
     
