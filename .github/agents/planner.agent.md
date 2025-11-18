@@ -10,7 +10,7 @@ handoffs:
   - label: Start Frontend Implementation  
     agent: frontend-impl
     prompt: Implement the frontend components outlined in the plan above, using the API schema contract for disposal_events
-    send: false
+    send: true
 ---
 
 # Planner Agent - Requirements Analyst

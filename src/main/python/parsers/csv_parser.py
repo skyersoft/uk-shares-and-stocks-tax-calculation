@@ -8,6 +8,19 @@ from ..interfaces.calculator_interfaces import FileParserInterface
 from ..models.domain_models import Transaction, TransactionType, Security, Currency, AssetClass
 
 
+class CSVValidationError(Exception):
+    """Raised when CSV is missing required columns."""
+    def __init__(self, missing_columns: list):
+        self.missing_columns = missing_columns
+        super().__init__(f"Missing required columns: {', '.join(missing_columns)}")
+
+
+REQUIRED_CSV_COLUMNS = [
+    'Symbol', 'DateTime', 'Quantity', 'T. Price', 
+    'Comm/Fee', 'Basis', 'Realized P/L', 'Code'
+]
+
+
 class CsvParser(FileParserInterface):
     """Parser for CSV (Comma-Separated Values) files from trading platforms.
     
@@ -45,6 +58,15 @@ class CsvParser(FileParserInterface):
             # Read the CSV file
             with open(file_path, 'r', encoding='utf-8') as file:
                 reader = csv.DictReader(file)
+                
+                # NEW: Validate required columns
+                if hasattr(reader, 'fieldnames') and reader.fieldnames:
+                    missing = [col for col in REQUIRED_CSV_COLUMNS 
+                              if col not in reader.fieldnames]
+                    if missing:
+                        self.logger.error(f"CSV missing columns: {missing}")
+                        raise CSVValidationError(missing)
+                
                 for row in reader:
                     # Create transaction
                     transaction = self._create_transaction_from_row(row)
@@ -53,6 +75,9 @@ class CsvParser(FileParserInterface):
             
             return transactions
             
+        except CSVValidationError:
+            # Re-raise validation errors
+            raise
         except Exception as e:
             self.logger.error(f"Error parsing CSV file: {e}")
             return transactions

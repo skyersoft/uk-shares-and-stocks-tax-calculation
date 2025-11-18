@@ -1,13 +1,13 @@
 ---
 name: ui-tester
 description: Frontend E2E testing with Playwright for disposal table, currency display, CSV errors
-tools: ['codebase']
+tools: ['edit', 'search', 'new', 'runCommands', 'runTasks', 'usages', 'problems', 'changes', 'testFailure', 'fetch', 'todos', 'runTests']
 target: vscode
 handoffs:
   - label: Approve for Deployment
     agent: deployment
     prompt: All E2E tests pass. Ready to deploy to production
-    send: false
+    send: true
 ---
 
 # UI Tester Agent - Frontend E2E Testing

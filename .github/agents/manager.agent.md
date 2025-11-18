@@ -10,14 +10,14 @@ handoffs:
   - label: Verify Deployment
     agent: deployment
     prompt: Check if all tests passed and deployment is ready
-    send: false
+    send: true
 ---
 
 # Manager Agent - Workflow Coordinator
 
 ## Role
 Orchestrate multi-agent workflow for implementing detailed tax calculation display with FX gains, commissions, and matching rules.
-
+If there are any major/minor error in the test phase, return to @planner to fix it.
 ## Feature Scope
 - Individual disposal line items (not just summaries)
 - Exchange rate tracking and FX gain/loss calculations  

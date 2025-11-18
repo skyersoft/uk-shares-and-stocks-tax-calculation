@@ -59,6 +59,49 @@ export interface CalculationResult {
   portfolio_report?: any;
   tax_report?: any;
   commission_summary?: any;
+  disposal_events?: DisposalEvent[];
+}
+
+export interface DisposalEvent {
+  disposal_id: string;
+  disposal_date: string;
+  security_symbol: string;
+  security_name: string;
+  security_country: string | null;
+  quantity: number;
+  
+  // Cost breakdown
+  cost_original_amount: number;
+  cost_original_currency: string;
+  cost_fx_rate: number;
+  cost_gbp: number;
+  cost_commission: number;
+  acquisition_date: string | null;
+  
+  // Proceeds breakdown
+  proceeds_original_amount: number;
+  proceeds_original_currency: string;
+  proceeds_fx_rate: number;
+  proceeds_gbp: number;
+  proceeds_commission: number;
+  
+  // Tax and FX tracking
+  withholding_tax: number;
+  fx_gain_loss: number;
+  cgt_gain_loss: number;
+  total_gain_loss: number;
+  matching_rule: 'same-day' | 'bed-breakfast' | 'section104';
+  
+  // Calculated properties
+  allowable_cost: number;
+  net_proceeds: number;
+}
+
+export interface CSVValidationError {
+  error: string;
+  message: string;
+  missing_columns: string[];
+  required_columns: string[];
 }
 
 export interface NormalizedDisposal {

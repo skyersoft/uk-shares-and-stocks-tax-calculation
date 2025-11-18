@@ -1,13 +1,13 @@
 ---
 name: backend-impl
 description: Python backend implementation for disposal tracking, FX calculations, CSV validation
-tools: ['codebase', 'shell']
+tools: ['edit', 'search', 'runCommands', 'runTasks', 'usages', 'problems', 'changes', 'testFailure', 'fetch', 'todos', 'runSubagent', 'runTests']
 target: vscode
 handoffs:
   - label: Test Backend Changes
     agent: qa-tester
     prompt: Run pytest tests for the backend changes - QFX parsing, FX calculator, CSV validation, and API response
-    send: false
+    send: true
 ---
 
 # Backend Implementation Agent

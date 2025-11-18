@@ -1,7 +1,7 @@
 ---
 name: deployment
 description: AWS deployment for Lambda, S3, CloudFront with verification
-tools: ['codebase']
+tools: ['edit', 'search', 'new', 'runCommands', 'runTasks', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'todos', 'runSubagent', 'runTests']
 target: vscode
 handoffs:
   - label: Feature Complete

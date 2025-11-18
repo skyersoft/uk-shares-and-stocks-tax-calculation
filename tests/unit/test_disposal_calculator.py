@@ -67,7 +67,7 @@ class TestUKDisposalCalculator:
         # 690.0 - 500.0 - 10.0 = 180.0
         assert disposal.gain_or_loss == 180.0, f"Gain/loss should be 180.0, got {disposal.gain_or_loss}"
         # Buy is before sell
-        assert disposal.matching_rule == "section-104", f"Rule should be section-104, got {disposal.matching_rule}"
+        assert disposal.matching_rule == "section104", f"Rule should be section104, got {disposal.matching_rule}"
     
     def test_same_day_disposal(self):
         """Test a same-day disposal calculation."""
@@ -153,7 +153,7 @@ class TestUKDisposalCalculator:
         )
         
         # Check disposal details
-        assert disposal.matching_rule == "30-day"
+        assert disposal.matching_rule == "bed-breakfast"
     
     def test_foreign_currency_disposal(self):
         """Test a disposal with currency conversion."""

@@ -337,6 +337,10 @@ class Transaction:
     taxes: float = 0.0  # In transaction currency
     currency: Currency = None
     
+    # NEW FIELDS for detailed tracking
+    withholding_tax: float = 0.0  # Foreign withholding tax
+    country: Optional[str] = None  # Security country (GB, US, etc.)
+    
     def __post_init__(self):
         """Validate transaction data after initialization."""
         if self.currency is None:
@@ -579,7 +583,7 @@ class SharePool:
 
 @dataclass
 class Disposal:
-    """Represents a disposal of shares for tax purposes."""
+    """Represents a disposal of shares for tax purposes with detailed FX tracking."""
     id: UUID = field(default_factory=uuid4)
     security: Security = None
     sell_date: datetime = None
@@ -589,10 +593,62 @@ class Disposal:
     expenses: float = 0.0  # In GBP (commissions, fees)
     matching_rule: str = ""  # "same-day", "30-day", "section-104"
     
+    # NEW FIELDS: Detailed cost breakdown
+    cost_original_amount: float = 0.0
+    cost_original_currency: str = 'GBP'
+    cost_fx_rate: float = 1.0
+    cost_commission: float = 0.0
+    acquisition_date: Optional[datetime] = None
+    
+    # NEW FIELDS: Detailed proceeds breakdown
+    proceeds_original_amount: float = 0.0
+    proceeds_original_currency: str = 'GBP'
+    proceeds_fx_rate: float = 1.0
+    proceeds_commission: float = 0.0
+    
+    # NEW FIELDS: Tax and FX tracking
+    withholding_tax: float = 0.0
+    country: Optional[str] = None
+    fx_gain_loss: float = 0.0
+    
     @property
     def gain_or_loss(self) -> float:
-        """Calculate the gain or loss on this disposal."""
+        """Calculate the total gain or loss on this disposal."""
         return self.proceeds - self.cost_basis - self.expenses
+    
+    @property
+    def allowable_cost(self) -> float:
+        """Total allowable cost (cost_basis + commission + withholding tax)."""
+        return self.cost_basis + self.cost_commission + self.withholding_tax
+    
+    @property
+    def net_proceeds(self) -> float:
+        """Proceeds minus selling commission."""
+        return self.proceeds - self.proceeds_commission
+    
+    @property
+    def cgt_gain_loss(self) -> float:
+        """Pure CGT gain/loss (excluding FX component)."""
+        return self.gain_or_loss - self.fx_gain_loss
+
+
+@dataclass
+class CashExchange:
+    """Represents a currency exchange event for FX gain/loss tracking."""
+    id: UUID = field(default_factory=uuid4)
+    exchange_date: datetime = None
+    from_currency: str = 'USD'
+    to_currency: str = 'GBP'
+    amount_exchanged: float = 0.0
+    exchange_rate: float = 1.0
+    acquisition_rate: float = 1.0  # From FIFO pool
+    proceeds_gbp: float = 0.0
+    cost_gbp: float = 0.0
+    
+    @property
+    def fx_gain_loss(self) -> float:
+        """Calculate FX gain/loss."""
+        return self.proceeds_gbp - self.cost_gbp
 
 
 @dataclass

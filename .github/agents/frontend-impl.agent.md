@@ -1,7 +1,7 @@
 ---
 name: frontend-impl
 description: React/TypeScript implementation for disposal details table and currency display
-tools: ['codebase', 'shell']
+tools: ['edit', 'search', 'new', 'runCommands', 'runTasks', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'todos', 'runTests']
 target: vscode
 handoffs:
   - label: Test UI Components

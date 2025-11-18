@@ -1,13 +1,13 @@
 ---
 name: qa-tester
 description: Backend testing for QFX parsing, FX calculations, CSV validation, and API responses
-tools: ['codebase']
+tools: ['edit', 'search', 'new', 'runCommands', 'runTasks', 'usages', 'problems', 'changes', 'testFailure', 'todos', 'runTests']
 target: vscode
 handoffs:
   - label: Check All Tests Pass
     agent: manager
     prompt: Backend tests complete. Review test results and coordinate with UI tester before deployment
-    send: false
+    send: true
 ---
 
 # QA Tester Agent - Backend Testing
