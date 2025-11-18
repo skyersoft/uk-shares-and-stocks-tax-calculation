@@ -419,7 +419,7 @@ def serialize_results(results: Dict[str, Any]) -> Dict[str, Any]:
                         
                         # Cost breakdown
                         'cost_original_amount': float(getattr(disposal, 'cost_original_amount', 0)),
-                        'cost_original_currency': getattr(disposal, 'cost_currency', 'GBP'),
+                        'cost_original_currency': getattr(disposal, 'cost_original_currency', 'GBP'),
                         'cost_fx_rate': float(getattr(disposal, 'cost_fx_rate', 1.0)),
                         'cost_gbp': float(disposal.cost_basis),
                         'cost_commission': float(getattr(disposal, 'cost_commission', 0)),
@@ -427,7 +427,7 @@ def serialize_results(results: Dict[str, Any]) -> Dict[str, Any]:
                         
                         # Proceeds breakdown
                         'proceeds_original_amount': float(getattr(disposal, 'proceeds_original_amount', 0)),
-                        'proceeds_original_currency': getattr(disposal, 'proceeds_currency', 'GBP'),
+                        'proceeds_original_currency': getattr(disposal, 'proceeds_original_currency', 'GBP'),
                         'proceeds_fx_rate': float(getattr(disposal, 'proceeds_fx_rate', 1.0)),
                         'proceeds_gbp': float(disposal.proceeds),
                         'proceeds_commission': float(getattr(disposal, 'proceeds_commission', 0)),

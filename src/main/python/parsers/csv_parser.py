@@ -82,6 +82,35 @@ class CsvParser(FileParserInterface):
             self.logger.error(f"Error parsing CSV file: {e}")
             return transactions
     
+    def _validate_row_data(self, row: Dict[str, Any]) -> bool:
+        """Validate that row has non-null critical data.
+        
+        Args:
+            row: A dictionary representing a row from the CSV
+            
+        Returns:
+            True if row has valid data, False otherwise
+        """
+        # Check for null or zero values in critical fields
+        quantity_str = row.get('Quantity', '')
+        if not quantity_str or quantity_str.strip() == '' or quantity_str == '0':
+            self.logger.warning(f"Invalid quantity in row: {row}")
+            return False
+        
+        price_str = (row.get('TradePrice') or
+                     row.get('UnitPrice') or
+                     row.get('Price', ''))
+        if not price_str or price_str.strip() == '' or price_str == '0':
+            self.logger.warning(f"Invalid price in row: {row}")
+            return False
+        
+        fx_rate_str = row.get('FXRateToBase') or row.get('CurrencyRate', '')
+        if not fx_rate_str or fx_rate_str.strip() == '':
+            self.logger.warning(f"Invalid FX rate in row: {row}")
+            return False
+        
+        return True
+    
     def _create_transaction_from_row(self, row: Dict[str, Any]) -> Optional[Transaction]:
         """Create a Transaction object from a CSV row.
         
@@ -92,6 +121,10 @@ class CsvParser(FileParserInterface):
             A Transaction object or None if creation fails
         """
         try:
+            # Validate row data first
+            if not self._validate_row_data(row):
+                return None
+            
             # Determine transaction type
             transaction_type = self._map_transaction_type(row)
             

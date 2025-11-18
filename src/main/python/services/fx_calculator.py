@@ -1,6 +1,6 @@
 """Foreign exchange gain/loss calculator for HMRC compliance."""
 import logging
-from typing import Optional
+from typing import Optional, List
 
 
 class FXCalculator:
@@ -52,12 +52,28 @@ class FXCalculator:
             # Validate inputs
             if cost_fx_rate <= 0 or proceeds_fx_rate <= 0:
                 self.logger.warning(
-                    f"Invalid FX rates: cost={cost_fx_rate}, proceeds={proceeds_fx_rate}"
+                    f"Invalid FX rates: cost={cost_fx_rate}, proceeds={proceeds_fx_rate}. "
+                    f"Using zero FX gain/loss."
                 )
                 return 0.0
             
+            # Validate amounts
+            if cost_original_amount < 0 or proceeds_original_amount < 0:
+                self.logger.warning(
+                    f"Negative amounts detected: cost={cost_original_amount}, "
+                    f"proceeds={proceeds_original_amount}"
+                )
+            
             # If both rates are the same (or both GBP), no FX gain/loss
             if abs(cost_fx_rate - proceeds_fx_rate) < 0.0001:
+                self.logger.debug(
+                    f"FX rates identical ({cost_fx_rate:.4f}), no FX gain/loss"
+                )
+                return 0.0
+            
+            # If rates are 1.0, this is likely GBP-GBP transaction
+            if abs(cost_fx_rate - 1.0) < 0.0001 and abs(proceeds_fx_rate - 1.0) < 0.0001:
+                self.logger.debug("GBP-GBP transaction, no FX gain/loss")
                 return 0.0
             
             # Calculate the FX component
@@ -132,53 +148,50 @@ class FXCalculator:
             return 0.0
     
     def calculate_weighted_average_fx_rate(
-        self,
-        transactions: list,
-        quantity_field: str = 'quantity',
-        fx_rate_field: str = 'fx_rate'
+        self, 
+        transactions: List
     ) -> float:
-        """
-        Calculate weighted average FX rate from multiple transactions.
-        
-        This is used when multiple acquisitions at different rates are
-        matched to a single disposal.
+        """Calculate weighted average FX rate from multiple transactions.
         
         Args:
-            transactions: List of transaction objects
-            quantity_field: Name of the quantity field
-            fx_rate_field: Name of the FX rate field
+            transactions: List of Transaction objects
             
         Returns:
             Weighted average FX rate
         """
+        if not transactions:
+            self.logger.warning("No transactions provided for weighted average calculation")
+            return 1.0
+        
         try:
-            total_weighted = 0.0
-            total_quantity = 0.0
+            total_amount = 0.0
+            weighted_sum = 0.0
             
             for tx in transactions:
-                quantity = getattr(tx, quantity_field, 0)
+                amount = abs(tx.quantity) * tx.price_per_unit
+                if amount > 0:
+                    fx_rate = tx.currency.rate_to_base if hasattr(tx, 'currency') else 1.0
+                    if fx_rate <= 0:
+                        self.logger.warning(
+                            f"Invalid FX rate {fx_rate} for transaction {tx.transaction_id}, "
+                            f"using 1.0"
+                        )
+                        fx_rate = 1.0
+                    
+                    weighted_sum += amount * fx_rate
+                    total_amount += amount
+            
+            if total_amount > 0:
+                weighted_avg = weighted_sum / total_amount
+                self.logger.debug(
+                    f"Weighted average FX rate: {weighted_avg:.4f} "
+                    f"from {len(transactions)} transactions"
+                )
+                return weighted_avg
+            else:
+                self.logger.warning("Total amount is zero, returning default rate 1.0")
+                return 1.0
                 
-                # Try to get FX rate from currency object first
-                if hasattr(tx, 'currency') and hasattr(tx.currency, 'rate_to_base'):
-                    fx_rate = tx.currency.rate_to_base
-                else:
-                    fx_rate = getattr(tx, fx_rate_field, 1.0)
-                
-                total_weighted += abs(quantity) * fx_rate
-                total_quantity += abs(quantity)
-            
-            if total_quantity == 0:
-                return 1.0  # Default to no conversion
-            
-            weighted_avg = total_weighted / total_quantity
-            
-            self.logger.debug(
-                f"Weighted average FX rate: {weighted_avg:.4f} "
-                f"from {len(transactions)} transactions"
-            )
-            
-            return weighted_avg
-            
         except Exception as e:
             self.logger.error(f"Error calculating weighted average FX rate: {e}")
             return 1.0

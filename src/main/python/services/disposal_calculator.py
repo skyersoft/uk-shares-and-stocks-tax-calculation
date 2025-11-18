@@ -97,34 +97,42 @@ class UKDisposalCalculator(DisposalCalculatorInterface):
             proceeds_fx_rate=proceeds_fx_rate
         )
         
-        # Create the disposal object
-        disposal = Disposal(
-            security=sell_transaction.security,
-            sell_date=sell_transaction.date,
-            quantity=abs(sell_transaction.quantity),
-            proceeds=net_proceeds,
-            cost_basis=total_cost,
-            expenses=total_expenses,
-            matching_rule=matching_rule,
-            
-            # Detailed cost breakdown
-            cost_original_amount=cost_original_amount,
-            cost_original_currency=cost_original_currency,
-            cost_fx_rate=cost_fx_rate,
-            cost_commission=cost_commission,
-            acquisition_date=acquisition_date,
-            
-            # Detailed proceeds breakdown
-            proceeds_original_amount=proceeds_original_amount,
-            proceeds_original_currency=proceeds_original_currency,
-            proceeds_fx_rate=proceeds_fx_rate,
-            proceeds_commission=proceeds_commission,
-            
-            # Tax and FX tracking
-            withholding_tax=sell_transaction.withholding_tax,
-            country=sell_transaction.country,
-            fx_gain_loss=fx_gain_loss
-        )
+        # Create the disposal object with error handling
+        try:
+            disposal = Disposal(
+                security=sell_transaction.security,
+                sell_date=sell_transaction.date,
+                quantity=abs(sell_transaction.quantity),
+                proceeds=net_proceeds,
+                cost_basis=total_cost,
+                expenses=total_expenses,
+                matching_rule=matching_rule,
+                
+                # Detailed cost breakdown
+                cost_original_amount=cost_original_amount,
+                cost_original_currency=cost_original_currency,
+                cost_fx_rate=cost_fx_rate,
+                cost_commission=cost_commission,
+                acquisition_date=acquisition_date,
+                
+                # Detailed proceeds breakdown
+                proceeds_original_amount=proceeds_original_amount,
+                proceeds_original_currency=proceeds_original_currency,
+                proceeds_fx_rate=proceeds_fx_rate,
+                proceeds_commission=proceeds_commission,
+                
+                # Tax and FX tracking
+                withholding_tax=sell_transaction.withholding_tax,
+                country=sell_transaction.country,
+                fx_gain_loss=fx_gain_loss
+            )
+        except Exception as e:
+            self.logger.error(
+                f"Failed to create disposal for {sell_transaction.transaction_id}: {e}"
+            )
+            raise ValueError(
+                f"Disposal calculation failed for {sell_transaction.security.get_display_name()}: {e}"
+            ) from e
         
         self.logger.info(
             f"Disposal calculation: Proceeds={disposal.proceeds:.2f}, "

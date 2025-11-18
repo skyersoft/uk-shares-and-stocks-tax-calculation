@@ -1,7 +1,7 @@
 ---
 name: manager
 description: Orchestrates workflow for detailed tax calculation display feature
-tools: []
+tools: ['search', 'runTasks', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'todos', 'runSubagent', 'runTests']
 handoffs:
   - label: Start Planning
     agent: planner
