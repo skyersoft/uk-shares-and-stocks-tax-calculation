@@ -25,6 +25,16 @@ Deploy backend and frontend changes to AWS production environment with verificat
 
 ### Phase 1: Pre-Deployment Checks
 
+**CRITICAL: Activate Conda Environment First**
+```bash
+# ALWAYS activate ibkr-tax conda environment before any deployment operations
+conda activate ibkr-tax
+
+# Verify correct Python environment
+python --version  # Should be Python 3.13.x
+which python      # Should be /usr/local/anaconda3/envs/ibkr-tax/bin/python
+```
+
 Verify readiness:
 ```bash
 # Confirm all tests pass
@@ -41,9 +51,15 @@ aws sts get-caller-identity --profile goker
 ### Phase 2: Backend Deployment
 
 **Step 1: Package Lambda**
+
+**IMPORTANT: Run from project root, NOT from deployment/ directory**
+
 ```bash
-cd deployment/
-./01-package.sh
+# Ensure you're in project root directory
+cd /Users/myuser/development/ibkr-tax-calculator
+
+# Run packaging script (script copies src/ directory)
+./deployment/01-package.sh
 ```
 
 Verify package includes:
@@ -61,8 +77,19 @@ Verify package includes:
 Only needed if CloudFormation template changed. Skip if only code changes.
 
 **Step 3: Update Lambda Code**
+
+**Note: This project uses direct AWS Lambda update, not stack-based deployment**
+
 ```bash
-./03-deploy-code.sh
+# Option 1: Use AWS CLI directly (recommended for this project)
+aws lambda update-function-code \
+    --function-name ibkr-tax-calculator-prod-us-east-1 \
+    --zip-file fileb://lambda-deployment.zip \
+    --region us-east-1 \
+    --profile goker
+
+# Option 2: Use deployment script (if stack-outputs.env exists)
+./deployment/03-deploy-code.sh
 ```
 
 This updates the Lambda function with new deployment package.
