@@ -48,6 +48,13 @@ export interface TaxCalculation {
   };
 }
 
+export interface CurrencyBalance {
+  currency: string;
+  balance: number;
+  balance_gbp: number;
+  fx_rate: number;
+}
+
 export interface CalculationResult {
   file_path: string;
   tax_year: string;
@@ -60,6 +67,7 @@ export interface CalculationResult {
   tax_report?: any;
   commission_summary?: any;
   disposal_events?: DisposalEvent[];
+  currency_balances?: CurrencyBalance[];
 }
 
 export interface DisposalEvent {

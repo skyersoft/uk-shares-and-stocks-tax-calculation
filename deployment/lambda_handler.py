@@ -201,7 +201,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             
             # Serialize results to JSON
             # This is the main fix: returning JSON instead of HTML
-            json_results = serialize_results(results)
+            json_results = serialize_results(results, calculator)
             
             return {
                 'statusCode': 200,
@@ -383,7 +383,7 @@ def parse_multipart_data_simple(body: str) -> tuple:
     return file_content.strip(), tax_year, analysis_type, filename
 
 
-def serialize_results(results: Dict[str, Any]) -> Dict[str, Any]:
+def serialize_results(results: Dict[str, Any], calculator=None) -> Dict[str, Any]:
     """Serialize results for JSON response, handling complex types."""
     
     class CustomJSONEncoder(json.JSONEncoder):
@@ -446,6 +446,29 @@ def serialize_results(results: Dict[str, Any]) -> Dict[str, Any]:
                     disposal_events.append(event)
                 
                 results['disposal_events'] = disposal_events
+    
+    # Extract currency pool balances from calculator if available
+    if calculator and hasattr(calculator, 'currency_processor'):
+        try:
+            currency_processor = calculator.currency_processor
+            if hasattr(currency_processor, 'get_currency_pool_status'):
+                pool_status = currency_processor.get_currency_pool_status()
+                if pool_status:
+                    currency_balances = []
+                    for currency_code, status in pool_status.items():
+                        balance = {
+                            'currency': currency_code,
+                            'balance': float(status.get('total_amount', 0)),
+                            'balance_gbp': float(status.get('total_cost_gbp', 0)),
+                            'fx_rate': float(status.get('average_rate', 1.0))
+                        }
+                        currency_balances.append(balance)
+                    
+                    if currency_balances:
+                        results['currency_balances'] = currency_balances
+        except Exception as e:
+            # Don't fail the entire request if currency balances extraction fails
+            print(f"Warning: Could not extract currency balances: {e}")
 
     # The dumps/loads cycle ensures all nested objects are serialized
     return json.loads(json.dumps(results, cls=CustomJSONEncoder))
