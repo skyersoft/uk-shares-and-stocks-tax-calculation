@@ -47,6 +47,7 @@ export interface TaxCalculationInput {
   claimMarriageAllowance?: boolean;
   claimBlindPersonAllowance?: boolean;
   carriedForwardLosses?: number;
+  charitableDonations?: number;
 }
 
 export interface IncomeTaxBreakdown {
@@ -123,7 +124,8 @@ export const calculateIncomeTax = (
   region: 'england-wales-ni' | 'scotland',
   pensionContributions: number = 0,
   claimMarriageAllowance: boolean = false,
-  claimBlindPersonAllowance: boolean = false
+  claimBlindPersonAllowance: boolean = false,
+  charitableDonations: number = 0
 ): IncomeTaxBreakdown => {
   const bands = getTaxBands(region);
   
@@ -131,6 +133,10 @@ export const calculateIncomeTax = (
   const personalAllowance = calculateAdjustedPersonalAllowance(income);
   const marriageAllowance = claimMarriageAllowance ? MARRIAGE_ALLOWANCE_2024_25 : 0;
   const blindPersonAllowance = claimBlindPersonAllowance ? BLIND_PERSON_ALLOWANCE_2024_25 : 0;
+  
+  // Gift Aid: gross up donations (add 25% basic rate tax back)
+  // If you donate £100, charity claims £25 tax back, so gross donation is £125
+  const grossDonations = charitableDonations * 1.25;
   
   // Income after pension relief (pension contributions are deducted before tax)
   const incomeAfterPension = Math.max(0, income - pensionContributions);
@@ -149,10 +155,16 @@ export const calculateIncomeTax = (
   // Skip the personal allowance band (0% tax) and calculate for other bands
   for (let i = 1; i < bands.length; i++) {
     const band = bands[i];
-    const previousBand = bands[i - 1];
     
     const bandStart = band.threshold - (personalAllowance > 0 ? personalAllowance : 0);
-    const bandEnd = band.upperLimit ? band.upperLimit - (personalAllowance > 0 ? personalAllowance : 0) : Infinity;
+    let bandEnd = band.upperLimit ? band.upperLimit - (personalAllowance > 0 ? personalAllowance : 0) : Infinity;
+    
+    // Gift Aid extends the basic rate band (20% rate)
+    // This means more income is taxed at lower rate instead of higher rate
+    if (band.rate === 0.20 && grossDonations > 0) {
+      bandEnd += grossDonations;
+    }
+    
     const bandWidth = bandEnd - bandStart;
     
     if (remainingIncome <= 0) break;
@@ -427,10 +439,9 @@ export const calculateComprehensiveTax = (
     input.region,
     input.employeePensionContributions || 0,
     input.claimMarriageAllowance,
-    input.claimBlindPersonAllowance
-  );
-  
-  // Calculate Dividend Tax
+    input.claimBlindPersonAllowance,
+    input.charitableDonations || 0
+  );  // Calculate Dividend Tax
   const totalDividends = (input.portfolioDividends || 0) + (input.otherDividends || 0);
   const dividendTax = calculateDividendTax(totalDividends, nonDividendIncome, input.region);
   

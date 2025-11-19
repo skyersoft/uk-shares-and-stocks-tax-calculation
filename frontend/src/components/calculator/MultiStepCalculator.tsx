@@ -4,6 +4,9 @@ import { WizardData, WizardStep, WIZARD_STEPS } from '../../types/calculator';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
 import { IncomeSourcesStep } from './steps/IncomeSourcesStep';
+import { UploadDetailsStep } from './steps/UploadDetailsStep';
+import { PersonalDetailsStep } from './steps/PersonalDetailsStep';
+import { ReviewStep } from './steps/ReviewStep';
 
 interface MultiStepCalculatorProps {
   onComplete: (data: WizardData) => void;
@@ -35,6 +38,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
       claimMarriageAllowance: false,
       claimBlindPersonAllowance: false,
       carriedForwardLosses: 0,
+      charitableDonations: 0,
       isRegisteredForSelfAssessment: false
     }
   });
@@ -128,8 +132,15 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
   };
 
   const handleSubmit = () => {
+    console.log('[MultiStepCalculator] handleSubmit called');
+    console.log('[MultiStepCalculator] Current step:', currentStep);
+    console.log('[MultiStepCalculator] Wizard data:', wizardData);
+    
     if (validateStep(4)) {
+      console.log('[MultiStepCalculator] Validation passed, calling onComplete');
       onComplete(wizardData as WizardData);
+    } else {
+      console.log('[MultiStepCalculator] Validation failed');
     }
   };
 
@@ -151,74 +162,27 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
 
       case 2:
         return (
-          <div className="step-content">
-            <h3 className="mb-4">
-              <i className="fas fa-upload me-2 text-primary"></i>
-              Upload Files & Enter Details
-            </h3>
-            <p className="text-muted mb-4">
-              Upload your broker files and provide details for other income sources you selected.
-            </p>
-            
-            {/* File Upload & Income Details Components will go here */}
-            <div className="alert alert-info">
-              <i className="fas fa-info-circle me-2"></i>
-              <strong>Step 2 Component Placeholder</strong>
-              <p className="mb-0 small">File upload and income detail forms will be implemented next.</p>
-            </div>
-          </div>
+          <UploadDetailsStep
+            data={wizardData as WizardData}
+            onChange={updateWizardData}
+          />
         );
 
       case 3:
         return (
-          <div className="step-content">
-            <h3 className="mb-4">
-              <i className="fas fa-user me-2 text-primary"></i>
-              Personal Tax Details
-            </h3>
-            <p className="text-muted mb-4">
-              Provide your personal tax information to ensure accurate calculations.
-            </p>
-            
-            {/* Personal Details Component will go here */}
-            <div className="alert alert-info">
-              <i className="fas fa-info-circle me-2"></i>
-              <strong>Step 3 Component Placeholder</strong>
-              <p className="mb-0 small">Personal tax details form will be implemented next.</p>
-            </div>
-          </div>
+          <PersonalDetailsStep
+            personalDetails={wizardData.personalDetails!}
+            onChange={(details) => updateWizardData({ personalDetails: details })}
+          />
         );
 
       case 4:
         return (
-          <div className="step-content">
-            <h3 className="mb-4">
-              <i className="fas fa-clipboard-check me-2 text-primary"></i>
-              Review & Calculate
-            </h3>
-            <p className="text-muted mb-4">
-              Review your information before running the tax calculation.
-            </p>
-            
-            {/* Review Summary Component will go here */}
-            <div className="alert alert-info">
-              <i className="fas fa-info-circle me-2"></i>
-              <strong>Step 4 Component Placeholder</strong>
-              <p className="mb-0 small">Review summary will be implemented next.</p>
-            </div>
-            
-            <div className="card bg-light border-0 mt-4">
-              <div className="card-body">
-                <h5 className="card-title">
-                  <i className="fas fa-check-circle text-success me-2"></i>
-                  Ready to Calculate
-                </h5>
-                <p className="card-text text-muted mb-0">
-                  Click "Calculate Tax" below to process your information and generate your comprehensive tax report.
-                </p>
-              </div>
-            </div>
-          </div>
+          <ReviewStep
+            data={wizardData as WizardData}
+            onEdit={(step) => setCurrentStep(step as WizardStep)}
+            onCalculate={handleSubmit}
+          />
         );
     }
   };
@@ -253,6 +217,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
             <div>
               {currentStep > 1 && (
                 <Button
+                  type="button"
                   variant="outline-secondary"
                   onClick={handlePrevious}
                   className="me-2"
@@ -263,6 +228,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
               )}
               {onCancel && (
                 <Button
+                  type="button"
                   variant="outline-danger"
                   onClick={onCancel}
                 >
@@ -275,6 +241,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
             <div>
               {currentStep < 4 ? (
                 <Button
+                  type="button"
                   variant="primary"
                   onClick={handleNext}
                 >
@@ -283,6 +250,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
                 </Button>
               ) : (
                 <Button
+                  type="button"
                   variant="success"
                   onClick={handleSubmit}
                   size="lg"

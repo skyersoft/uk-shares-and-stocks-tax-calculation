@@ -16,11 +16,14 @@ try:
     # In Lambda, the files are at root level after packaging
     from main.python.capital_gains_calculator import create_enhanced_calculator
     from main.python.services.portfolio_report_generator import PortfolioReportGenerator
+    from main.python.parsers.csv_parser import CSVValidationError, REQUIRED_CSV_COLUMNS
     IMPORTS_OK = True
 except ImportError as e:
     print(f"Import error: {e}")
     IMPORTS_OK = False
     # Fallback - we'll handle this in the handler
+    CSVValidationError = None
+    REQUIRED_CSV_COLUMNS = []
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -198,7 +201,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             
             # Serialize results to JSON
             # This is the main fix: returning JSON instead of HTML
-            json_results = serialize_results(results)
+            json_results = serialize_results(results, calculator)
             
             return {
                 'statusCode': 200,
@@ -207,6 +210,22 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                     'Access-Control-Allow-Origin': '*'
                 },
                 'body': json.dumps(json_results)
+            }
+        
+        except CSVValidationError as e:
+            # Handle CSV validation errors
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'error': 'Invalid CSV format',
+                    'message': 'Missing required columns',
+                    'missing_columns': e.missing_columns,
+                    'required_columns': REQUIRED_CSV_COLUMNS
+                })
             }
             
         finally:
@@ -364,7 +383,7 @@ def parse_multipart_data_simple(body: str) -> tuple:
     return file_content.strip(), tax_year, analysis_type, filename
 
 
-def serialize_results(results: Dict[str, Any]) -> Dict[str, Any]:
+def serialize_results(results: Dict[str, Any], calculator=None) -> Dict[str, Any]:
     """Serialize results for JSON response, handling complex types."""
     
     class CustomJSONEncoder(json.JSONEncoder):
@@ -380,6 +399,76 @@ def serialize_results(results: Dict[str, Any]) -> Dict[str, Any]:
                 return super().default(obj)
             except TypeError:
                 return str(obj)
+
+    # Extract disposal events if tax analysis exists
+    if 'tax_analysis' in results and results['tax_analysis']:
+        tax_analysis = results['tax_analysis']
+        if hasattr(tax_analysis, 'capital_gains') and tax_analysis.capital_gains:
+            capital_gains = tax_analysis.capital_gains
+            if hasattr(capital_gains, 'disposals') and capital_gains.disposals:
+                disposal_events = []
+                for i, disposal in enumerate(capital_gains.disposals, 1):
+                    # Extract disposal event with all tracking fields
+                    event = {
+                        'disposal_id': str(i),
+                        'disposal_date': disposal.sell_date.isoformat() if hasattr(disposal.sell_date, 'isoformat') else str(disposal.sell_date),
+                        'security_symbol': disposal.security.symbol if hasattr(disposal, 'security') else '',
+                        'security_name': disposal.security.name if hasattr(disposal, 'security') else '',
+                        'security_country': getattr(disposal, 'country', None),
+                        'quantity': float(disposal.quantity),
+                        
+                        # Cost breakdown
+                        'cost_original_amount': float(getattr(disposal, 'cost_original_amount', 0)),
+                        'cost_original_currency': getattr(disposal, 'cost_original_currency', 'GBP'),
+                        'cost_fx_rate': float(getattr(disposal, 'cost_fx_rate', 1.0)),
+                        'cost_gbp': float(disposal.cost_basis),
+                        'cost_commission': float(getattr(disposal, 'cost_commission', 0)),
+                        'acquisition_date': disposal.acquisition_date.isoformat() if hasattr(disposal, 'acquisition_date') and disposal.acquisition_date and hasattr(disposal.acquisition_date, 'isoformat') else None,
+                        
+                        # Proceeds breakdown
+                        'proceeds_original_amount': float(getattr(disposal, 'proceeds_original_amount', 0)),
+                        'proceeds_original_currency': getattr(disposal, 'proceeds_original_currency', 'GBP'),
+                        'proceeds_fx_rate': float(getattr(disposal, 'proceeds_fx_rate', 1.0)),
+                        'proceeds_gbp': float(disposal.proceeds),
+                        'proceeds_commission': float(getattr(disposal, 'proceeds_commission', 0)),
+                        
+                        # Tax tracking
+                        'withholding_tax': float(getattr(disposal, 'withholding_tax', 0)),
+                        'fx_gain_loss': float(getattr(disposal, 'fx_gain_loss', 0)),
+                        'cgt_gain_loss': float(getattr(disposal, 'cgt_gain_loss', disposal.gain_or_loss)),
+                        'total_gain_loss': float(disposal.gain_or_loss),
+                        'matching_rule': getattr(disposal, 'matching_rule', 'section104'),
+                        
+                        # Calculated properties
+                        'allowable_cost': float(getattr(disposal, 'allowable_cost', disposal.cost_basis)),
+                        'net_proceeds': float(disposal.proceeds - getattr(disposal, 'proceeds_commission', 0))
+                    }
+                    disposal_events.append(event)
+                
+                results['disposal_events'] = disposal_events
+    
+    # Extract currency pool balances from calculator if available
+    if calculator and hasattr(calculator, 'currency_processor'):
+        try:
+            currency_processor = calculator.currency_processor
+            if hasattr(currency_processor, 'get_currency_pool_status'):
+                pool_status = currency_processor.get_currency_pool_status()
+                if pool_status:
+                    currency_balances = []
+                    for currency_code, status in pool_status.items():
+                        balance = {
+                            'currency': currency_code,
+                            'balance': float(status.get('total_amount', 0)),
+                            'balance_gbp': float(status.get('total_cost_gbp', 0)),
+                            'fx_rate': float(status.get('average_rate', 1.0))
+                        }
+                        currency_balances.append(balance)
+                    
+                    if currency_balances:
+                        results['currency_balances'] = currency_balances
+        except Exception as e:
+            # Don't fail the entire request if currency balances extraction fails
+            print(f"Warning: Could not extract currency balances: {e}")
 
     # The dumps/loads cycle ensures all nested objects are serialized
     return json.loads(json.dumps(results, cls=CustomJSONEncoder))

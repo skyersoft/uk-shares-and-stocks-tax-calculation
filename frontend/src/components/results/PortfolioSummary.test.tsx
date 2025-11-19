@@ -81,7 +81,9 @@ describe('PortfolioSummary', () => {
     expect(screen.getByText('$7,000.00')).toBeInTheDocument();
     
     expect(screen.getByText('Unrealized Gain/Loss %')).toBeInTheDocument();
-    expect(screen.getByText('+10.77%')).toBeInTheDocument();
+    // The percentage is calculated as gainLoss / costBasis
+    // 7000 / (70000 - 7000) = 7000 / 63000 = 11.11%
+    expect(screen.getByText('+11.11%')).toBeInTheDocument();
   });
 
   it('shows currency breakdown for multiple currencies', () => {

@@ -19,6 +19,8 @@ import { ResultsDividendsTable } from '../components/results/ResultsDividendsTab
 import { ResultsCallToAction } from '../components/results/ResultsCallToAction';
 import { AdditionalIncomeInputs } from '../components/results/AdditionalIncomeInputs';
 import { normalizeCalculationResults } from '../utils/resultsNormalizer';
+import { DisposalDetailsTable } from '../components/results/DisposalDetailsTable';
+import { CashBalancesTable } from '../components/results/CashBalancesTable';
 
 interface AdditionalIncomeData {
   otherIncome: number;
@@ -305,6 +307,28 @@ const ResultsPage: React.FC = () => {
           />
         </div>
       </div>
+
+      {state.raw?.disposal_events && state.raw.disposal_events.length > 0 && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <DisposalDetailsTable
+              disposalEvents={state.raw.disposal_events}
+              className="shadow-sm border-0"
+            />
+          </div>
+        </div>
+      )}
+
+      {state.raw?.currency_balances && state.raw.currency_balances.length > 0 && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <CashBalancesTable
+              currencyBalances={state.raw.currency_balances}
+              className="shadow-sm border-0"
+            />
+          </div>
+        </div>
+      )}
 
       <div className="row mb-4">
         <div className="col-12">

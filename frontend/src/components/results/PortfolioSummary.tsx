@@ -13,9 +13,13 @@ export const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   className = ''
 }) => {
   const formatCurrency = (amount: number, currency = 'USD'): string => {
+    // Validate currency code - if it's not a valid ISO 4217 code, default to GBP
+    const validCurrencyCodes = ['USD', 'GBP', 'EUR', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD', 'CNY', 'HKD', 'SGD'];
+    const currencyCode = validCurrencyCodes.includes(currency) ? currency : 'GBP';
+    
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: currency,
+      currency: currencyCode,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);

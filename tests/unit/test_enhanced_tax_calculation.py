@@ -24,13 +24,13 @@ def mock_disposal_calculator():
             security=Security(symbol="AAPL"),
             sell_date=datetime(2024, 7, 1),
             quantity=10, proceeds=1200, cost_basis=1000, expenses=10, # Gain 190
-            matching_rule="section-104"
+            matching_rule="section104"
         ),
         Disposal(
             security=Security(symbol="GOOG"),
             sell_date=datetime(2024, 8, 1),
             quantity=5, proceeds=1100, cost_basis=900, expenses=5, # Gain 195
-            matching_rule="section-104"
+            matching_rule="section104"
         )
     ]
     return mock

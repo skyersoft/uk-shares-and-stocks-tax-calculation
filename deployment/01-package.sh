@@ -30,7 +30,7 @@ mkdir -p $DEPLOY_DIR
 echo -e "${YELLOW}📋 Copying source code...${NC}"
 cp -r src/ $DEPLOY_DIR/
 cp deployment/lambda_handler.py $DEPLOY_DIR/
-cp -r deployment/templates/ $DEPLOY_DIR/
+# cp -r deployment/templates/ $DEPLOY_DIR/  # Templates not used
 
 # Install dependencies
 echo -e "${YELLOW}📥 Installing Python dependencies...${NC}"

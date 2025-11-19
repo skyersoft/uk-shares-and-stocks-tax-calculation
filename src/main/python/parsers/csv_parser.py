@@ -8,6 +8,19 @@ from ..interfaces.calculator_interfaces import FileParserInterface
 from ..models.domain_models import Transaction, TransactionType, Security, Currency, AssetClass
 
 
+class CSVValidationError(Exception):
+    """Raised when CSV is missing required columns."""
+    def __init__(self, missing_columns: list):
+        self.missing_columns = missing_columns
+        super().__init__(f"Missing required columns: {', '.join(missing_columns)}")
+
+
+REQUIRED_CSV_COLUMNS = [
+    'Symbol', 'DateTime', 'Quantity', 'T. Price', 
+    'Comm/Fee', 'Basis', 'Realized P/L', 'Code'
+]
+
+
 class CsvParser(FileParserInterface):
     """Parser for CSV (Comma-Separated Values) files from trading platforms.
     
@@ -45,6 +58,15 @@ class CsvParser(FileParserInterface):
             # Read the CSV file
             with open(file_path, 'r', encoding='utf-8') as file:
                 reader = csv.DictReader(file)
+                
+                # NEW: Validate required columns
+                if hasattr(reader, 'fieldnames') and reader.fieldnames:
+                    missing = [col for col in REQUIRED_CSV_COLUMNS 
+                              if col not in reader.fieldnames]
+                    if missing:
+                        self.logger.error(f"CSV missing columns: {missing}")
+                        raise CSVValidationError(missing)
+                
                 for row in reader:
                     # Create transaction
                     transaction = self._create_transaction_from_row(row)
@@ -53,9 +75,41 @@ class CsvParser(FileParserInterface):
             
             return transactions
             
+        except CSVValidationError:
+            # Re-raise validation errors
+            raise
         except Exception as e:
             self.logger.error(f"Error parsing CSV file: {e}")
             return transactions
+    
+    def _validate_row_data(self, row: Dict[str, Any]) -> bool:
+        """Validate that row has non-null critical data.
+        
+        Args:
+            row: A dictionary representing a row from the CSV
+            
+        Returns:
+            True if row has valid data, False otherwise
+        """
+        # Check for null or zero values in critical fields
+        quantity_str = row.get('Quantity', '')
+        if not quantity_str or quantity_str.strip() == '' or quantity_str == '0':
+            self.logger.warning(f"Invalid quantity in row: {row}")
+            return False
+        
+        price_str = (row.get('TradePrice') or
+                     row.get('UnitPrice') or
+                     row.get('Price', ''))
+        if not price_str or price_str.strip() == '' or price_str == '0':
+            self.logger.warning(f"Invalid price in row: {row}")
+            return False
+        
+        fx_rate_str = row.get('FXRateToBase') or row.get('CurrencyRate', '')
+        if not fx_rate_str or fx_rate_str.strip() == '':
+            self.logger.warning(f"Invalid FX rate in row: {row}")
+            return False
+        
+        return True
     
     def _create_transaction_from_row(self, row: Dict[str, Any]) -> Optional[Transaction]:
         """Create a Transaction object from a CSV row.
@@ -67,6 +121,10 @@ class CsvParser(FileParserInterface):
             A Transaction object or None if creation fails
         """
         try:
+            # Validate row data first
+            if not self._validate_row_data(row):
+                return None
+            
             # Determine transaction type
             transaction_type = self._map_transaction_type(row)
             
