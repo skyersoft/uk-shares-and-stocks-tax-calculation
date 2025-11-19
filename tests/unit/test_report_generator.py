@@ -29,10 +29,10 @@ class TestCSVReportGenerator:
             security=security1,
             sell_date=datetime(2024, 6, 15),
             quantity=100.0,
-            proceeds=700.0,
-            cost_basis=500.0,
-            expenses=10.0,
-            matching_rule="section-104"
+            proceeds=1200.0,
+            cost_basis=1000.0,
+            expenses=25.0,
+            matching_rule="section104"
         )
         
         disposal2 = Disposal(
@@ -84,7 +84,7 @@ class TestCSVReportGenerator:
             assert float(rows[1][4]) == 500.00  # Cost
             assert float(rows[1][5]) == 10.00  # Expenses
             assert float(rows[1][6]) == 190.00  # Gain/Loss
-            assert rows[1][7] == 'section-104'  # Matching Rule
+            assert rows[1][7] == 'section104'  # Matching Rule
 
             # Check second disposal row
             assert rows[2][0] == '2024-12-20'  # Date
@@ -130,10 +130,10 @@ class TestCSVReportGenerator:
             security=security,
             sell_date=datetime(2024, 6, 15),
             quantity=100.0,
-            proceeds=400.0,
-            cost_basis=500.0,
-            expenses=10.0,
-            matching_rule="section-104"
+            proceeds=1400.0,
+            cost_basis=1100.0,
+            expenses=30.0,
+            matching_rule="section104"
         )
         
         # Create tax year summary
@@ -194,7 +194,7 @@ class TestCSVReportGenerator:
             proceeds=700.0,
             cost_basis=500.0,
             expenses=10.0,
-            matching_rule="section-104"
+            matching_rule="section104"
         )
         
         summary = TaxYearSummary(tax_year="2024-2025")
@@ -239,7 +239,7 @@ class TestJSONReportGenerator:
             proceeds=700.0,
             cost_basis=500.0,
             expenses=10.0,
-            matching_rule="section-104"
+            matching_rule="section104"
         )
         
         disposal2 = Disposal(
@@ -295,7 +295,7 @@ class TestJSONReportGenerator:
             assert disposal1_data['cost_basis'] == 500.0
             assert disposal1_data['expenses'] == 10.0
             assert disposal1_data['gain_or_loss'] == 190.0
-            assert disposal1_data['matching_rule'] == 'section-104'
+            assert disposal1_data['matching_rule'] == 'section104'
             
             # Check second disposal
             disposal2_data = data['disposals'][1]
@@ -336,7 +336,7 @@ class TestJSONReportGenerator:
             proceeds=400.0,
             cost_basis=500.0,
             expenses=10.0,
-            matching_rule="section-104"
+            matching_rule="section104"
         )
         
         # Create tax year summary
@@ -391,7 +391,7 @@ class TestJSONReportGenerator:
             proceeds=700.0,
             cost_basis=500.0,
             expenses=10.0,
-            matching_rule="section-104"
+            matching_rule="section104"
         )
         
         summary = TaxYearSummary(tax_year="2024-2025")
@@ -438,7 +438,7 @@ class TestJSONReportGenerator:
             proceeds=700.123456,  # Many decimal places
             cost_basis=500.987654,  # Many decimal places
             expenses=10.555555,  # Many decimal places
-            matching_rule="section-104"
+            matching_rule="section104"
         )
         
         summary = TaxYearSummary(tax_year="2024-2025")

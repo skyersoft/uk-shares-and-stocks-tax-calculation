@@ -591,7 +591,7 @@ class Disposal:
     proceeds: float = 0.0  # In GBP
     cost_basis: float = 0.0  # In GBP
     expenses: float = 0.0  # In GBP (commissions, fees)
-    matching_rule: str = ""  # "same-day", "30-day", "section-104"
+    matching_rule: str = ""  # "same-day", "bed-breakfast", "section104"
     
     # NEW FIELDS: Detailed cost breakdown
     cost_original_amount: float = 0.0
