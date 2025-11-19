@@ -2,7 +2,16 @@
 
 ## Overview
 
-This document defines the standard CSV format that all broker data will be converted to. This approach simplifies the architecture by having a single, well-defined format that the tax calculation engine understands, rather than trying to support multiple broker-specific formats directly.
+**⚠️ IMPORTANT: This document describes a planned unified CSV format for future implementation.**
+
+**Current Implementation Status:**
+- The current CSV parser (`src/main/python/parsers/csv_parser.py`) expects **Interactive Brokers Flex Query format** (Sharesight-compatible)
+- Required columns: `Symbol`, `DateTime`, `Quantity`, `T. Price`, `Comm/Fee`, `Basis`, `Realized P/L`, `Code`
+- See blog post "Using Interactive Brokers Data" for current CSV requirements
+
+This document defines the **target** standard CSV format that all broker data will be converted to in future versions. This approach will simplify the architecture by having a single, well-defined format that the tax calculation engine understands, rather than trying to support multiple broker-specific formats directly.
+
+**Migration Plan:** All broker-specific parsers (QFX, CSV) will eventually convert their native formats into this standard format before tax calculations.
 
 ## Format Specification
 

@@ -1,7 +1,7 @@
 ---
 name: planner
 description: Analyze codebase and create detailed implementation plan for disposal tracking enhancement
-tools: ['search', 'usages', 'fetch']
+tools: ['edit', 'search', 'new', 'usages', 'changes', 'fetch', 'todos']
 handoffs:
   - label: Start Backend Implementation
     agent: backend-impl
