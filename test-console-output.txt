@@ -1,0 +1,55 @@
+✅ Site is accessible at https://cgttaxtool.uk
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] › tests/ui/wizard-e2e.spec.ts:10:7 › Multi-Step Calculator Wizard - End to End › should complete full wizard flow and display results with CSV file
+[1A[2K[chromium] › tests/ui/wizard-e2e.spec.ts:10:7 › Multi-Step Calculator Wizard - End to End › should complete full wizard flow and display results with CSV file
+Step 1: Selecting income sources...
+
+[1A[2KStep 2: Uploading file...
+
+[1A[2KUploading file from: /Users/myuser/development/ibkr-tax-calculator/data/Sharesight.csv
+
+[1A[2KStep 3: Entering personal details...
+
+[1A[2KStep 4: Reviewing and calculating...
+
+[1A[2KWaiting for calculation to complete...
+
+[1A[2KCurrent URL after calculation: https://cgttaxtool.uk/#calculator
+
+[1A[2K  1) [chromium] › tests/ui/wizard-e2e.spec.ts:10:7 › Multi-Step Calculator Wizard - End to End › should complete full wizard flow and display results with CSV file 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    Expected substring: [32m"results"[39m
+    Received string:    [31m"https://cgttaxtool.uk/#calculator"[39m
+
+      100 |     
+      101 |     // Verify URL contains results
+    > 102 |     expect(currentUrl).toContain('results');
+          |                        ^
+      103 |     
+      104 |     // Wait for results content to load
+      105 |     await page.waitForTimeout(2000);
+        at /Users/myuser/development/ibkr-tax-calculator/tests/ui/wizard-e2e.spec.ts:102:24
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/wizard-e2e-Multi-Step-Calc-185ad-splay-results-with-CSV-file-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/wizard-e2e-Multi-Step-Calc-185ad-splay-results-with-CSV-file-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/wizard-e2e-Multi-Step-Calc-185ad-splay-results-with-CSV-file-chromium/error-context.md
+
+
+[1A[2K[31mTesting stopped early after 1 maximum allowed failures.[39m
+
+✅ Global teardown completed
+[1A[2K  1 failed
+    [chromium] › tests/ui/wizard-e2e.spec.ts:10:7 › Multi-Step Calculator Wizard - End to End › should complete full wizard flow and display results with CSV file 
+  1 error was not a part of any test, see above for details
+
+[36m  Serving HTML report at http://localhost:9323. Press Ctrl+C to quit.[39m

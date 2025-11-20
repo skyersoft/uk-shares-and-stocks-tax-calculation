@@ -69,7 +69,6 @@ uploads/
 *.qfx
 *.xlsx
 *.json
-*.txt
 !requirements.txt
 !web_requirements.txt
 !package.json
