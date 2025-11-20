@@ -64,11 +64,13 @@ deployment/dns-update.json
 
 # Private Data Files - DO NOT COMMIT
 data/
+!frontend/src/data
 uploads/
 *.csv
 *.qfx
 *.xlsx
 *.json
+!frontend/src/data/affiliateProducts.json
 !requirements.txt
 !web_requirements.txt
 !package.json
