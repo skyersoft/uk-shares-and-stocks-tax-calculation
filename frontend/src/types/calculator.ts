@@ -13,14 +13,21 @@ export interface IncomeSourceSelection {
   pensionContributions: boolean;
 }
 
+
 export interface BrokerFile {
   id: string;
   file: File;
   broker: BrokerType;
   accountName?: string;
+  // Broker detection metadata
+  detectionStatus?: 'pending' | 'detecting' | 'detected' | 'error';
+  detectedBroker?: string;
+  confidence?: number;
+  transactionCount?: number;
+  detectionError?: string;
 }
 
-export type BrokerType = 
+export type BrokerType =
   | 'interactive-brokers'
   | 'hargreaves-lansdown'
   | 'trading212'
@@ -116,7 +123,7 @@ export interface WizardData {
   incomeSources: IncomeSourceSelection;
   taxYear: string;
   analysisType: 'both' | 'tax' | 'portfolio';
-  
+
   // Step 2
   brokerFiles: BrokerFile[];
   employmentIncome?: EmploymentIncomeData;
@@ -124,7 +131,7 @@ export interface WizardData {
   savingsInterest?: SavingsInterestData;
   otherCapitalGains?: OtherCapitalGainsData;
   otherDividends?: OtherDividendsData;
-  
+
   // Step 3
   personalDetails: PersonalTaxDetails;
 }
