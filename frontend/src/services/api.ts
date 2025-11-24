@@ -73,7 +73,8 @@ export interface BrokerMetadata {
  * This provides a preview of the file contents and validation.
  */
 export async function detectBroker(file: File): Promise<BrokerDetectionResult> {
-  const base = window.location.origin + '/prod';
+  // Use /api prefix which is proxied in development, or full URL in production
+  const base = import.meta.env.DEV ? '/api' : (window.location.origin + '/prod');
   const form = new FormData();
   form.append('file', file);
 
@@ -106,7 +107,7 @@ export async function submitCalculation({
   taxYear: string;
   analysisType: string;
 }) {
-  const base = window.location.origin + '/prod';
+  const base = import.meta.env.DEV ? '/api' : (window.location.origin + '/prod');
   const form = new FormData();
   form.append('file', file);
   form.append('tax_year', taxYear);
