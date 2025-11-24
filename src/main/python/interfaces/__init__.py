@@ -1,9 +1,13 @@
-"""Package initialization."""
-from .calculator_interfaces import (
-    FileParserInterface,
-    TransactionMatcherInterface,
-    SharePoolManagerInterface,
-    DisposalCalculatorInterface,
-    TaxYearCalculatorInterface,
-    ReportGeneratorInterface,
+"""Interfaces package init."""
+
+from .broker_converter import (
+    BrokerConverterInterface,
+    BaseBrokerConverter,
+    BrokerConversionError
 )
+
+__all__ = [
+    'BrokerConverterInterface',
+    'BaseBrokerConverter',
+    'BrokerConversionError',
+]
