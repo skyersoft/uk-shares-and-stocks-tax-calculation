@@ -17,6 +17,14 @@ try:
     from main.python.capital_gains_calculator import create_enhanced_calculator
     from main.python.services.portfolio_report_generator import PortfolioReportGenerator
     from main.python.parsers.csv_parser import CSVValidationError, REQUIRED_CSV_COLUMNS
+    from main.python.converters.converter_factory import ConverterFactory
+    from main.python.converters import register_default_converters
+    from main.python.parsers.multi_broker_parser import MultiBrokerParser
+    from main.python.interfaces.broker_converter import BrokerConversionError
+    
+    # Register all available converters
+    register_default_converters()
+    
     IMPORTS_OK = True
 except ImportError as e:
     print(f"Import error: {e}")
@@ -24,6 +32,7 @@ except ImportError as e:
     # Fallback - we'll handle this in the handler
     CSVValidationError = None
     REQUIRED_CSV_COLUMNS = []
+    BrokerConversionError = None
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -127,6 +136,10 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
     elif method == 'POST' and (path == '/calculate' or path == '/'):
         return handle_calculation_request(event)
     
+    # Handle broker detection preview
+    elif method == 'POST' and path == '/detect-broker':
+        return handle_broker_detection_request(event)
+    
     # 404 for unknown paths
     return {
         'statusCode': 404,
@@ -136,6 +149,184 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
         },
         'body': '<h1>404 - Page Not Found</h1>'
     }
+
+
+def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
+    """
+    Detect broker from file and return metadata.
+    
+    Returns:
+        Dictionary with broker detection results and file metadata
+    """
+    try:
+        factory = ConverterFactory()
+        
+        # Detect broker
+        detection = factory.detect_broker(file_path, min_confidence=0.5)
+        
+        if not detection:
+            return {
+                'detected': False,
+                'error': 'Could not detect broker from file. Please ensure the file is in a supported format.',
+                'supported_brokers': factory.list_brokers()
+            }
+        
+        broker_name = detection['broker']
+        confidence = detection['confidence']
+        converter = detection['converter']
+        
+        # Validate file structure
+        validation = converter.validate_file_structure(file_path)
+        
+        # Try to parse a preview of transactions
+        transaction_preview = []
+        date_range = None
+        
+        try:
+            transactions = converter.convert(file_path, base_currency="GBP")
+            transaction_count = len(transactions)
+            
+            # Get date range
+            if transactions:
+                dates = [tx.date for tx in transactions if tx.date]
+                if dates:
+                    date_range = {
+                        'start': min(dates).isoformat(),
+                        'end': max(dates).isoformat()
+                    }
+                
+                # Get preview of first few transactions
+                for tx in transactions[:5]:
+                    transaction_preview.append({
+                        'date': tx.date.isoformat() if tx.date else None,
+                        'symbol': tx.symbol,
+                        'type': tx.transaction_type.value if hasattr(tx.transaction_type, 'value') else str(tx.transaction_type),
+                        'quantity': float(tx.quantity),
+                        'price': float(tx.price),
+                        'currency': tx.transaction_currency
+                    })
+        except Exception as e:
+            print(f"Warning: Could not parse transaction preview: {e}")
+            transaction_count = validation.get('row_count', 0)
+        
+        return {
+            'detected': True,
+            'broker': broker_name,
+            'confidence': confidence,
+            'validation': {
+                'valid': validation['valid'],
+                'errors': validation.get('errors', []),
+                'warnings': validation.get('warnings', []),
+                'row_count': validation.get('row_count', 0)
+            },
+            'metadata': {
+                'transaction_count': transaction_count,
+                'date_range': date_range,
+                'transaction_preview': transaction_preview
+            },
+            'alternatives': [
+                {
+                    'broker': alt['broker'],
+                    'confidence': alt['confidence']
+                }
+                for alt in detection.get('alternatives', [])[:3]
+            ]
+        }
+        
+    except Exception as e:
+        return {
+            'detected': False,
+            'error': f'Error detecting broker: {str(e)}'
+        }
+
+
+def handle_broker_detection_request(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle broker detection preview request."""
+    
+    try:
+        # Parse request body
+        if event.get('isBase64Encoded', False):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event['body'].encode('utf-8') if isinstance(event['body'], str) else event['body']
+
+        # Parse multipart form data
+        content_type = event.get('headers', {}).get('content-type', '') or event.get('headers', {}).get('Content-Type', '')
+
+        if 'multipart/form-data' in content_type:
+            file_content, _, _, filename = parse_multipart_data_proper(body, content_type)
+        else:
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'error': 'Invalid request format. Expected multipart/form-data.'
+                })
+            }
+
+        if not file_content:
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'error': 'No file content received'
+                })
+            }
+
+        # Determine file type from filename
+        file_type = "csv"  # default
+        if filename:
+            if filename.lower().endswith(('.qfx', '.ofx')):
+                file_type = "qfx"
+            elif filename.lower().endswith('.csv'):
+                file_type = "csv"
+
+        # Create temporary file
+        file_suffix = f'.{file_type}'
+        with tempfile.NamedTemporaryFile(mode='w', suffix=file_suffix, delete=False) as temp_file:
+            temp_file.write(file_content)
+            temp_file_path = temp_file.name
+
+        try:
+            # Detect broker
+            detection_result = detect_broker_from_file(temp_file_path)
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    **detection_result,
+                    'filename': filename,
+                    'file_type': file_type
+                })
+            }
+            
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+    
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({
+                'error': str(e),
+                'message': 'Error processing broker detection request'
+            })
+        }
 
 
 def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
@@ -192,6 +383,39 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             temp_file_path = temp_file.name
 
         try:
+            # Detect broker and get metadata (for CSV files)
+            broker_metadata = None
+            if file_type == 'csv':
+                print(f"Detecting broker for CSV file: {filename}")
+                detection_result = detect_broker_from_file(temp_file_path)
+                
+                if not detection_result.get('detected'):
+                    # Broker detection failed
+                    error_msg = detection_result.get('error', 'Unknown error')
+                    supported_brokers = detection_result.get('supported_brokers', [])
+                    
+                    return {
+                        'statusCode': 400,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'body': json.dumps({
+                            'error': 'Broker detection failed',
+                            'message': error_msg,
+                            'supported_brokers': supported_brokers
+                        })
+                    }
+                
+                broker_metadata = {
+                    'broker': detection_result['broker'],
+                    'confidence': detection_result['confidence'],
+                    'transaction_count': detection_result['metadata']['transaction_count'],
+                    'date_range': detection_result['metadata']['date_range']
+                }
+                
+                print(f"Detected broker: {broker_metadata['broker']} (confidence: {broker_metadata['confidence']})")
+            
             # Process the file with correct parser
             calculator = create_enhanced_calculator(file_type)
             print(f"Using {file_type} parser for file: {filename}")
@@ -200,8 +424,11 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             )
             
             # Serialize results to JSON
-            # This is the main fix: returning JSON instead of HTML
             json_results = serialize_results(results, calculator)
+            
+            # Add broker metadata to response if available
+            if broker_metadata:
+                json_results['broker_metadata'] = broker_metadata
             
             return {
                 'statusCode': 200,
@@ -210,6 +437,21 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                     'Access-Control-Allow-Origin': '*'
                 },
                 'body': json.dumps(json_results)
+            }
+        
+        except BrokerConversionError as e:
+            # Handle broker conversion errors
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'error': 'Broker conversion failed',
+                    'message': str(e),
+                    'broker': e.broker if hasattr(e, 'broker') else 'Unknown'
+                })
             }
         
         except CSVValidationError as e:
