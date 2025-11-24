@@ -417,6 +417,10 @@ class QfxParser(FileParserInterface):
                 code=currency_code,
                 rate_to_base=currency_rate
             )
+            
+            # NEW: Extract withholding tax and country
+            withholding_tax = self._extract_withholding_tax(node)
+            country = self._extract_security_country(uniqueid)
 
             return Transaction(
                 transaction_id=fitid,
@@ -427,7 +431,9 @@ class QfxParser(FileParserInterface):
                 price_per_unit=unit_price,
                 commission=commission,
                 taxes=taxes,
-                currency=currency
+                currency=currency,
+                withholding_tax=withholding_tax,
+                country=country
             )
         except Exception as e:
             self.logger.error(f"Error parsing buy transaction: {e}")
@@ -601,6 +607,10 @@ class QfxParser(FileParserInterface):
                 code=currency_code,
                 rate_to_base=currency_rate
             )
+            
+            # NEW: Extract withholding tax and country
+            withholding_tax = self._extract_withholding_tax(node)
+            country = self._extract_security_country(uniqueid)
 
             return Transaction(
                 transaction_id=fitid,
@@ -611,8 +621,70 @@ class QfxParser(FileParserInterface):
                 price_per_unit=unit_price,
                 commission=commission,
                 taxes=taxes,
-                currency=currency
+                currency=currency,
+                withholding_tax=withholding_tax,
+                country=country
             )
         except Exception as e:
             self.logger.error(f"Error parsing sell transaction: {e}")
+            return None
+    
+    def _extract_withholding_tax(self, node) -> float:
+        """
+        Extract withholding tax from INVBUY/INVSELL/TAXES node.
+        
+        Args:
+            node: XML node containing transaction data
+            
+        Returns:
+            Withholding tax amount (0.0 if not found)
+        """
+        try:
+            # Check INVTRAN/TAXES for withholding tax
+            taxes_node = node.find('.//INVTRAN/TAXES')
+            if taxes_node is not None and taxes_node.text:
+                return abs(float(taxes_node.text))
+            
+            # Some brokers put it in STMTTRN for dividend withholding
+            taxes_node = node.find('.//STMTTRN/TAXES')
+            if taxes_node is not None and taxes_node.text:
+                return abs(float(taxes_node.text))
+            
+            return 0.0
+        except Exception as e:
+            self.logger.warning(f"Error extracting withholding tax: {e}")
+            return 0.0
+    
+    def _extract_security_country(self, security_id: str) -> Optional[str]:
+        """
+        Derive country from ISIN (first 2 characters) or security ID.
+        
+        Args:
+            security_id: Security identifier (ISIN, CUSIP, etc.)
+            
+        Returns:
+            Country code (GB, US, etc.) or None if cannot determine
+        """
+        try:
+            if not security_id:
+                return None
+            
+            # ISIN format: 2-letter country code + 9 alphanumeric + check digit
+            if len(security_id) >= 2 and security_id[:2].isalpha():
+                country = security_id[:2].upper()
+                # Verify it's a valid ISIN country code
+                valid_countries = [
+                    'GB', 'US', 'IE', 'FR', 'DE', 'NL', 'CH', 
+                    'CA', 'AU', 'JP', 'IT', 'ES', 'SE', 'DK'
+                ]
+                if country in valid_countries:
+                    return country
+            
+            # CUSIP is US-specific
+            if security_id.startswith('CUSIP:'):
+                return 'US'
+            
+            return None
+        except Exception as e:
+            self.logger.warning(f"Error extracting country: {e}")
             return None

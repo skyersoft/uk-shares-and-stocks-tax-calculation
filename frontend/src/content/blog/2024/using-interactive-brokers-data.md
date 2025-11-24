@@ -142,6 +142,79 @@ Whether you're dealing with multi-currency transactions, complex corporate actio
 
 **Note:** While CSV files are supported, QFX files generally provide more comprehensive data and are recommended for complete tax calculations.
 
+### Required CSV Columns for Tax Calculator
+
+**Important: Your CSV file must include these required columns for successful processing:**
+
+Our calculator expects CSV files in the Interactive Brokers Flex Query format (also used by Sharesight exports). The following columns are mandatory:
+
+| Column | Description | Example Value |
+|--------|-------------|---------------|
+| `Symbol` | Stock ticker or security symbol | `AAPL`, `MSFT`, `VWRL.L` |
+| `DateTime` | Transaction date and time | `2024-01-15` or `01/15/2024` |
+| `Quantity` | Number of shares traded | `100` (buy), `-50` (sell) |
+| `T. Price` | Trade price per share in transaction currency | `150.25` |
+| `Comm/Fee` | Commission or transaction fees | `1.00` |
+| `Basis` | Cost basis for the transaction | `15001.00` |
+| `Realized P/L` | Realized profit or loss for the trade | `500.00` or `-200.00` |
+| `Code` | Transaction code or type | `BUY`, `SELL`, `O` |
+
+**Optional columns (enhanced calculations when present):**
+
+| Column | Purpose | Example |
+|--------|---------|----------|
+| `CurrencyRate` or `FXRateToBase` | Exchange rate to GBP | `1.2500` |
+| `CurrencyPrimary` or `Currency` | Transaction currency | `USD`, `EUR`, `GBP` |
+| `IBCommission` or `Commission` | Alternative commission field | `1.00` |
+| `Buy/Sell` | Explicit transaction direction | `BUY`, `SELL` |
+| `AssetClass` | Type of security | `STK`, `ETF`, `OPT` |
+| `Name` or `Description` | Security full name | `Apple Inc`, `Microsoft Corporation` |
+| `ISIN` | International Securities ID | `US0378331005` |
+
+### CSV File Validation
+
+**When you upload a CSV file, our calculator automatically validates:**
+
+✅ **All required columns are present** - Missing columns will trigger an error message  
+✅ **Column names match exactly** - Column names are case-sensitive  
+✅ **Critical data is not empty** - Symbol, DateTime, Quantity, and T. Price cannot be blank  
+✅ **Data types are correct** - Numeric fields contain valid numbers  
+
+### Common CSV Upload Issues
+
+**Problem: "Missing required columns" error**
+- **Cause**: CSV doesn't contain all 8 required columns
+- **Solution**: When creating IBKR Flex Query, select **"SELECT ALL"** fields to ensure comprehensive export
+- **Alternative**: Use QFX format which includes all necessary data automatically
+
+**Problem: "Invalid data in row" warnings**
+- **Cause**: Empty or zero values in critical fields (quantity, price, FX rate)
+- **Solution**: Review your date range - ensure you're exporting actual trades, not just account summaries
+
+**Problem: Currency conversion errors**
+- **Cause**: Missing `CurrencyRate` or `FXRateToBase` column for foreign currency trades
+- **Solution**: Ensure Flex Query includes currency rate fields, or switch to QFX format
+
+**Problem: Transactions not appearing in results**
+- **Cause**: Invalid date format or data validation failures
+- **Solution**: Use IBKR's recommended date format (MM/DD/YYYY) in Flex Query configuration
+
+### CSV vs QFX: Which Should You Use?
+
+**Use CSV when:**
+- You need custom field selection
+- You're comfortable with Flex Query configuration
+- You want to inspect/edit data before upload
+- You're combining data from multiple sources
+
+**Use QFX when:**
+- You want the simplest export process (fewer steps)
+- You need guaranteed data completeness
+- You're processing complex corporate actions
+- You want to avoid column configuration issues
+
+**Recommendation:** For first-time users or complex portfolios, **QFX is strongly recommended** as it eliminates potential CSV formatting and column mapping issues.
+
 ## Currency Conversion Challenges and Solutions
 
 ### Multi-Currency Transaction Example

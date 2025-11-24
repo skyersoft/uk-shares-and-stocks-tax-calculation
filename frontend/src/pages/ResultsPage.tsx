@@ -4,8 +4,6 @@ import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { PortfolioSummary } from '../components/results/PortfolioSummary';
-import { ResultsHoldingsTable } from '../components/results/HoldingsTable';
-import { TaxCalculations } from '../components/results/TaxCalculations';
 import DataVisualization from '../components/results/DataVisualization';
 import {
   NormalizedResults,
@@ -14,11 +12,15 @@ import {
 } from '../types/calculation';
 import { AffiliateGrid } from '../components/affiliate';
 import { ResultsMetricsSummary } from '../components/results/ResultsMetrics';
-import { ResultsDisposalsTable } from '../components/results/ResultsDisposalsTable';
-import { ResultsDividendsTable } from '../components/results/ResultsDividendsTable';
 import { ResultsCallToAction } from '../components/results/ResultsCallToAction';
 import { AdditionalIncomeInputs } from '../components/results/AdditionalIncomeInputs';
 import { normalizeCalculationResults } from '../utils/resultsNormalizer';
+import { DisposalDetailsTable } from '../components/results/DisposalDetailsTable';
+import { CashBalancesTable } from '../components/results/CashBalancesTable';
+import { CalculationParameters } from '../components/results/CalculationParameters';
+import { DetailedTaxBreakdown } from '../components/results/DetailedTaxBreakdown';
+import { ResultsTabs } from '../components/results/ResultsTabs';
+import { calculateComprehensiveTax } from '../utils/comprehensiveTaxCalculation';
 
 interface AdditionalIncomeData {
   otherIncome: number;
@@ -89,12 +91,12 @@ const ResultsPage: React.FC = () => {
     // Base tax from portfolio
     const baseCGT = Number(estimated.capital_gains_tax) || 0;
     const baseDivTax = Number(estimated.dividend_tax) || 0;
-    
+
     // Add additional income tax calculations (simplified)
     // In reality, these would need proper tax bands and calculations
     const additionalCGT = additionalIncome.otherCapitalGains * 0.2; // Simplified 20% rate
     const additionalDivTax = additionalIncome.otherDividends * 0.0875; // Simplified 8.75% basic rate
-    
+
     return {
       capital_gains_tax: baseCGT + additionalCGT,
       dividend_tax: baseDivTax + additionalDivTax,
@@ -106,6 +108,22 @@ const ResultsPage: React.FC = () => {
       additional_income: additionalIncome
     } as TaxCalculation;
   }, [normalizedResults, state.raw, additionalIncome]);
+
+  // Calculate comprehensive tax including all wizard inputs
+  const comprehensiveTax = useMemo(() => {
+    if (!normalizedResults) return null;
+    const taxYear = state.wizardData?.taxYear || normalizedResults.taxYear || '2024-2025';
+    return calculateComprehensiveTax(normalizedResults, state.wizardData, taxYear);
+  }, [normalizedResults, state.wizardData]);
+
+  // Create corrected metrics with comprehensive tax liability
+  const correctedMetrics = useMemo(() => {
+    if (!normalizedResults) return null;
+    return {
+      ...normalizedResults.metrics,
+      totalTaxLiability: comprehensiveTax?.totalTaxLiability || normalizedResults.metrics.totalTaxLiability
+    };
+  }, [normalizedResults, comprehensiveTax]);
 
   const handleAdditionalIncomeCalculate = (data: AdditionalIncomeData) => {
     setAdditionalIncome(data);
@@ -247,47 +265,61 @@ const ResultsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Executive Summary */}
       <ResultsMetricsSummary
-        metrics={normalizedResults.metrics}
+        metrics={correctedMetrics || normalizedResults.metrics}
         taxYear={normalizedResults.taxYear}
         showCgtWarning={normalizedResults.showCgtWarning}
         className="mb-4"
       />
 
+      {/* Calculation Parameters (Collapsible) */}
+      {state.wizardData && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <details className="calculation-parameters-details">
+              <summary className="cursor-pointer">
+                <div className="card shadow-sm border-0">
+                  <div className="card-body p-3">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 className="mb-0 text-primary">
+                          <i className="fas fa-sliders-h me-2"></i>
+                          Calculation Parameters
+                        </h6>
+                        <small className="text-muted">
+                          Click to view the data used for this calculation
+                        </small>
+                      </div>
+                      <i className="fas fa-chevron-down text-muted"></i>
+                    </div>
+                  </div>
+                </div>
+              </summary>
+              <div className="mt-3">
+                <CalculationParameters
+                  data={state.wizardData}
+                  className="shadow-sm border-0"
+                />
+              </div>
+            </details>
+          </div>
+        </div>
+      )}
+
+      {/* Detailed Tax Breakdown */}
       <div className="row mb-4">
         <div className="col-12">
-          <AdditionalIncomeInputs
-            onCalculate={handleAdditionalIncomeCalculate}
+          <DetailedTaxBreakdown
+            normalizedResults={normalizedResults}
+            wizardData={state.wizardData}
+            taxCalculations={taxCalculations}
             className="shadow-sm border-0"
           />
         </div>
       </div>
 
-      {taxCalculations.total_tax_liability > 0 && (
-        <div className="row mb-4">
-          <div className="col-12">
-            <Alert variant="warning" className="border-0 shadow-sm">
-              <div className="d-flex align-items-center">
-                <i className="fas fa-exclamation-triangle me-3" style={{ fontSize: '1.5rem' }}></i>
-                <div>
-                  <h5 className="mb-1">Tax Liability Identified</h5>
-                  <p className="mb-0">
-                    Your portfolio analysis shows a potential tax liability of{' '}
-                    <strong>
-                      {new Intl.NumberFormat('en-GB', {
-                        style: 'currency',
-                        currency: 'GBP'
-                      }).format(taxCalculations.total_tax_liability)}
-                    </strong>
-                    . Please consult with a qualified tax advisor to confirm your obligations.
-                  </p>
-                </div>
-              </div>
-            </Alert>
-          </div>
-        </div>
-      )}
-
+      {/* Portfolio Summary */}
       <div className="row mb-4">
         <div className="col-12">
           <PortfolioSummary
@@ -297,45 +329,52 @@ const ResultsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Additional Income Inputs */}
       <div className="row mb-4">
         <div className="col-12">
-          <ResultsDisposalsTable
-            disposals={normalizedResults.disposals}
+          <AdditionalIncomeInputs
+            onCalculate={handleAdditionalIncomeCalculate}
             className="shadow-sm border-0"
           />
         </div>
       </div>
 
+      {/* Detailed Transaction Data (Tabs) */}
       <div className="row mb-4">
         <div className="col-12">
-          <ResultsDividendsTable
-            dividends={normalizedResults.dividends}
+          <ResultsTabs
+            normalizedResults={normalizedResults}
+            portfolioAnalysis={portfolioAnalysis}
+            taxCalculations={taxCalculations}
             className="shadow-sm border-0"
           />
         </div>
       </div>
 
-      <div className="row mb-4">
-        <div className="col-12">
-          <ResultsHoldingsTable
-            holdings={normalizedResults.holdings}
-            marketSummaries={portfolioAnalysis.market_summaries}
-            className="shadow-sm border-0"
-          />
-        </div>
-      </div>
-
-      {taxCalculations && (
+      {/* Additional Tables (if available) */}
+      {state.raw?.disposal_events && state.raw.disposal_events.length > 0 && (
         <div className="row mb-4">
           <div className="col-12">
-            <TaxCalculations
-              taxCalculations={taxCalculations}
+            <DisposalDetailsTable
+              disposalEvents={state.raw.disposal_events}
               className="shadow-sm border-0"
             />
           </div>
         </div>
       )}
 
+      {state.raw?.currency_balances && state.raw.currency_balances.length > 0 && (
+        <div className="row mb-4">
+          <div className="col-12">
+            <CashBalancesTable
+              currencyBalances={state.raw.currency_balances}
+              className="shadow-sm border-0"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Data Visualization */}
       <div className="row mb-4">
         <div className="col-12">
           <DataVisualization

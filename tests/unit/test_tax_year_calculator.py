@@ -58,7 +58,7 @@ class TestEnhancedTaxYearCalculator:
             proceeds=700.0,
             cost_basis=500.0,
             expenses=10.0,  # Gain: 700 - 500 - 10 = 190
-            matching_rule="section-104"
+            matching_rule="section104"
         )
         
         disposal2 = Disposal(
@@ -68,7 +68,7 @@ class TestEnhancedTaxYearCalculator:
             proceeds=400.0,
             cost_basis=300.0,
             expenses=5.0,  # Gain: 400 - 300 - 5 = 95
-            matching_rule="section-104"
+            matching_rule="section104"
         )
         
         # Create a disposal in a different tax year
@@ -79,7 +79,7 @@ class TestEnhancedTaxYearCalculator:
             proceeds=1500.0,
             cost_basis=1200.0,
             expenses=20.0,  # Gain: 1500 - 1200 - 20 = 280
-            matching_rule="section-104"
+            matching_rule="section104"
         )
         
         # Create a disposal with a loss in the 2024-2025 tax year
@@ -90,7 +90,7 @@ class TestEnhancedTaxYearCalculator:
             proceeds=300.0,
             cost_basis=350.0,
             expenses=5.0,  # Loss: 300 - 350 - 5 = -55
-            matching_rule="section-104"
+            matching_rule="section104"
         )
         
         # Calculate tax year summary for 2024-2025
@@ -148,7 +148,7 @@ class TestEnhancedTaxYearCalculator:
             proceeds=15000.0,
             cost_basis=5000.0,
             expenses=500.0,  # Gain: 15000 - 5000 - 500 = 9500
-            matching_rule="section-104"
+            matching_rule="section104"
         )
 
         # Calculate tax year summary for 2024-2025
@@ -184,7 +184,7 @@ class TestEnhancedTaxYearCalculator:
             proceeds=4500.0,
             cost_basis=5000.0,
             expenses=100.0,  # Loss: 4500 - 5000 - 100 = -600
-            matching_rule="section-104"
+            matching_rule="section104"
         )
 
         disposal2 = Disposal(
@@ -194,7 +194,7 @@ class TestEnhancedTaxYearCalculator:
             proceeds=2000.0,
             cost_basis=2500.0,
             expenses=50.0,  # Loss: 2000 - 2500 - 50 = -550
-            matching_rule="section-104"
+            matching_rule="section104"
         )
 
         # Calculate tax year summary for 2024-2025

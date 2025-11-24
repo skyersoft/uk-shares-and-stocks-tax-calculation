@@ -468,8 +468,8 @@ class TestRealQfxDataIntegration:
         # Should have at least one matching rule applied
         assert len(matching_rules_used) > 0, "Should have applied at least one matching rule"
         
-        # Most common rule should be section-104 for typical scenarios
-        if 'section-104' in matching_rules_used:
+        # Most common rule should be section104 for typical scenarios
+        if 'section104' in matching_rules_used:
             print(f"✓ Section 104 pooling rule applied correctly")
     
     def test_error_recovery_with_real_data(self, qfx_parser, real_qfx_file_path):

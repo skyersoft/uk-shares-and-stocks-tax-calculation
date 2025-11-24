@@ -216,7 +216,7 @@ class TestCapitalGainsCalculatorIntegration:
                 assert disposal.quantity > 0, "Disposal quantity should be positive"
                 assert disposal.proceeds > 0, "Disposal proceeds should be positive"
                 assert disposal.cost_basis > 0, "Disposal cost basis should be positive"
-                assert disposal.matching_rule in ["same-day", "30-day", "section-104"], f"Invalid matching rule: {disposal.matching_rule}"
+                assert disposal.matching_rule in ["same-day", "bed-breakfast", "section104"], f"Invalid matching rule: {disposal.matching_rule}"
                 
                 # Verify gain/loss calculation
                 expected_gain_loss = disposal.proceeds - disposal.cost_basis - disposal.expenses

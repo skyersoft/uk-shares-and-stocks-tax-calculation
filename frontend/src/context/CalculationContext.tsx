@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useReducer } from 'react';
 import { NormalizedResults } from '../types/calculation';
+import { WizardData } from '../types/calculator';
 
 interface CalculationState {
   status: 'idle' | 'submitting' | 'success' | 'error';
   error: string | null;
   result: NormalizedResults | null;
   raw: any | null;
+  wizardData: WizardData | null;
 }
 
 interface CalculationAction {
@@ -29,7 +31,8 @@ const initialState: CalculationState = {
   status: 'idle', // idle|submitting|success|error
   error: null,
   result: null,
-  raw: null
+  raw: null,
+  wizardData: null
 };
 
 function reducer(state: CalculationState, action: CalculationAction): CalculationState {
@@ -37,7 +40,13 @@ function reducer(state: CalculationState, action: CalculationAction): Calculatio
     case 'SUBMIT_START':
       return { ...state, status: 'submitting', error: null };
     case 'SUBMIT_SUCCESS':
-      return { ...state, status: 'success', result: action.payload.normalized, raw: action.payload.raw };
+      return {
+        ...state,
+        status: 'success',
+        result: action.payload.normalized,
+        raw: action.payload.raw,
+        wizardData: action.payload.wizardData
+      };
     case 'SUBMIT_ERROR':
       return { ...state, status: 'error', error: action.payload };
     default:

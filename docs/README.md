@@ -1,75 +1,113 @@
 # 📚 IBKR Tax Calculator Documentation
 
-This directory contains comprehensive documentation for the IBKR Tax Calculator project.
+Complete documentation for the UK Capital Gains Tax Calculator project.
+
+## 🚀 Quick Start
+
+- **New Contributors**: Start with [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Deployment**: See [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Architecture**: Read [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## 📖 Documentation Index
 
-### User Documentation
-- **[README.md](../README.md)** - Main project overview, installation, and usage
-- **[DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md)** - Complete AWS deployment instructions
-- **[TESTING.md](../TESTING.md)** - Comprehensive testing guide and best practices
-
-### Developer Documentation
-- **[PROJECT_PLAN.md](../PROJECT_PLAN.md)** - Project roadmap and development phases
-- **[context.md](../context.md)** - Developer context and business feature definitions
-- **[REPOSITORY_ANALYSIS.md](../REPOSITORY_ANALYSIS.md)** - Repository cleanup analysis and findings
-
-### Technical Documentation
-- **[UK_TAX_CALCULATION_REQUIREMENTS.md](UK_TAX_CALCULATION_REQUIREMENTS.md)** - HMRC tax rules and requirements
-
-## 🔍 Quick Reference
-
 ### Getting Started
-1. **New Developers**: Start with [README.md](../README.md) for setup
-2. **Deployment**: Follow [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md)
-3. **Testing**: Refer to [TESTING.md](../TESTING.md) for test procedures
+- [**CONTRIBUTING.md**](CONTRIBUTING.md) - Developer guide, setup, and workflow
+- [**ARCHITECTURE.md**](ARCHITECTURE.md) - System architecture and design decisions
 
-### Development Workflow
-1. **Planning**: Check [PROJECT_PLAN.md](../PROJECT_PLAN.md) for current priorities
-2. **Context**: Review [context.md](../context.md) for business logic
-3. **Requirements**: Reference [UK_TAX_CALCULATION_REQUIREMENTS.md](UK_TAX_CALCULATION_REQUIREMENTS.md) for tax rules
+### Deployment & Operations
+- [**DEPLOYMENT.md**](DEPLOYMENT.md) - AWS deployment guide (Terraform)
+- [**TESTING.md**](TESTING.md) - Testing guide and best practices
 
-### Maintenance
-- **Repository Health**: See [REPOSITORY_ANALYSIS.md](../REPOSITORY_ANALYSIS.md) for cleanup status
-- **Testing Standards**: Follow guidelines in [TESTING.md](../TESTING.md)
-- **Deployment Updates**: Update [DEPLOYMENT_GUIDE.md](../DEPLOYMENT_GUIDE.md) for infrastructure changes
+### Reference Documentation
+- [**TAX_REFERENCE.md**](TAX_REFERENCE.md) - UK tax rules and calculations
+- [**UK_TAX_CALCULATION_REQUIREMENTS.md**](UK_TAX_CALCULATION_REQUIREMENTS.md) - Tax calculation requirements
+- [**STANDARD_CSV_FORMAT.md**](STANDARD_CSV_FORMAT.md) - Internal CSV format specification
+- [**IBKR_QFX_GUIDE.md**](IBKR_QFX_GUIDE.md) - How to generate QFX files from Interactive Brokers
 
-## 📝 Documentation Standards
+### Historical Reference
+- [**archive/PROJECT_PLAN.md**](archive/PROJECT_PLAN.md) - Original comprehensive project plan
 
-### File Organization
-- **Root Level**: Core user-facing documentation (README, deployment, testing)
-- **docs/**: Technical and detailed documentation
-- **Archive**: Outdated files renamed with `.archive` extension
+## 🎯 Common Tasks
 
-### Content Guidelines
-- **Accuracy**: Keep tax rules and technical details current
-- **Completeness**: Include all steps, prerequisites, and examples
-- **Maintenance**: Update documentation with code changes
-- **Accessibility**: Clear language, proper formatting, working links
+### Running the Application
 
-### Update Process
-1. **Identify Changes**: Note what documentation needs updating
-2. **Update Content**: Modify relevant files with accurate information
-3. **Verify Links**: Ensure all internal references work
-4. **Test Procedures**: Validate any included commands or procedures
+**CLI Mode**:
+```bash
+conda activate ibkr-tax
+python run_calculator.py --input data/file.qfx --tax-year 2024-2025
+```
 
-## 🏷️ Status Tags
+**Local Development**:
+```bash
+docker-compose up -d
+sh run-local-dev.sh
+```
 
-- **✅ Active**: Current, maintained documentation
-- **📝 Draft**: In development, subject to change
-- **🗂️ Archive**: Historical reference, no longer maintained
-- **🔄 Review**: Needs updating or verification
+**Frontend Development**:
+```bash
+cd frontend
+npm run dev
+```
 
-## 📞 Support
+### Testing
 
-For documentation issues or suggestions:
-- Check existing documentation first
-- Follow established patterns and standards
-- Update documentation when making code changes
-- Report gaps or inconsistencies
+**Python Tests**:
+```bash
+pytest
+pytest --cov=src --cov-report=html
+```
+
+**Frontend Tests**:
+```bash
+cd frontend
+npm run test:unit  # Jest
+npm run test       # Playwright E2E
+```
+
+### Deployment
+
+**Backend**:
+```bash
+./deployment/01-package.sh
+./deployment/terraform-deploy.sh
+```
+
+**Frontend**:
+```bash
+cd frontend && npm run build
+aws s3 sync dist/ s3://bucket-name/ --profile goker
+aws cloudfront create-invalidation --distribution-id E3CPZK9XL7GR6Q --paths "/*" --profile goker
+```
+
+## 🏗️ Project Structure
+
+```
+ibkr-tax-calculator/
+├── src/                    # Python backend
+├── frontend/               # React SPA
+├── deployment/             # Terraform & scripts
+├── tests/                  # Test suite
+├── data/                   # Test data
+└── docs/                   # Documentation (you are here)
+```
+
+## 🔗 External Resources
+
+- **Live Website**: https://cgttaxtool.uk
+- **HMRC Tax Guide**: https://www.gov.uk/capital-gains-tax
+- **AWS Documentation**: https://docs.aws.amazon.com/
+- **React Docs**: https://react.dev/
+
+## 📝 Documentation Maintenance
+
+This documentation was consolidated on 2025-11-20 from 26 separate files into a more organized structure.
+
+If you need to update documentation:
+1. Edit the relevant file in `docs/`
+2. Keep documentation concise and up-to-date
+3. Remove obsolete information
+4. Update this index if adding new docs
 
 ---
 
-*Documentation maintained as single source of truth for the IBKR Tax Calculator project.*
-
-*Last Updated: 2025-10-14*
+*Last Updated: 2025-11-20*
