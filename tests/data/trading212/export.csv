@@ -1,0 +1,7 @@
+Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Total,Withholding tax,Currency (Withholding tax),Charge amount,Stamp duty reserve tax,Notes,ID,Currency conversion fee
+Market buy,2023-01-15 10:30:00,US0378331005,AAPL,Apple Inc,10,150.00,USD,0.82,0.00,1230.00,0.00,USD,0.00,0.00,,EOF123456789,6.15
+Market sell,2023-02-20 14:45:00,US0378331005,AAPL,Apple Inc,5,160.00,USD,0.83,41.50,664.00,0.00,USD,0.00,0.00,,EOF987654321,3.32
+Dividend (Ordinary),2023-03-01 09:00:00,US0378331005,AAPL,Apple Inc,,0.23,USD,0.83,0.00,1.91,0.34,USD,0.00,0.00,,DIV123456,0.00
+Limit buy,2023-04-10 11:00:00,GB0002374006,DGE,Diageo plc,20,35.00,GBP,1.00,0.00,700.00,0.00,GBP,0.00,3.50,,EOF555555555,0.00
+Interest on cash,2023-05-01 00:00:00,,,Interest,1,1.50,GBP,1.00,0.00,1.50,0.00,GBP,0.00,0.00,,INT123,0.00
+Deposit,2023-01-01 00:00:00,,,,,,GBP,1.00,0.00,1000.00,0.00,GBP,0.00,0.00,,DEP123,0.00
