@@ -67,6 +67,7 @@ data/
 !frontend/src/data
 uploads/
 *.csv
+!tests/data/**/*.csv
 *.qfx
 *.xlsx
 *.json
