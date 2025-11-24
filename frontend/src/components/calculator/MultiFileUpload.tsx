@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { BrokerFile, BrokerType, BROKER_OPTIONS } from '../../types/calculator';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
@@ -22,6 +22,13 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Keep a ref to the latest files to avoid stale closures in async operations
+  const filesRef = useRef<BrokerFile[]>(files);
+
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
 
   const generateId = () => `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -96,7 +103,8 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     const { detectBroker } = await import('../../services/api');
 
     // Update status to detecting
-    onChange(files.map(f =>
+    // Use filesRef.current to get the latest files array
+    onChange(filesRef.current.map(f =>
       f.id === fileId ? { ...f, detectionStatus: 'detecting' as const } : f
     ));
 
@@ -117,7 +125,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
 
         const brokerType = brokerTypeMap[result.broker!] || 'manual-csv';
 
-        onChange(files.map(f =>
+        onChange(filesRef.current.map(f =>
           f.id === fileId ? {
             ...f,
             broker: brokerType,
@@ -128,7 +136,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
           } : f
         ));
       } else {
-        onChange(files.map(f =>
+        onChange(filesRef.current.map(f =>
           f.id === fileId ? {
             ...f,
             detectionStatus: 'error' as const,
@@ -138,7 +146,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       }
     } catch (error) {
       console.error('Broker detection failed:', error);
-      onChange(files.map(f =>
+      onChange(filesRef.current.map(f =>
         f.id === fileId ? {
           ...f,
           detectionStatus: 'error' as const,
