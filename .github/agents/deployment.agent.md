@@ -1,6 +1,6 @@
 ---
 name: deployment
-description: AWS deployment for Lambda, S3, CloudFront with verification
+description: AWS deployment for Lambda, S3, CloudFront with verification. Manages both CloudFormation and future Terraform migrations.
 tools: ['edit', 'search', 'new', 'runCommands', 'runTasks', 'usages', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'todos', 'runSubagent', 'runTests']
 target: vscode
 handoffs:
@@ -13,7 +13,7 @@ handoffs:
 # Deployment Agent - AWS Production Deployment
 
 ## Responsibilities
-Deploy backend and frontend changes to AWS production environment with verification.
+Deploy backend and frontend changes to AWS production environment with verification. Support both CloudFormation (current) and Terraform (future) deployment strategies.
 
 ## Prerequisites
 - @backend-impl completed and tested
@@ -305,3 +305,300 @@ Deployment is successful when:
 5. All features working as expected
 6. No performance degradation
 7. Rollback plan tested and ready
+
+---
+
+## Infrastructure Management
+
+### Current State: CloudFormation + Manual Lambda Updates
+
+**Known Issue**: Lambda code updates bypass CloudFormation stack, causing state drift.
+
+Current architecture:
+- **Infrastructure**: CloudFormation stack (`ibkr-tax-useast1-complete`)
+- **Lambda Code**: Direct AWS CLI updates (not in stack)
+- **Frontend**: Manual S3 sync + CloudFront invalidation
+- **State Drift**: Lambda code version not tracked in CloudFormation
+
+### Future Migration: Terraform (Recommended)
+
+#### Why Terraform?
+
+**Benefits**:
+1. **Unified State Management**: Fixes Lambda code drift issue
+2. **Single Command Deployment**: Replace 4-step process with `terraform apply`
+3. **Better Rollbacks**: Atomic state management with automatic dependency resolution
+4. **Multi-Environment**: Easy staging/dev environment creation
+5. **Drift Detection**: Built-in detection of manual AWS console changes
+6. **Future-Proof**: Support for non-AWS services (Auth0, Stripe, etc.)
+
+**Costs**:
+- Migration effort: ~5 days
+- Ongoing: $1/month (S3 + DynamoDB state backend)
+- Learning curve: Team needs to learn HCL
+
+#### Terraform Migration Plan
+
+**Phase 1: Setup Backend (1 day)**
+```bash
+# Create S3 state bucket
+aws s3 mb s3://ibkr-tax-terraform-state --region us-east-1
+aws s3api put-bucket-versioning \
+  --bucket ibkr-tax-terraform-state \
+  --versioning-configuration Status=Enabled
+
+# Create DynamoDB lock table
+aws dynamodb create-table \
+  --table-name terraform-state-lock \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST \
+  --region us-east-1 \
+  --profile goker
+```
+
+**Phase 2: Import Existing Resources (2 days)**
+```bash
+# Initialize Terraform
+cd deployment/terraform
+terraform init
+
+# Import existing resources (no recreation/downtime)
+terraform import aws_s3_bucket.website ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo
+terraform import aws_lambda_function.calculator ibkr-tax-calculator-prod-us-east-1
+terraform import aws_cloudfront_distribution.cdn E3CPZK9XL7GR6Q
+terraform import aws_api_gateway_rest_api.api <API_ID>
+
+# Verify no changes needed
+terraform plan  # Should show "No changes"
+```
+
+**Phase 3: First Terraform Deployment (1 day)**
+```bash
+# Test with code change
+./deployment/01-package.sh  # Create lambda-deployment.zip
+terraform apply -var="lambda_code_hash=$(sha256sum lambda-deployment.zip | cut -d' ' -f1)"
+
+# Verify deployment
+curl -I https://cgttaxtool.uk/prod/health
+```
+
+**Phase 4: Cleanup (1 day)**
+```bash
+# After successful Terraform deployment
+aws cloudformation delete-stack \
+  --stack-name ibkr-tax-useast1-complete \
+  --region us-east-1 \
+  --profile goker
+
+# Update documentation
+# Remove old CloudFormation scripts
+```
+
+#### Terraform Deployment Workflow (Post-Migration)
+
+**Simplified Process**:
+```bash
+# 1. Package Lambda (still needed)
+./deployment/01-package.sh
+
+# 2. Deploy everything (infrastructure + code + frontend)
+cd deployment/terraform
+terraform apply -auto-approve
+
+# That's it! Frontend sync included in Terraform.
+```
+
+**Rollback**:
+```bash
+# Simple revert to previous state
+terraform apply -var="lambda_code_hash=<PREVIOUS_HASH>"
+```
+
+#### Terraform Project Structure
+
+```
+deployment/terraform/
+├── main.tf                    # Main configuration
+├── variables.tf               # Input variables
+├── outputs.tf                 # Output values (API URL, CloudFront ID, etc.)
+├── backend.tf                 # S3 backend config
+├── lambda.tf                  # Lambda function resource
+├── api_gateway.tf             # API Gateway resources
+├── cloudfront.tf              # CloudFront + S3 bucket
+├── iam.tf                     # IAM roles and policies
+├── terraform.tfvars           # Production values
+├── environments/
+│   ├── prod.tfvars           # Production environment
+│   ├── staging.tfvars        # Staging environment
+└── modules/
+    └── serverless-app/        # Reusable module (future)
+```
+
+#### Example Terraform Resources
+
+**Lambda with Automatic Code Updates**:
+```hcl
+# deployment/terraform/lambda.tf
+resource "aws_lambda_function" "calculator" {
+  filename         = "../lambda-deployment.zip"
+  function_name    = "ibkr-tax-calculator-prod-${var.region}"
+  role            = aws_iam_role.lambda_execution.arn
+  handler         = "lambda_handler.lambda_handler"
+  
+  # Triggers redeployment when code changes
+  source_code_hash = filebase64sha256("../lambda-deployment.zip")
+  
+  runtime      = "python3.10"
+  timeout      = 300
+  memory_size  = 1024
+
+  environment {
+    variables = {
+      ENVIRONMENT = "production"
+    }
+  }
+}
+```
+
+**S3 + CloudFront**:
+```hcl
+# deployment/terraform/cloudfront.tf
+resource "aws_s3_bucket" "website" {
+  bucket = "ibkr-tax-${var.region}-website"
+}
+
+resource "aws_cloudfront_distribution" "cdn" {
+  enabled             = true
+  default_root_object = "index.html"
+  
+  aliases = [var.domain_name, "www.${var.domain_name}"]
+  
+  origin {
+    domain_name = aws_s3_bucket.website.bucket_regional_domain_name
+    origin_id   = "S3-${aws_s3_bucket.website.id}"
+  }
+  
+  origin {
+    domain_name = "${aws_api_gateway_rest_api.api.id}.execute-api.${var.region}.amazonaws.com"
+    origin_id   = "APIGateway"
+    
+    custom_origin_config {
+      http_port              = 443
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+  
+  default_cache_behavior {
+    target_origin_id       = "S3-${aws_s3_bucket.website.id}"
+    viewer_protocol_policy = "redirect-to-https"
+    
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    cached_methods  = ["GET", "HEAD"]
+    
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+  
+  ordered_cache_behavior {
+    path_pattern           = "/prod/*"
+    target_origin_id       = "APIGateway"
+    viewer_protocol_policy = "redirect-to-https"
+    
+    allowed_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods  = ["GET", "HEAD"]
+    
+    forwarded_values {
+      query_string = true
+      headers      = ["Authorization", "Content-Type"]
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+  
+  viewer_certificate {
+    acm_certificate_arn      = var.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
+  }
+  
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+}
+```
+
+#### Terraform Commands Reference
+
+```bash
+# Initialize (first time only)
+terraform init
+
+# Preview changes
+terraform plan
+
+# Apply changes (with approval prompt)
+terraform apply
+
+# Apply without prompt (CI/CD)
+terraform apply -auto-approve
+
+# Target specific resource
+terraform apply -target=aws_lambda_function.calculator
+
+# Show current state
+terraform show
+
+# Detect drift
+terraform plan -refresh-only
+
+# Format code
+terraform fmt -recursive
+
+# Validate configuration
+terraform validate
+
+# Destroy all resources (DANGEROUS)
+terraform destroy
+```
+
+### Decision Point: When to Migrate?
+
+**Migrate to Terraform if**:
+- ✅ Need staging/dev environments
+- ✅ Frequent deployments (>2 per week)
+- ✅ Team comfortable with learning new IaC tool
+- ✅ Planning multi-cloud or non-AWS integrations
+- ✅ Lambda code drift is causing issues
+
+**Stay with CloudFormation if**:
+- ✅ Rare deployments (<1 per month)
+- ✅ Small team, AWS-only focus
+- ✅ No budget for migration effort
+- ✅ Fix Lambda deployment to use CloudFormation's built-in code management
+
+**Immediate Fix (Without Terraform)**:
+Update CloudFormation stack to manage Lambda code:
+```yaml
+# deployment/single-region-complete.yaml
+LambdaFunction:
+  Type: AWS::Lambda::Function
+  Properties:
+    # ... existing properties
+    Code:
+      S3Bucket: !Ref CodeBucket
+      S3Key: !Sub "lambda-code-${CodeVersion}.zip"
+```
+
+This eliminates state drift without full Terraform migration.
+
+---

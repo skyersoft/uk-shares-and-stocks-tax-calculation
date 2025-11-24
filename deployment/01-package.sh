@@ -32,6 +32,11 @@ cp -r src/ $DEPLOY_DIR/
 cp deployment/lambda_handler.py $DEPLOY_DIR/
 # cp -r deployment/templates/ $DEPLOY_DIR/  # Templates not used
 
+# Activate Conda environment
+echo -e "${YELLOW}🐍 Activating ibkr-tax conda environment...${NC}"
+eval "$(conda shell.bash hook)"
+conda activate ibkr-tax
+
 # Install dependencies
 echo -e "${YELLOW}📥 Installing Python dependencies...${NC}"
 python -m pip install -r deployment/requirements.txt -t $DEPLOY_DIR/ --quiet

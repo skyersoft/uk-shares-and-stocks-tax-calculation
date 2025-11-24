@@ -14,13 +14,13 @@ const CalculatorPage: React.FC = () => {
     console.log('[CalculatorPage] Broker files:', data.brokerFiles);
     console.log('[CalculatorPage] Tax year:', data.taxYear);
     console.log('[CalculatorPage] Analysis type:', data.analysisType);
-    
+
     dispatch({ type: 'SUBMIT_START' });
 
     try {
       // Extract the first broker file if available
-      const primaryFile = data.brokerFiles && data.brokerFiles.length > 0 
-        ? data.brokerFiles[0].file 
+      const primaryFile = data.brokerFiles && data.brokerFiles.length > 0
+        ? data.brokerFiles[0].file
         : null;
 
       console.log('[CalculatorPage] Primary file:', primaryFile);
@@ -40,16 +40,23 @@ const CalculatorPage: React.FC = () => {
       console.log('[CalculatorPage] Calculation results received:', results);
       const normalized = normalizeCalculationResults(results.raw);
       console.log('[CalculatorPage] Results normalized:', normalized);
-      
-      dispatch({ type: 'SUBMIT_SUCCESS', payload: { raw: results.raw, normalized } });
-      
+
+      dispatch({
+        type: 'SUBMIT_SUCCESS',
+        payload: {
+          raw: results.raw,
+          normalized,
+          wizardData: data
+        }
+      });
+
       console.log('[CalculatorPage] Navigating to results...');
       // Navigate to results
       window.location.hash = 'results';
       console.log('[CalculatorPage] Navigation complete, hash:', window.location.hash);
     } catch (error: any) {
       console.error('[CalculatorPage] Submission error:', error);
-      
+
       // Handle CSV validation errors with detailed information
       if (error instanceof CSVValidationError) {
         const missingCols = error.missing_columns.join(', ');
@@ -75,14 +82,14 @@ const CalculatorPage: React.FC = () => {
                     UK Tax Calculator
                   </h1>
                   <p className="lead mb-4">
-                    Calculate your Capital Gains Tax and income tax for informational purposes. 
+                    Calculate your Capital Gains Tax and income tax for informational purposes.
                     This tool follows HMRC guidelines but results are for reference only.
                   </p>
                   <div className="disclaimer-banner">
                     <div className="alert alert-warning border-0 mb-4">
                       <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                      <strong>Important:</strong> This calculator is for informational purposes only. 
-                      You are solely responsible for verifying calculations and submitting accurate information to HMRC. 
+                      <strong>Important:</strong> This calculator is for informational purposes only.
+                      You are solely responsible for verifying calculations and submitting accurate information to HMRC.
                       Use at your own risk.
                     </div>
                   </div>
