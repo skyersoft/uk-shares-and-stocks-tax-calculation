@@ -18,7 +18,7 @@ CONVERTERS_AVAILABLE = False
 
 # Import converters (light dependencies)
 try:
-    from main.python.converters.converter_factory import ConverterFactory
+    from main.python.converters.converter_factory import get_factory
     from main.python.converters import register_default_converters
     from main.python.parsers.multi_broker_parser import MultiBrokerParser
     from main.python.interfaces.broker_converter import BrokerConversionError
@@ -161,7 +161,7 @@ def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
                 'error': 'Broker detection unavailable (missing dependencies)'
             }
             
-        factory = ConverterFactory()
+        factory = get_factory()
         
         # Detect broker
         detection = factory.detect_broker(file_path, min_confidence=0.5)

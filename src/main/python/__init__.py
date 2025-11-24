@@ -1,2 +1,4 @@
 """Main package initialization."""
-from .capital_gains_calculator import main
+# Avoid importing capital_gains_calculator here as it has heavy CLI dependencies (typer)
+# Import it explicitly where needed instead
+
