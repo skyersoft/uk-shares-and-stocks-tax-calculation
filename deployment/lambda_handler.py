@@ -12,11 +12,12 @@ sys.path.append('/opt/python')  # Lambda layer path
 sys.path.append('.')
 sys.path.append('./main/python')  # Add the main/python directory to path
 
+# Global flags
+CALCULATOR_AVAILABLE = False
+CONVERTERS_AVAILABLE = False
+
+# Import converters (light dependencies)
 try:
-    # In Lambda, the files are at root level after packaging
-    from main.python.capital_gains_calculator import create_enhanced_calculator
-    from main.python.services.portfolio_report_generator import PortfolioReportGenerator
-    from main.python.parsers.csv_parser import CSVValidationError, REQUIRED_CSV_COLUMNS
     from main.python.converters.converter_factory import ConverterFactory
     from main.python.converters import register_default_converters
     from main.python.parsers.multi_broker_parser import MultiBrokerParser
@@ -24,15 +25,21 @@ try:
     
     # Register all available converters
     register_default_converters()
-    
-    IMPORTS_OK = True
+    CONVERTERS_AVAILABLE = True
 except ImportError as e:
-    print(f"Import error: {e}")
-    IMPORTS_OK = False
+    print(f"Converter import error: {e}")
+
+# Import calculator (heavy dependencies like pandas)
+try:
+    from main.python.capital_gains_calculator import create_enhanced_calculator
+    from main.python.services.portfolio_report_generator import PortfolioReportGenerator
+    from main.python.parsers.csv_parser import CSVValidationError, REQUIRED_CSV_COLUMNS
+    CALCULATOR_AVAILABLE = True
+except ImportError as e:
+    print(f"Calculator import error: {e}")
     # Fallback - we'll handle this in the handler
     CSVValidationError = None
     REQUIRED_CSV_COLUMNS = []
-    BrokerConversionError = None
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
@@ -42,17 +49,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Supports both API Gateway and direct invocation.
     """
     try:
-        # Check if imports worked
-        if not IMPORTS_OK:
-            return {
-                'statusCode': 500,
-                'headers': {
-                    'Content-Type': 'text/html',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': '<h1>Import Error</h1><p>Failed to import required modules</p>'
-            }
-
         # Parse the request
         if 'httpMethod' in event:
             # API Gateway request
@@ -159,6 +155,12 @@ def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
         Dictionary with broker detection results and file metadata
     """
     try:
+        if not CONVERTERS_AVAILABLE:
+            return {
+                'detected': False,
+                'error': 'Broker detection unavailable (missing dependencies)'
+            }
+            
         factory = ConverterFactory()
         
         # Detect broker
@@ -333,6 +335,19 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
     """Handle tax calculation request with file upload."""
 
     try:
+        if not CALCULATOR_AVAILABLE:
+            return {
+                'statusCode': 503,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'error': 'Service Unavailable',
+                    'message': 'Calculation service is currently unavailable due to missing dependencies.'
+                })
+            }
+
         # Parse request body
         if event.get('isBase64Encoded', False):
             body = base64.b64decode(event['body'])
