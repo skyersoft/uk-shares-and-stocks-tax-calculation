@@ -279,13 +279,21 @@ class TestCompleteUserFlow:
         page = page_with_api_intercept
         
         # Navigate to calculator
-        page.goto(f"{frontend_url}/calculate.html")
+        page.goto(f"{frontend_url}/#/calculator")
         
         # Wait for page to load
         expect(page.locator("h1")).to_contain_text("Tax Calculator", timeout=10000)
         
+        # Navigate to Step 2 (Upload & Details)
+        # First, we need to complete Step 1 or click Next
+        next_button = page.locator('button:has-text("Next"), button:has-text("Continue")')
+        if next_button.count() > 0:
+            next_button.first.click()
+            page.wait_for_timeout(1000)
+        
         # Find file upload input
         file_input = page.locator('input[type="file"]')
+        file_input.wait_for(state="attached", timeout=10000)
         
         # Upload Trading 212 CSV file
         csv_path = Path("tests/data/trading212/export.csv")
@@ -324,7 +332,14 @@ class TestCompleteUserFlow:
         page = page_with_api_intercept
         
         # Navigate to calculator
-        page.goto(f"{frontend_url}/calculate.html")
+        page.goto(f"{frontend_url}/#/calculator")
+        
+        # Navigate to Step 2 (Upload & Details)
+        page.wait_for_timeout(1000)
+        next_button = page.locator('button:has-text("Next"), button:has-text("Continue")')
+        if next_button.count() > 0:
+            next_button.first.click()
+            page.wait_for_timeout(1000)
         
         # Upload file
         file_input = page.locator('input[type="file"]').first
@@ -371,7 +386,14 @@ class TestCompleteUserFlow:
         """
         page = page_with_api_intercept
         
-        page.goto(f"{frontend_url}/calculate.html")
+        page.goto(f"{frontend_url}/#/calculator")
+        
+        # Navigate to Step 2 (Upload & Details)
+        page.wait_for_timeout(1000)
+        next_button = page.locator('button:has-text("Next"), button:has-text("Continue")')
+        if next_button.count() > 0:
+            next_button.first.click()
+            page.wait_for_timeout(1000)
         
         # Upload file
         file_input = page.locator('input[type="file"]').first
@@ -410,7 +432,14 @@ class TestCompleteUserFlow:
         """
         page = page_with_api_intercept
         
-        page.goto(f"{frontend_url}/calculate.html")
+        page.goto(f"{frontend_url}/#/calculator")
+        
+        # Navigate to Step 2 (Upload & Details)
+        page.wait_for_timeout(1000)
+        next_button = page.locator('button:has-text("Next"), button:has-text("Continue")')
+        if next_button.count() > 0:
+            next_button.first.click()
+            page.wait_for_timeout(1000)
         
         # Create invalid file
         invalid_file = tmp_path / "invalid.txt"
@@ -447,7 +476,14 @@ class TestCompleteUserFlow:
         """
         page = page_with_api_intercept
         
-        page.goto(f"{frontend_url}/calculate.html")
+        page.goto(f"{frontend_url}/#/calculator")
+        
+        # Navigate to Step 2 (Upload & Details)
+        page.wait_for_timeout(1000)
+        next_button = page.locator('button:has-text("Next"), button:has-text("Continue")')
+        if next_button.count() > 0:
+            next_button.first.click()
+            page.wait_for_timeout(1000)
         
         # Upload first file
         file_input = page.locator('input[type="file"]').first
