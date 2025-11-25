@@ -219,6 +219,20 @@ The implementation uses:
 - Required libraries: (listed in requirements.txt/web_requirements.txt)
 - Anaconda or Miniconda (recommended for conda environment)
 
+## Deployment
+
+The application is deployed as a serverless web application on AWS. For deployment instructions:
+
+- **Quick Start**: See `deployment/README.md` for step-by-step guide
+- **Full Documentation**: See `docs/DEPLOYMENT.md` for comprehensive deployment information
+- **Infrastructure**: Managed with Terraform in `deployment/terraform/`
+
+### Live Website
+- **Production URL**: https://cgttaxtool.uk
+- **API Endpoints**: `/calculate`, `/detect-broker`, `/download-report`, `/health`
+
+For local development and testing, see `docs/TESTING.md`.
+
 ## Future Enhancements
 
 - Support for additional file formats (PDF)

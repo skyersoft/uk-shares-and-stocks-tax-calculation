@@ -40,32 +40,40 @@ Complete guide for deploying the IBKR Tax Calculator to AWS using Terraform.
 # Activate Python environment
 conda activate ibkr-tax
 
-# Package Lambda code
+# Package Lambda code with all dependencies
 cd deployment
-./01-package.sh
+bash 01-package-api.sh
 ```
 
-This creates `lambda-deployment.zip` with all dependencies.
+This creates `api-lambda-deployment.zip` (~29MB) with:
+- Lambda handler with all endpoints (calculate, detect-broker, download-report, health)
+- All Python dependencies (pandas, numpy, typer, rich, pydantic, etc.)
+- Source code from `src/main/python/`
 
-### 2. Deploy Infrastructure with Terraform
+**Note**: Use `01-package-api.sh` (not `01-package.sh`) as it includes all required dependencies.
+
+### 2. Deploy Infrastructure and Code with Terraform
 
 ```bash
-# Deploy using the automated script
-./deployment/terraform-deploy.sh
-
-# Or manually:
+# After packaging, deploy with Terraform
 cd deployment/terraform
 terraform plan
 terraform apply
 ```
 
-The Terraform deployment handles:
-- Lambda function
-- API Gateway
-- S3 bucket for frontend
-- CloudFront distribution
-- IAM roles and policies
-- Route 53 DNS (if configured)
+The Terraform deployment automatically:
+- Uploads the new Lambda function code from `lambda-deployment.zip`
+- Updates API Gateway with new deployment
+- Configures all endpoints: `/calculate`, `/detect-broker`, `/download-report`, `/health`
+- Updates CloudFront distribution
+- Manages IAM roles and policies
+- Handles S3 bucket for frontend
+
+**Important**: Terraform reads `../../lambda-deployment.zip` so ensure the package is renamed:
+```bash
+# After running 01-package-api.sh:
+mv api-lambda-deployment.zip lambda-deployment.zip
+```
 
 ### 3. Deploy Frontend
 

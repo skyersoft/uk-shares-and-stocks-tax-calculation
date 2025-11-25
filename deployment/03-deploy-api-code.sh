@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# Step 3: Deploy API application code to Lambda function
-# This script uploads the API-only deployment package to the Lambda function
+# OBSOLETE: This script is no longer needed
+# Lambda deployment is now handled by Terraform
+#
+# Use: cd deployment/terraform && terraform apply
 
 set -e  # Exit on any error
 

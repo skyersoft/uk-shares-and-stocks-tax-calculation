@@ -24,7 +24,7 @@ echo "╚═══════════════════════�
 echo -e "${NC}"
 
 # Check if running from project root
-if [ ! -f "${PROJECT_ROOT}/deployment/01-package.sh" ]; then
+if [ ! -f "${PROJECT_ROOT}/deployment/01-package-api.sh" ]; then
     echo -e "${RED}❌ Please run this script from the project root directory.${NC}"
     exit 1
 fi
@@ -36,8 +36,11 @@ echo -e "${BLUE}═════════════════════�
 
 if [ ! -f "${PROJECT_ROOT}/lambda-deployment.zip" ] || [ "$1" == "--repackage" ]; then
     echo -e "${YELLOW}📦 Creating Lambda deployment package...${NC}"
+    cd "${PROJECT_ROOT}/deployment"
+    bash 01-package-api.sh
     cd "${PROJECT_ROOT}"
-    ./deployment/01-package.sh
+    mv api-lambda-deployment.zip lambda-deployment.zip
+    echo -e "${GREEN}✅ Package created and renamed to lambda-deployment.zip${NC}"
 else
     echo -e "${GREEN}✅ Lambda deployment package already exists${NC}"
     echo -e "${YELLOW}   (Use --repackage to force rebuild)${NC}"
