@@ -15,6 +15,8 @@ import {
 } from '../components/affiliate';
 import '../components/affiliate/affiliate.css';
 
+import SEOHead from '../components/seo/SEOHead';
+
 const AffiliateDemo: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -25,6 +27,11 @@ const AffiliateDemo: React.FC = () => {
 
   return (
     <div className="container my-5">
+      <SEOHead
+        title="Affiliate Components Demo"
+        description="Demo page for affiliate marketing components."
+        robots="noindex, nofollow"
+      />
       <div className="row">
         <div className="col-12">
           {/* Header */}
@@ -33,7 +40,7 @@ const AffiliateDemo: React.FC = () => {
             <p className="lead text-muted">
               Comprehensive Amazon affiliate marketing system for tax and trading books
             </p>
-            
+
             {/* Banner Disclosure */}
             <AffiliateDisclosure style="banner" />
           </div>
@@ -117,8 +124,8 @@ const AffiliateDemo: React.FC = () => {
                     </div>
                     <div>
                       <strong>No Disclosure:</strong><br />
-                      <AffiliateLink 
-                        product={allProducts[0]} 
+                      <AffiliateLink
+                        product={allProducts[0]}
                         showDisclosure={false}
                         className="btn btn-outline-success btn-sm"
                       >
@@ -142,8 +149,8 @@ const AffiliateDemo: React.FC = () => {
                 <div className="card-body">
                   <p className="text-muted">Rich product cards with images and details:</p>
                   {featuredProducts.length > 0 && (
-                    <AffiliateCard 
-                      product={featuredProducts[0]} 
+                    <AffiliateCard
+                      product={featuredProducts[0]}
                       layout="horizontal"
                       imageHeight={120}
                       compact={true}
@@ -303,7 +310,7 @@ const AffiliateDemo: React.FC = () => {
               <div className="card-body">
                 <h6>1. Import Components</h6>
                 <pre className="bg-light p-3 rounded">
-{`import {
+                  {`import {
   AffiliateLink,
   AffiliateCard,
   AffiliateGrid,
@@ -313,7 +320,7 @@ const AffiliateDemo: React.FC = () => {
 
                 <h6>2. Basic Usage</h6>
                 <pre className="bg-light p-3 rounded">
-{`// Simple affiliate link
+                  {`// Simple affiliate link
 <AffiliateLink product={product} />
 
 // Product grid

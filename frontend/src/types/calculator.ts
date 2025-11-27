@@ -32,6 +32,7 @@ export type BrokerType =
   | 'hargreaves-lansdown'
   | 'trading212'
   | 'freetrade'
+  | 'fidelity'
   | 'etoro'
   | 'vanguard'
   | 'aj-bell'
@@ -42,6 +43,7 @@ export const BROKER_OPTIONS: Array<{ value: BrokerType; label: string }> = [
   { value: 'hargreaves-lansdown', label: 'Hargreaves Lansdown' },
   { value: 'trading212', label: 'Trading 212' },
   { value: 'freetrade', label: 'Freetrade' },
+  { value: 'fidelity', label: 'Fidelity' },
   { value: 'etoro', label: 'eToro' },
   { value: 'vanguard', label: 'Vanguard' },
   { value: 'aj-bell', label: 'AJ Bell' },

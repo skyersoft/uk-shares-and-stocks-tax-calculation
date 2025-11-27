@@ -4,6 +4,7 @@ import { BlogPost as BlogPostComponent, BlogPostData } from '../components/blog/
 import { getAllPosts } from '../content/blogLoader';
 import { BlogPost as LoadedBlogPost } from '../types/blog';
 import { AffiliateGrid, searchAffiliateProducts } from '../components/affiliate';
+import SEOHead from '../components/seo/SEOHead';
 
 // Map legacy numeric IDs (original hardcoded sample posts) to new slugs.
 // This allows previously shared links like #blog/post/2 to redirect.
@@ -34,7 +35,7 @@ const BlogPage: React.FC = () => {
       ...(post.title.toLowerCase().includes('investment') ? ['investing'] : []),
       ...(post.title.toLowerCase().includes('capital gains') ? ['tax'] : [])
     ].filter(Boolean);
-    
+
     // Search for books matching the content
     const relevantBooks = searchAffiliateProducts(searchTerms.join(' '));
     return relevantBooks.slice(0, 3); // Limit to 3 books
@@ -93,11 +94,11 @@ const BlogPage: React.FC = () => {
         // If legacy numeric, translate to slug and rewrite hash exactly once.
         if (/^\d+$/.test(potential) && legacyIdToSlug[potential]) {
           const slug = legacyIdToSlug[potential];
-            if (!hasRedirectedRef.current) {
-              hasRedirectedRef.current = true;
-              window.location.replace(`#blog/post/${slug}`);
-              return; // parsing will happen again after hash change
-            }
+          if (!hasRedirectedRef.current) {
+            hasRedirectedRef.current = true;
+            window.location.replace(`#blog/post/${slug}`);
+            return; // parsing will happen again after hash change
+          }
         }
         setSelectedSlug(potential);
         return;
@@ -131,6 +132,25 @@ const BlogPage: React.FC = () => {
 
   return (
     <div className="container-fluid py-4">
+      {selectedPost ? (
+        <SEOHead
+          title={selectedPost.title}
+          description={selectedPost.excerpt || ''}
+          keywords={selectedPost.tags}
+          canonical={`https://cgttaxtool.uk/blog/post/${selectedPost.id}`}
+          ogType="article"
+          articleAuthor={selectedPost.author}
+          articlePublishedTime={selectedPost.publishedDate}
+          articleTags={selectedPost.tags}
+          articleSection={selectedPost.category}
+        />
+      ) : (
+        <SEOHead
+          title="UK Tax & Investment Blog - IBKR Tax Calculator"
+          description="Expert insights, guides, and updates on UK tax calculations for stocks and shares. Stay informed about CGT rules and investment strategies."
+          canonical="https://cgttaxtool.uk/blog"
+        />
+      )}
       <div className="row justify-content-center">
         <div className="col-12 col-xl-10">
           {!selectedPost && (
@@ -161,8 +181,8 @@ const BlogPage: React.FC = () => {
                 </button>
                 <span className="text-muted small">Post {posts.findIndex(p => p.id === selectedPost.id) + 1} of {posts.length}</span>
               </div>
-               <BlogPostComponent post={selectedPost} />
-               
+              <BlogPostComponent post={selectedPost} />
+
               {/* Related Resources Section */}
               <div className="mt-5 mb-4">
                 <div className="border-top pt-4">
@@ -172,7 +192,7 @@ const BlogPage: React.FC = () => {
                   <p className="text-muted mb-3">
                     Deepen your understanding with these expert-recommended books
                   </p>
-                  
+
                   <AffiliateGrid
                     products={getRelevantBooks(selectedPost)}
                     columns={{ xs: 1, sm: 2, md: 3 }}
@@ -183,7 +203,7 @@ const BlogPage: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="mt-4 d-flex justify-content-between">
                 <button
                   className="btn btn-outline-primary btn-sm"

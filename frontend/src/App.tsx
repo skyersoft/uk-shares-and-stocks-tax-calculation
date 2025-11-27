@@ -2,6 +2,7 @@ import React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { CalculationProvider } from './context/CalculationContext';
 import { ToastProvider } from './components/ui/ToastContext';
+import { HelmetProvider } from 'react-helmet-async';
 import { Layout } from './components/layout/Layout';
 import LandingPage from './pages/LandingPage';
 import CalculatorPage from './pages/CalculatorPage';
@@ -17,24 +18,26 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <ToastProvider position="top-end">
-        <CalculationProvider>
-          <div className="min-vh-100 bg-light">
-            <Layout>
-              <Routes>
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/calculator" element={<CalculatorPage />} />
-                <Route path="/results" element={<ResultsPage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/help" element={<HelpPage />} />
-                <Route path="/guide" element={<GuidePage />} />
-                <Route path="/blog/*" element={<BlogPage />} />
-                <Route path="/affiliate-demo" element={<AffiliateDemo />} />
-              </Routes>
-            </Layout>
-          </div>
-        </CalculationProvider>
-      </ToastProvider>
+      <HelmetProvider>
+        <ToastProvider position="top-end">
+          <CalculationProvider>
+            <div className="min-vh-100 bg-light">
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/calculator" element={<CalculatorPage />} />
+                  <Route path="/results" element={<ResultsPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/help" element={<HelpPage />} />
+                  <Route path="/guide" element={<GuidePage />} />
+                  <Route path="/blog/*" element={<BlogPage />} />
+                  <Route path="/affiliate-demo" element={<AffiliateDemo />} />
+                </Routes>
+              </Layout>
+            </div>
+          </CalculationProvider>
+        </ToastProvider>
+      </HelmetProvider>
     </Router>
   );
 }

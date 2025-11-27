@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
   WizardData,
   EmploymentIncomeData,
   RentalIncomeData,
@@ -79,7 +79,7 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
               </p>
             </div>
           </div>
-          
+
           <MultiFileUpload
             files={data.brokerFiles}
             onChange={(files) => onChange({ ...data, brokerFiles: files })}
@@ -156,8 +156,10 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
               <h6 className="text-muted mb-2">File Formats</h6>
               <ul className="small mb-3">
                 <li><strong>Interactive Brokers:</strong> Activity Statement (CSV/XML)</li>
-                <li><strong>Hargreaves Lansdown:</strong> Contract Notes (CSV)</li>
                 <li><strong>Trading 212:</strong> History export (CSV)</li>
+                <li><strong>Hargreaves Lansdown:</strong> Transaction history (CSV)</li>
+                <li><strong>Freetrade:</strong> Activity export (CSV)</li>
+                <li><strong>Fidelity:</strong> Transactions export (CSV)</li>
                 <li><strong>Others:</strong> Transaction history (CSV)</li>
               </ul>
             </div>

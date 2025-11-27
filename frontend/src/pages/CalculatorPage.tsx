@@ -4,6 +4,8 @@ import { submitCalculation, CSVValidationError } from '../services/api';
 import { MultiStepCalculator } from '../components/calculator/MultiStepCalculator';
 import { normalizeCalculationResults } from '../utils/resultsNormalizer';
 
+import SEOHead from '../components/seo/SEOHead';
+
 const CalculatorPage: React.FC = () => {
   console.log('[CalculatorPage] Rendering component');
   const { dispatch } = useCalculation();
@@ -71,6 +73,12 @@ const CalculatorPage: React.FC = () => {
 
   return (
     <div className="calculator-page">
+      <SEOHead
+        title="Calculate UK Capital Gains Tax - Free Online Tool"
+        description="Free online calculator for UK Capital Gains Tax (CGT). Supports Interactive Brokers, Trading 212, and CSV uploads. HMRC compliant rules."
+        keywords={['UK CGT calculator', 'capital gains tax calculator', 'free tax calculator', 'HMRC tax tool']}
+        canonical="https://cgttaxtool.uk/calculator"
+      />
       <div className="calculator-content">
         {/* Modern Hero Section */}
         <section className="calculator-hero">

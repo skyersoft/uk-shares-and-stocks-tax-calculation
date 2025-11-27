@@ -1,18 +1,25 @@
 import React from 'react';
 import { AffiliateGrid } from '../components/affiliate';
 
+import SEOHead from '../components/seo/SEOHead';
+
 const HelpPage: React.FC = () => {
   return (
     <div className="container py-4">
+      <SEOHead
+        title="Help & FAQ - UK Stock Tax Calculator"
+        description="Frequently asked questions about using the UK Stock Tax Calculator. Learn how to upload files, understand calculations, and ensure data privacy."
+        canonical="https://cgttaxtool.uk/help"
+      />
       <div className="row justify-content-center">
         <div className="col-lg-10">
           <div className="card shadow">
             <div className="card-body">
               <h1 className="card-title">Help & FAQ</h1>
               <p className="lead">
-                Get help with using the IBKR Tax Calculator and understanding UK Capital Gains Tax.
+                Get help with using the Tax Calculator and understanding UK Capital Gains Tax.
               </p>
-              
+
               <div className="row">
                 <div className="col-md-6">
                   <h2>Getting Started</h2>
@@ -34,7 +41,7 @@ const HelpPage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="accordion-item">
                       <h2 className="accordion-header">
                         <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#calculations">
@@ -55,7 +62,7 @@ const HelpPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="col-md-6">
                   <h2>Common Questions</h2>
                   <div className="accordion" id="faqAccordion">
@@ -71,7 +78,7 @@ const HelpPage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="accordion-item">
                       <h2 className="accordion-header">
                         <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accuracy">
@@ -87,7 +94,7 @@ const HelpPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-4">
                 <div className="alert alert-primary">
                   <h4 className="alert-heading">Need More Help?</h4>
@@ -97,7 +104,7 @@ const HelpPage: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Additional Resources Section */}
           <div className="mt-4">
             <div className="card shadow">
@@ -108,7 +115,7 @@ const HelpPage: React.FC = () => {
                 <p className="text-muted mb-4">
                   Expand your knowledge with these comprehensive guides to UK taxation and investment strategies
                 </p>
-                
+
                 <AffiliateGrid
                   category="tax"
                   limit={4}

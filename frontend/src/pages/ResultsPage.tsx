@@ -21,6 +21,7 @@ import { CalculationParameters } from '../components/results/CalculationParamete
 import { DetailedTaxBreakdown } from '../components/results/DetailedTaxBreakdown';
 import { ResultsTabs } from '../components/results/ResultsTabs';
 import { calculateComprehensiveTax } from '../utils/comprehensiveTaxCalculation';
+import SEOHead from '../components/seo/SEOHead';
 
 interface AdditionalIncomeData {
   otherIncome: number;
@@ -227,6 +228,11 @@ const ResultsPage: React.FC = () => {
       className="container-fluid py-4"
       style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}
     >
+      <SEOHead
+        title="Calculation Results - UK Stock Tax Calculator"
+        description="View your detailed UK capital gains tax calculation results, including Section 104 pools, dividend tax, and portfolio analysis."
+        robots="noindex, nofollow"
+      />
       <div className="row mb-4">
         <div className="col-12">
           <div className="d-flex justify-content-between align-items-center bg-white rounded shadow-sm p-4 flex-wrap gap-3">

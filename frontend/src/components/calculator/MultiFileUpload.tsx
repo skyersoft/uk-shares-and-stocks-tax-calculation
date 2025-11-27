@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { BrokerFile, BrokerType, BROKER_OPTIONS } from '../../types/calculator';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
+import { Modal } from '../ui/Modal';
+import { FileValidationPreview } from './FileValidationPreview';
+import { BrokerDetectionResult } from '../../services/api';
 
 interface MultiFileUploadProps {
   files: BrokerFile[];
@@ -22,6 +25,8 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detectionResults, setDetectionResults] = useState<Record<string, BrokerDetectionResult>>({});
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
 
   // Keep a ref to the latest files to avoid stale closures in async operations
   const filesRef = useRef<BrokerFile[]>(files);
@@ -112,12 +117,16 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       const result = await detectBroker(file);
 
       if (result.detected) {
+        // Store full result
+        setDetectionResults(prev => ({ ...prev, [fileId]: result }));
+
         // Map broker name to BrokerType
         const brokerTypeMap: Record<string, BrokerType> = {
           'Interactive Brokers': 'interactive-brokers',
           'Trading 212': 'trading212',
           'Hargreaves Lansdown': 'hargreaves-lansdown',
           'Freetrade': 'freetrade',
+          'Fidelity': 'fidelity',
           'eToro': 'etoro',
           'Vanguard': 'vanguard',
           'AJ Bell': 'aj-bell'
@@ -328,6 +337,17 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
 
                   {/* Remove Button */}
                   <div className="col-12 col-md-2 text-end">
+                    {brokerFile.detectionStatus === 'detected' && (
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => setPreviewFileId(brokerFile.id)}
+                        title="Preview file details"
+                      >
+                        <i className="fas fa-eye"></i>
+                      </Button>
+                    )}
                     <Button
                       variant="outline-danger"
                       size="sm"
@@ -359,6 +379,22 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
           <i className="fas fa-info-circle me-2"></i>
           <strong>Tip:</strong> You can upload files from multiple brokers. We'll combine them automatically.
         </div>
+      )}
+
+      {/* Preview Modal */}
+      {previewFileId && detectionResults[previewFileId] && (
+        <Modal
+          isOpen={!!previewFileId}
+          onClose={() => setPreviewFileId(null)}
+          title="File Validation Preview"
+          size="lg"
+        >
+          <FileValidationPreview
+            detection={detectionResults[previewFileId]}
+            onConfirm={() => setPreviewFileId(null)}
+            onCancel={() => setPreviewFileId(null)}
+          />
+        </Modal>
       )}
     </div>
   );

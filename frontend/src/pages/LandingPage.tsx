@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AffiliateGrid from '../components/affiliate/AffiliateGrid';
 import { AffiliateProduct } from '../types/affiliate';
 import affiliateProductsData from '../data/affiliateProducts.json';
+import SEOHead from '../components/seo/SEOHead';
 
 type FeatureCard = {
   icon: string;
@@ -239,20 +240,29 @@ const LandingPage: React.FC = () => {
   const handleViewGuide = () => navigate('/guide');
   const handleViewBlog = () => navigate('/blog');
   const handleViewHelp = () => navigate('/help');
-  const handleViewAbout = () => navigate('/about');
 
   return (
     <div className="landing-page">
+      <SEOHead
+        title="UK Stock Tax Calculator - Capital Gains & Dividend Tax Tool"
+        description="Calculate your UK capital gains tax, dividend income, and portfolio performance for shares and stocks. Support for Interactive Brokers, Trading 212, and CSV imports. HMRC compliant calculations with detailed reporting."
+        keywords={['UK stock tax calculator', 'share tax calculator', 'capital gains tax calculator', 'CGT calculator', 'HMRC reporting', 'Interactive Brokers tax', 'Trading 212 tax']}
+        canonical="https://cgttaxtool.uk/"
+        ogTitle="UK Stock Tax Calculator - Capital Gains & Dividend Tax Tool"
+        ogDescription="Calculate your UK capital gains tax, dividend income, and portfolio performance for shares and stocks. HMRC compliant calculations."
+        ogImage="https://cgttaxtool.uk/images/calculator-preview.png"
+        twitterCard="summary_large_image"
+      />
       <section id="calculator" className="hero-section py-5 mb-5 position-relative overflow-hidden text-white">
         <div className="container">
           <div className="row align-items-center min-vh-75">
             <div className="col-lg-7">
               <h1 className="display-3 fw-bold mb-4">
                 UK Tax Calculator for
-                <span className="d-block text-warning">Interactive Brokers</span>
+                <span className="d-block text-warning">Stocks & Shares</span>
               </h1>
               <p className="lead mb-4 fs-5">
-                Calculate your UK capital gains tax, dividend income, and portfolio performance from IBKR transactions.
+                Calculate your UK capital gains tax, dividend income, and portfolio performance from Interactive Brokers, Trading 212, and other platforms.
                 HMRC compliant calculations with detailed reporting.
               </p>
               <div className="d-flex gap-3 mb-4 flex-wrap">
@@ -308,7 +318,7 @@ const LandingPage: React.FC = () => {
                       Why Choose Our Tax Calculator?
                     </h2>
                     <p className="lead text-muted">
-                      Comprehensive UK tax calculations designed specifically for Interactive Brokers users.
+                      Comprehensive UK tax calculations designed for investors using Interactive Brokers, Trading 212, and other platforms.
                     </p>
                   </div>
                 </div>
@@ -662,9 +672,9 @@ const LandingPage: React.FC = () => {
             </section>
 
             <section className="d-none">
-              <h3>UK Tax Calculator for Interactive Brokers Users</h3>
+              <h3>UK Tax Calculator for Stocks and Shares</h3>
               <p>
-                Calculate capital gains tax, dividend tax, and currency gains for UK investors using Interactive Brokers.
+                Calculate capital gains tax, dividend tax, and currency gains for UK investors using Interactive Brokers, Trading 212, and other platforms via CSV.
                 The SPA replicates the production landing page so HMRC-compliant outputs remain consistent across web experiences.
               </p>
               <ul>
@@ -675,7 +685,7 @@ const LandingPage: React.FC = () => {
                 <li>Support for stocks, ETFs, and other securities</li>
               </ul>
               <p>
-                Keywords: UK tax calculator, Interactive Brokers tax, IBKR CGT, capital gains tax calculator, HMRC compliance,
+                Keywords: UK tax calculator, Interactive Brokers tax, Trading 212 tax, capital gains tax calculator, HMRC compliance,
                 Section 104 pooling, UK investment tax, Self Assessment, portfolio analytics.
               </p>
             </section>
