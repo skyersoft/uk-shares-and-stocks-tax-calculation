@@ -53,10 +53,10 @@ export const Layout: React.FC<LayoutProps> = ({
               <i className="bi bi-calculator-fill me-2 text-primary"></i>
               <span className="fw-bold">UK Tax Calculator</span>
             </a>
-            
-            <button 
-              className="navbar-toggler" 
-              type="button" 
+
+            <button
+              className="navbar-toggler"
+              type="button"
               onClick={toggleNavbar}
               aria-controls="navbarNav"
               aria-expanded={isNavbarExpanded}
@@ -64,7 +64,7 @@ export const Layout: React.FC<LayoutProps> = ({
             >
               <span className="navbar-toggler-icon"></span>
             </button>
-            
+
             <div className={`collapse navbar-collapse ${isNavbarExpanded ? 'show' : ''}`} id="navbarNav">
               <ul className="navbar-nav me-auto">
                 <li className="nav-item">
@@ -89,7 +89,7 @@ export const Layout: React.FC<LayoutProps> = ({
                   </a>
                 </li>
               </ul>
-              
+
               <div className="d-flex">
                 <span className="navbar-text small text-muted">
                   Free UK Tax Calculator
@@ -150,7 +150,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
       {/* Footer */}
       <footer className="footer bg-dark text-light py-4 mt-5">
-        
+
         <div className="container">
           <div className="row">
             <div className="col-md-6">
@@ -163,19 +163,20 @@ export const Layout: React.FC<LayoutProps> = ({
               <div className="footer-links">
                 <a href="/privacy" className="text-light text-decoration-none me-3">Privacy</a>
                 <a href="/terms" className="text-light text-decoration-none me-3">Terms</a>
-                <a href="/about" className="text-light text-decoration-none">About</a>
+                <a href="/about" className="text-light text-decoration-none me-3">About</a>
+                <a href="https://www.reddit.com/user/OpinionActual9772/" target="_blank" rel="noopener noreferrer" className="text-light text-decoration-none">Contact</a>
               </div>
               <p className="small mt-2 mb-0 text-muted">
                 © 2024 UK Tax Calculator. Educational purposes only.
               </p>
             </div>
           </div>
-          
+
           {/* Global Affiliate Disclosure */}
           <div className="row mt-3 pt-3 border-top border-secondary">
             <div className="col-12">
-              <AffiliateDisclosure 
-                style="footer" 
+              <AffiliateDisclosure
+                style="footer"
                 className="text-light"
               />
             </div>

@@ -44,6 +44,57 @@ const HelpPage: React.FC = () => {
 
                     <div className="accordion-item">
                       <h2 className="accordion-header">
+                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#csvFormat">
+                          CSV File Format Guide
+                        </button>
+                      </h2>
+                      <div id="csvFormat" className="accordion-collapse collapse" data-bs-parent="#gettingStartedAccordion">
+                        <div className="accordion-body">
+                          <p>If uploading a CSV file, please ensure it follows this format:</p>
+                          <div className="table-responsive">
+                            <table className="table table-sm table-bordered">
+                              <thead>
+                                <tr>
+                                  <th>Date</th>
+                                  <th>Type</th>
+                                  <th>Symbol</th>
+                                  <th>Quantity</th>
+                                  <th>Price</th>
+                                  <th>Fees</th>
+                                  <th>Currency</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <td>2024-01-15</td>
+                                  <td>BUY</td>
+                                  <td>AAPL</td>
+                                  <td>10</td>
+                                  <td>150.00</td>
+                                  <td>5.00</td>
+                                  <td>USD</td>
+                                </tr>
+                                <tr>
+                                  <td>2024-06-20</td>
+                                  <td>SELL</td>
+                                  <td>AAPL</td>
+                                  <td>5</td>
+                                  <td>180.00</td>
+                                  <td>2.00</td>
+                                  <td>USD</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                          <p className="small text-muted">
+                            Supported types: BUY, SELL, SPLIT, TRANSFER_OUT. Dates should be YYYY-MM-DD or DD/MM/YYYY.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="accordion-item">
+                      <h2 className="accordion-header">
                         <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#calculations">
                           Understanding the calculations
                         </button>
@@ -52,10 +103,12 @@ const HelpPage: React.FC = () => {
                         <div className="accordion-body">
                           <p>The calculator follows HMRC guidelines for Capital Gains Tax:</p>
                           <ul>
-                            <li>Uses Section 104 holding rules for share pooling</li>
-                            <li>Applies 30-day rule for wash sales</li>
-                            <li>Calculates allowable costs including broker fees</li>
-                            <li>Accounts for currency conversions at HMRC rates</li>
+                            <li><strong>Section 104 Pooling:</strong> Shares of the same class are pooled together. The cost basis is the weighted average cost of all shares in the pool.</li>
+                            <li><strong>Same Day & 30-Day Rules:</strong> "Bed & Breakfast" rules are applied to prevent tax avoidance by selling and repurchasing shortly after.</li>
+                            <li><strong>Spouse Transfers:</strong> Transfers to a spouse (TRANSFER_OUT) are handled as "no gain/no loss" disposals.</li>
+                            <li><strong>Share Restructuring:</strong> Stock splits and consolidations (SPLIT) automatically adjust the share pool quantity while preserving the total cost basis.</li>
+                            <li><strong>Allowable Costs:</strong> Broker fees and stamp duty are deducted from proceeds or added to cost basis.</li>
+                            <li><strong>Currency:</strong> Foreign currency transactions are converted to GBP using HMRC-approved exchange rates.</li>
                           </ul>
                         </div>
                       </div>
@@ -98,8 +151,11 @@ const HelpPage: React.FC = () => {
               <div className="mt-4">
                 <div className="alert alert-primary">
                   <h4 className="alert-heading">Need More Help?</h4>
-                  <p>If you can't find the answer you're looking for, try our CGT Guide for detailed explanations of UK Capital Gains Tax rules.</p>
-                  <a href="#guide" className="btn btn-primary">View CGT Guide</a>
+                  <p>If you can't find the answer you're looking for, or if you want to report an error or request a feature, please reach out on Reddit.</p>
+                  <div className="d-flex gap-2">
+                    <a href="#guide" className="btn btn-primary">View CGT Guide</a>
+                    <a href="https://www.reddit.com/user/OpinionActual9772/" target="_blank" rel="noopener noreferrer" className="btn btn-outline-primary">Contact on Reddit</a>
+                  </div>
                 </div>
               </div>
             </div>

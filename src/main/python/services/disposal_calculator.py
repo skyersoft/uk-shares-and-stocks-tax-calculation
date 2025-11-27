@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Dict, Optional
 
 from ..interfaces.calculator_interfaces import DisposalCalculatorInterface
-from ..models.domain_models import Transaction, Disposal
+from ..models.domain_models import Transaction, Disposal, TransactionType
 from .fx_calculator import FXCalculator
 
 
@@ -76,14 +76,31 @@ class UKDisposalCalculator(DisposalCalculatorInterface):
             
             # Determine the matching rule (use the first match's rule)
             if not matching_rule:
-                days_diff = (sell_transaction.date.date() - buy_tx.date.date()).days
-                if days_diff == 0:
-                    matching_rule = "same-day"
-                elif days_diff < 0 and abs(days_diff) <= 30:
-                    matching_rule = "bed-breakfast"
-                else:
+                if buy_tx.transaction_id.startswith("POOL_MATCH_"):
                     matching_rule = "section104"
+                else:
+                    days_diff = (sell_transaction.date.date() - buy_tx.date.date()).days
+                    if days_diff == 0:
+                        matching_rule = "same-day"
+                    elif days_diff < 0 and abs(days_diff) <= 30:
+                        matching_rule = "bed-breakfast"
+                    else:
+                        matching_rule = "section104"
         
+        # Handle Transfer to Spouse (No Gain/No Loss)
+        if sell_transaction.transaction_type == TransactionType.TRANSFER_OUT:
+            # For spouse transfers, the disposal proceeds are deemed to be such that
+            # they produce neither a gain nor a loss.
+            # Gain = Proceeds - Cost - Expenses
+            # 0 = Proceeds - Cost - Expenses
+            # Proceeds = Cost + Expenses
+            net_proceeds = total_cost + total_expenses
+            
+            # Adjust original proceeds for consistency (though less critical for tax)
+            proceeds_original_amount = net_proceeds / proceeds_fx_rate if proceeds_fx_rate else net_proceeds
+            
+            self.logger.info(f"Transfer to spouse detected for {sell_transaction.transaction_id}. Setting proceeds to {net_proceeds} (Cost {total_cost} + Expenses {total_expenses}) to ensure zero gain.")
+
         # Get cost currency and weighted average FX rate
         cost_original_currency = matched_buys[0].currency.code if matched_buys else 'GBP'
         cost_fx_rate = self.fx_calculator.calculate_weighted_average_fx_rate(matched_buys)
