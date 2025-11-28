@@ -104,7 +104,7 @@ const CalculatorPage: React.FC = () => {
     <div className="calculator-page">
       <SEOHead
         title="Calculate UK Capital Gains Tax - Free Online Tool"
-        description="Free online calculator for UK Capital Gains Tax (CGT). Supports Interactive Brokers, Trading 212, and CSV uploads. HMRC compliant rules."
+        description="Free online calculator for UK Capital Gains Tax (CGT). Supports Interactive Brokers, Trading 212, and CSV uploads. Follows HMRC rules."
         keywords={['UK CGT calculator', 'capital gains tax calculator', 'free tax calculator', 'HMRC tax tool']}
         canonical="https://cgttaxtool.uk/calculator"
       />

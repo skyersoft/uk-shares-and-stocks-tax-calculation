@@ -8,7 +8,7 @@ const AboutPage: React.FC = () => {
     <div className="container py-4">
       <SEOHead
         title="About Us - UK Stock Tax Calculator"
-        description="Learn about our mission to simplify UK Capital Gains Tax calculations for investors. Secure, private, and HMRC compliant."
+        description="Learn about our mission to simplify UK Capital Gains Tax calculations for investors. Secure, private, and follows HMRC rules."
         canonical="https://cgttaxtool.uk/about"
       />
       <div className="row justify-content-center">

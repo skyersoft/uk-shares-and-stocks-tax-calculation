@@ -31,12 +31,16 @@ const GuidePage: React.FC = () => {
                   </p>
 
                   <h3>CGT Rates for 2024/25</h3>
+                  <div className="alert alert-warning mb-3">
+                    <strong>Important:</strong> Tax rates for shares increased on 30 October 2024
+                  </div>
                   <div className="table-responsive">
                     <table className="table table-striped">
                       <thead>
                         <tr>
                           <th>Tax Band</th>
-                          <th>Rate (Shares)</th>
+                          <th>Rate (Shares) - Before 30 Oct</th>
+                          <th>Rate (Shares) - From 30 Oct</th>
                           <th>Rate (Residential Property)</th>
                         </tr>
                       </thead>
@@ -44,11 +48,13 @@ const GuidePage: React.FC = () => {
                         <tr>
                           <td>Basic Rate</td>
                           <td>10%</td>
+                          <td><strong>18%</strong></td>
                           <td>18%</td>
                         </tr>
                         <tr>
                           <td>Higher Rate</td>
                           <td>20%</td>
+                          <td><strong>24%</strong></td>
                           <td>28%</td>
                         </tr>
                       </tbody>
@@ -57,8 +63,11 @@ const GuidePage: React.FC = () => {
 
                   <h3>Annual Exempt Amount</h3>
                   <p>
-                    You can make gains of up to £6,000 (2024/25) before you need to pay Capital Gains Tax.
+                    You can make gains of up to <strong>£3,000</strong> (2024/25) before you need to pay Capital Gains Tax.
                     This is known as your annual exempt amount or 'allowance'.
+                  </p>
+                  <p className="text-muted small">
+                    Note: The AEA was £6,000 in 2023/24 and £12,300 in 2022/23.
                   </p>
 
                   <h3>Section 104 Holdings</h3>
@@ -77,7 +86,21 @@ const GuidePage: React.FC = () => {
                     </ul>
                   </div>
 
-                  <h3>The 30-Day Rule</h3>
+                  <h3>The Same-Day Rule (1-Day Rule)</h3>
+                  <p>
+                    If you buy and sell shares of the same company on the same day, these transactions are matched together first.
+                    This is known as the same-day rule or 1-day rule.
+                  </p>
+                  <div className="alert alert-warning">
+                    <strong>Important:</strong> Same-day matching takes priority over all other matching rules, including the 30-day rule and Section 104 pooling.
+                  </div>
+                  <p>
+                    <strong>Example:</strong> If you sell 50 shares of Company X on 15 March and buy 30 shares of Company X on the same day,
+                    those 30 shares are matched with 30 of the shares you sold. The remaining 20 shares sold are then matched using the 30-day rule
+                    or Section 104 pool.
+                  </p>
+
+                  <h3>The 30-Day Rule (Bed and Breakfasting)</h3>
                   <p>
                     If you sell shares and buy the same shares within 30 days, special rules apply to prevent 'bed and breakfasting'
                     (selling and immediately rebuying to crystallize losses).

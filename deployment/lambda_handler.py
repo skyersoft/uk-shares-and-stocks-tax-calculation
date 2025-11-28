@@ -256,7 +256,21 @@ def handle_broker_detection_request(event: Dict[str, Any]) -> Dict[str, Any]:
         content_type = event.get('headers', {}).get('content-type', '') or event.get('headers', {}).get('Content-Type', '')
 
         if 'multipart/form-data' in content_type:
-            file_content, _, _, filename = parse_multipart_data_proper(body, content_type)
+            files, _, _ = parse_multipart_data_proper(body, content_type)
+            if not files:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({
+                        'error': 'No file content received'
+                    })
+                }
+            # Use the first file for detection
+            file_content = files[0]['content']
+            filename = files[0]['filename']
         else:
             return {
                 'statusCode': 400,
@@ -359,10 +373,10 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
 
         if 'multipart/form-data' in content_type:
             # Extract file content and parameters from multipart data
-            file_content, tax_year, analysis_type, filename = parse_multipart_data_proper(body, content_type)
-            print(f"Parsed multipart data: file_content length={len(file_content)}, tax_year={tax_year}, analysis_type={analysis_type}, filename={filename}")
-            if file_content:
-                print(f"File content preview: {file_content[:200]}...")
+            files, tax_year, analysis_type = parse_multipart_data_proper(body, content_type)
+            print(f"Parsed multipart data: {len(files)} files, tax_year={tax_year}, analysis_type={analysis_type}")
+            if files:
+                print(f"First file: {files[0]['filename']}")
             else:
                 print("WARNING: No file content received!")
         else:
@@ -370,9 +384,10 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             try:
                 data = json.loads(body.decode('utf-8') if isinstance(body, bytes) else body)
                 file_content = data.get('file_content', '')
+                filename = data.get('filename', '')
+                files = [{'content': file_content, 'filename': filename}]
                 tax_year = data.get('tax_year', '2024-2025')
                 analysis_type = data.get('analysis_type', 'both')
-                filename = data.get('filename', '')
             except:
                 return {
                     'statusCode': 400,
@@ -383,26 +398,33 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                     'body': '<h1>Error</h1><p>Invalid request format. Please use the web form to upload files.</p>'
                 }
 
-        # Determine file type from filename
-        file_type = "csv"  # default
-        if filename:
-            if filename.lower().endswith(('.qfx', '.ofx')):
-                file_type = "qfx"
-            elif filename.lower().endswith('.csv'):
-                file_type = "csv"
-
-        # Create temporary file with correct extension
-        file_suffix = f'.{file_type}'
-        with tempfile.NamedTemporaryFile(mode='w', suffix=file_suffix, delete=False) as temp_file:
-            temp_file.write(file_content)
-            temp_file_path = temp_file.name
-
+        # Process files
+        temp_file_paths = []
+        file_type = "csv" # Default
+        
         try:
-            # Detect broker and get metadata (for CSV files)
+            for file_data in files:
+                file_content = file_data['content']
+                filename = file_data['filename']
+                
+                # Determine file type from filename (use the first file's type if multiple)
+                if filename:
+                    if filename.lower().endswith(('.qfx', '.ofx')):
+                        file_type = "qfx"
+                    elif filename.lower().endswith('.csv'):
+                        file_type = "csv"
+
+                # Create temporary file with correct extension
+                file_suffix = f'.{file_type}'
+                with tempfile.NamedTemporaryFile(mode='w', suffix=file_suffix, delete=False) as temp_file:
+                    temp_file.write(file_content)
+                    temp_file_paths.append(temp_file.name)
+
+            # Detect broker and get metadata (for CSV files) - only for the first file for now
             broker_metadata = None
-            if file_type == 'csv':
-                print(f"Detecting broker for CSV file: {filename}")
-                detection_result = detect_broker_from_file(temp_file_path)
+            if file_type == 'csv' and temp_file_paths:
+                print(f"Detecting broker for CSV file: {files[0]['filename']}")
+                detection_result = detect_broker_from_file(temp_file_paths[0])
                 
                 if not detection_result.get('detected'):
                     # Broker detection failed
@@ -431,11 +453,15 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 
                 print(f"Detected broker: {broker_metadata['broker']} (confidence: {broker_metadata['confidence']})")
             
-            # Process the file with correct parser
+            # Process the files with correct parser
             calculator = create_enhanced_calculator(file_type)
-            print(f"Using {file_type} parser for file: {filename}")
+            print(f"Using {file_type} parser for {len(temp_file_paths)} files")
+            
+            # Pass list of files if multiple, or single file if just one
+            files_to_process = temp_file_paths if len(temp_file_paths) > 1 else temp_file_paths[0]
+            
             results = calculator.calculate_comprehensive_analysis(
-                temp_file_path, tax_year, analysis_type
+                files_to_process, tax_year, analysis_type
             )
             
             # Serialize results to JSON
@@ -486,9 +512,13 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             }
             
         finally:
-            # Clean up temporary file
-            if os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
+            # Clean up temporary files
+            for path in temp_file_paths:
+                if os.path.exists(path):
+                    try:
+                        os.unlink(path)
+                    except Exception as e:
+                        print(f"Error deleting temp file {path}: {e}")
     
     except Exception as e:
         return {
@@ -554,15 +584,15 @@ def parse_multipart_data_proper(body: bytes, content_type: str) -> tuple:
         parser = MultipartParser(boundary.encode())
         parts = parser.parse(body)
 
-        file_content = ""
-        filename = ""
+        files = []
         tax_year = "2024-2025"
         analysis_type = "both"
 
         for part in parts:
             name = part.name
-            if name == 'file':
+            if name and name.startswith('file'):  # Match file, file0, file1, etc.
                 file_content = part.raw.decode('utf-8')
+                filename = ""
                 # Extract filename from Content-Disposition header
                 # Try different ways to get the filename
                 if hasattr(part, 'filename') and part.filename:
@@ -577,13 +607,18 @@ def parse_multipart_data_proper(body: bytes, content_type: str) -> tuple:
                         match = re.search(pattern, content_disp)
                         if match:
                             filename = match.group(1)
+                
                 print(f"Extracted filename: '{filename}' from file part")
+                files.append({
+                    'content': file_content,
+                    'filename': filename
+                })
             elif name == 'tax_year':
                 tax_year = part.value
             elif name == 'analysis_type':
                 analysis_type = part.value
 
-        return file_content, tax_year, analysis_type, filename
+        return files, tax_year, analysis_type
 
     except Exception:
         # Fallback to simple parsing if multipart library fails
@@ -595,8 +630,9 @@ def parse_multipart_data_simple(body: str) -> tuple:
     """Parse multipart form data (simplified implementation)."""
     # This is a basic implementation - fallback method
     lines = body.split('\n')
-    file_content = ""
-    filename = ""
+    files = []
+    current_file_content = ""
+    current_filename = ""
     tax_year = "2024-2025"
     analysis_type = "both"
 
@@ -605,7 +641,16 @@ def parse_multipart_data_simple(body: str) -> tuple:
     current_field = None
 
     for i, line in enumerate(lines):
-        if 'name="file"' in line:
+        if 'name="file' in line:  # Match name="file", name="file0", name="file1", etc.
+            # If we were processing a file, save it
+            if current_filename or current_file_content:
+                files.append({
+                    'content': current_file_content.strip(),
+                    'filename': current_filename
+                })
+                current_file_content = ""
+                current_filename = ""
+            
             in_file = True
             current_field = 'file'
             # Extract filename from Content-Disposition
@@ -614,7 +659,7 @@ def parse_multipart_data_simple(body: str) -> tuple:
                 pattern = r'filename="?([^"]+)"?'
                 match = re.search(pattern, line)
                 if match:
-                    filename = match.group(1)
+                    current_filename = match.group(1)
             continue
         elif 'name="tax_year"' in line:
             current_field = 'tax_year'
@@ -625,19 +670,33 @@ def parse_multipart_data_simple(body: str) -> tuple:
             in_file = False
             continue
         elif line.startswith('--') and current_field:
+            if current_field == 'file':
+                files.append({
+                    'content': current_file_content.strip(),
+                    'filename': current_filename
+                })
+                current_file_content = ""
+                current_filename = ""
             current_field = None
             in_file = False
             continue
         elif current_field == 'file' and in_file and line.strip() and not line.startswith('Content-'):
-            file_content += line + '\n'
+            current_file_content += line + '\n'
         elif current_field == 'tax_year' and line.strip() and not line.startswith('Content-'):
             tax_year = line.strip()
             current_field = None
         elif current_field == 'analysis_type' and line.strip() and not line.startswith('Content-'):
             analysis_type = line.strip()
             current_field = None
+            
+    # Add the last file if exists
+    if current_filename or current_file_content:
+        files.append({
+            'content': current_file_content.strip(),
+            'filename': current_filename
+        })
 
-    return file_content.strip(), tax_year, analysis_type, filename
+    return files, tax_year, analysis_type
 
 
 def serialize_results(results: Dict[str, Any], calculator=None) -> Dict[str, Any]:

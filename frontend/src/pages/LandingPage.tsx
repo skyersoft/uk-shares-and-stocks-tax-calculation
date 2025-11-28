@@ -51,7 +51,7 @@ const LandingPage: React.FC = () => {
       {
         icon: 'fas fa-calculator fa-xl',
         iconVariant: 'bg-primary',
-        title: 'HMRC Compliant',
+        title: 'Follows HMRC Rules',
         description: 'Accurate UK tax calculations following HMRC guidelines for capital gains, dividends, and currency gains.'
       },
       {
@@ -258,11 +258,11 @@ const LandingPage: React.FC = () => {
     <div className="landing-page">
       <SEOHead
         title="UK Stock Tax Calculator - Capital Gains & Dividend Tax Tool"
-        description="Calculate your UK capital gains tax, dividend income, and portfolio performance for shares and stocks. Support for Interactive Brokers, Trading 212, and CSV imports. HMRC compliant calculations with detailed reporting."
+        description="Calculate your UK capital gains tax, dividend income, and portfolio performance for shares and stocks. Support for Interactive Brokers, Trading 212, and CSV imports. Calculations following HMRC rules with detailed reporting."
         keywords={['UK stock tax calculator', 'share tax calculator', 'capital gains tax calculator', 'CGT calculator', 'HMRC reporting', 'Interactive Brokers tax', 'Trading 212 tax']}
         canonical="https://cgttaxtool.uk/"
         ogTitle="UK Stock Tax Calculator - Capital Gains & Dividend Tax Tool"
-        ogDescription="Calculate your UK capital gains tax, dividend income, and portfolio performance for shares and stocks. HMRC compliant calculations."
+        ogDescription="Calculate your UK capital gains tax, dividend income, and portfolio performance for shares and stocks. Calculations following HMRC rules."
         ogImage="https://cgttaxtool.uk/images/calculator-preview.png"
         twitterCard="summary_large_image"
       />
@@ -276,7 +276,7 @@ const LandingPage: React.FC = () => {
               </h1>
               <p className="lead mb-4 fs-5">
                 Calculate your UK capital gains tax, dividend income, and portfolio performance from Interactive Brokers, Trading 212, and other platforms.
-                HMRC compliant calculations with detailed reporting.
+                Calculations following HMRC rules with detailed reporting.
               </p>
               <div className="d-flex gap-3 mb-4 flex-wrap">
                 <button onClick={handleGetStarted} className="btn btn-light btn-lg px-4 py-3 fw-semibold">
@@ -291,7 +291,7 @@ const LandingPage: React.FC = () => {
               <div className="d-flex gap-4 text-light small opacity-90 flex-wrap">
                 <div className="d-flex align-items-center">
                   <i className="fas fa-shield-alt me-2" />
-                  HMRC Compliant
+                  Follows HMRC Rules
                 </div>
                 <div className="d-flex align-items-center">
                   <i className="fas fa-users me-2" />
