@@ -13,7 +13,12 @@ from ..models.domain_models import (
     CurrencyGainLossSummary,
     TransactionType
 )
-from ..config.tax_config import TAX_YEARS # Re-adding this as it was used in the original is_in_tax_year, which I removed. I need to check if it's actually used in the new _is_in_tax_year.
+from ..config.tax_config import (
+    TAX_YEARS,
+    CGT_RATE_CHANGE_DATE,
+    BASIC_RATE_PRE_OCT_2024,
+    BASIC_RATE_POST_OCT_2024
+)
 from .disposal_calculator import UKDisposalCalculator as DisposalCalculator
 from .dividend_processor import DividendProcessor
 from .currency_processor import CurrencyExchangeProcessor
@@ -301,24 +306,65 @@ class EnhancedTaxYearCalculator:
         # This is a simplified calculation - real implementation would need
         # to consider individual tax bands, rates, and circumstances
         
-        # Basic rate CGT: 10% (18% for residential property)
-        # Higher rate CGT: 20% (28% for residential property)
-        # Dividend tax rates: 8.75% basic, 33.75% higher, 39.35% additional
+        # Split gains into pre and post October 30, 2024
+        pre_oct_gains = 0.0
+        post_oct_gains = 0.0
         
-        cgt_taxable = comprehensive_summary.capital_gains.taxable_gain if comprehensive_summary.capital_gains else 0.0
+        if comprehensive_summary.capital_gains and comprehensive_summary.capital_gains.disposals:
+            for disposal in comprehensive_summary.capital_gains.disposals:
+                # Only count positive gains towards the split (losses offset generally)
+                # Simplified: assuming losses are already netted off in a way that preserves this ratio
+                # In reality, losses should be applied to minimize tax, usually against highest rate
+                # For this estimation, we'll just split the *taxable gain* based on the ratio of gross gains
+                
+                # Better approach for estimation:
+                # 1. Sum net gains (gain - loss) for each period
+                pass
+            
+            # Re-iterate to calculate properly
+            for disposal in comprehensive_summary.capital_gains.disposals:
+                gain = disposal.gain_or_loss
+                if disposal.sell_date < CGT_RATE_CHANGE_DATE:
+                    pre_oct_gains += gain
+                else:
+                    post_oct_gains += gain
+                    
+        # If we have a net loss overall, tax is 0
+        total_gain = pre_oct_gains + post_oct_gains
+        if total_gain <= 0:
+            return {
+                'capital_gains_tax': 0.0,
+                'dividend_tax': 0.0,
+                'currency_gains_tax': 0.0,
+                'total_estimated_tax': 0.0
+            }
+
+        # Apply Annual Exemption (AEA)
+        # Beneficial ordering: use AEA against highest rate (Post-Oct) first
+        aea_remaining = 3000.0 # 2024-25 allowance
+        
+        # 1. Offset Post-Oct gains (18%)
+        post_oct_taxable = max(0, post_oct_gains - aea_remaining)
+        aea_used_post = post_oct_gains - post_oct_taxable
+        aea_remaining -= aea_used_post
+        
+        # 2. Offset Pre-Oct gains (10%)
+        pre_oct_taxable = max(0, pre_oct_gains - aea_remaining)
+        
+        # Calculate Tax
+        cgt_tax = (pre_oct_taxable * BASIC_RATE_PRE_OCT_2024) + (post_oct_taxable * BASIC_RATE_POST_OCT_2024)
+        
         dividend_taxable = comprehensive_summary.dividend_income.taxable_dividend_income if comprehensive_summary.dividend_income else 0.0
         currency_taxable = max(0, comprehensive_summary.currency_gains.net_gain_loss) if comprehensive_summary.currency_gains else 0.0
         
-        # Assume basic rate for simplicity
-        estimated_cgt_tax = cgt_taxable * 0.10  # 10% basic rate
         estimated_dividend_tax = dividend_taxable * 0.0875  # 8.75% basic rate
-        estimated_currency_tax = currency_taxable * 0.10  # Treated as capital gains
+        estimated_currency_tax = currency_taxable * 0.10  # Treated as capital gains (simplified)
         
         return {
-            'capital_gains_tax': estimated_cgt_tax,
+            'capital_gains_tax': cgt_tax,
             'dividend_tax': estimated_dividend_tax,
             'currency_gains_tax': estimated_currency_tax,
-            'total_estimated_tax': estimated_cgt_tax + estimated_dividend_tax + estimated_currency_tax
+            'total_estimated_tax': cgt_tax + estimated_dividend_tax + estimated_currency_tax
         }
     
     def calculate_tax_year_summary(self, transactions_or_disposals, tax_year: str) -> TaxYearSummary:

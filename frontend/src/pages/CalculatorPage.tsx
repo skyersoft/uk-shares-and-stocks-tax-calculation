@@ -3,6 +3,12 @@ import { useCalculation } from '../context/CalculationContext';
 import { submitCalculation, CSVValidationError } from '../services/api';
 import { MultiStepCalculator } from '../components/calculator/MultiStepCalculator';
 import { normalizeCalculationResults } from '../utils/resultsNormalizer';
+import {
+  trackCalculationStart,
+  trackCalculationSuccess,
+  trackCalculationError,
+  trackFileUpload,
+} from '../utils/analytics';
 
 import SEOHead from '../components/seo/SEOHead';
 
@@ -20,21 +26,29 @@ const CalculatorPage: React.FC = () => {
     dispatch({ type: 'SUBMIT_START' });
 
     try {
-      // Extract the first broker file if available
-      const primaryFile = data.brokerFiles && data.brokerFiles.length > 0
-        ? data.brokerFiles[0].file
-        : null;
+      // Extract all broker files
+      const files = data.brokerFiles && data.brokerFiles.length > 0
+        ? data.brokerFiles.map((bf: any) => bf.file)
+        : [];
 
-      console.log('[CalculatorPage] Primary file:', primaryFile);
+      console.log('[CalculatorPage] Files to submit:', files.length);
 
-      if (!primaryFile) {
-        console.error('[CalculatorPage] No file uploaded');
-        throw new Error('No file uploaded for calculation');
+      if (files.length === 0) {
+        console.error('[CalculatorPage] No files uploaded');
+        throw new Error('No files uploaded for calculation');
       }
 
+      // Track file upload
+      const fileType = files[0].name.toLowerCase().endsWith('.qfx') ? 'qfx' : 'csv';
+      trackFileUpload(files.length, fileType);
+
+      // Track calculation start
+      trackCalculationStart(data.taxYear, data.analysisType || 'both', files.length);
+
       console.log('[CalculatorPage] Submitting calculation...');
+      const startTime = Date.now();
       const results = await submitCalculation({
-        file: primaryFile,
+        files,
         taxYear: data.taxYear,
         analysisType: data.analysisType || 'both'
       });
@@ -42,6 +56,15 @@ const CalculatorPage: React.FC = () => {
       console.log('[CalculatorPage] Calculation results received:', results);
       const normalized = normalizeCalculationResults(results.raw);
       console.log('[CalculatorPage] Results normalized:', normalized);
+
+      // Track calculation success
+      const processingTime = Date.now() - startTime;
+      trackCalculationSuccess(
+        data.taxYear,
+        results.raw.transaction_count || 0,
+        processingTime,
+        results.raw.disposal_events?.length || 0
+      );
 
       dispatch({
         type: 'SUBMIT_SUCCESS',
@@ -58,6 +81,12 @@ const CalculatorPage: React.FC = () => {
       console.log('[CalculatorPage] Navigation complete, hash:', window.location.hash);
     } catch (error: any) {
       console.error('[CalculatorPage] Submission error:', error);
+
+      // Track calculation error
+      const errorType = error instanceof CSVValidationError
+        ? 'csv_validation_error'
+        : 'calculation_error';
+      trackCalculationError(errorType, error.message || 'Unknown error');
 
       // Handle CSV validation errors with detailed information
       if (error instanceof CSVValidationError) {

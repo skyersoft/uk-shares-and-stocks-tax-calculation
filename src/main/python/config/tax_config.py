@@ -27,8 +27,19 @@ TAX_YEARS = {
 }
 
 # Tax rates for different bands (for reference)
+# Tax rates for different bands (for reference)
 BASIC_RATE_PERCENTAGE = 10.0  # 10% for basic rate taxpayers
 HIGHER_RATE_PERCENTAGE = 20.0  # 20% for higher/additional rate taxpayers
+
+# CGT Rate Changes (Autumn Budget 2024)
+from datetime import datetime
+CGT_RATE_CHANGE_DATE = datetime(2024, 10, 30)
+
+# Rates for shares/other assets (excluding residential property)
+BASIC_RATE_PRE_OCT_2024 = 0.10
+BASIC_RATE_POST_OCT_2024 = 0.18
+HIGHER_RATE_PRE_OCT_2024 = 0.20
+HIGHER_RATE_POST_OCT_2024 = 0.24
 
 # Number of days to consider for same-day and bed & breakfast rules
 SAME_DAY_RULE = 0  # Same day transactions

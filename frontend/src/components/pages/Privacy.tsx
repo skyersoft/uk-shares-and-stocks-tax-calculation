@@ -27,11 +27,11 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
       <div className="container py-5">
         <div className="row">
           <div className="col-lg-8 mx-auto">
-            
+
             {/* Introduction */}
             <section className="mb-5">
               <p className="lead">
-                The IBKR Tax Calculator is designed with privacy as a fundamental principle. 
+                The IBKR Tax Calculator is designed with privacy as a fundamental principle.
                 This policy explains our commitment to protecting your personal and financial information.
               </p>
             </section>
@@ -46,7 +46,7 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
                     <div>
                       <h5 className="text-success">No Data Collection</h5>
                       <p className="mb-0">
-                        We do not collect, store, or transmit any of your personal or financial data. 
+                        We do not collect, store, or transmit any of your personal or financial data.
                         Your transaction files, calculations, and results remain entirely on your device.
                       </p>
                     </div>
@@ -59,7 +59,7 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
             <section className="mb-5">
               <h2 className="mb-4">Local Processing</h2>
               <p>
-                All calculations are performed locally in your web browser. When you upload your 
+                All calculations are performed locally in your web browser. When you upload your
                 transaction files or enter data manually:
               </p>
               <ul className="list-group list-group-flush">
@@ -90,7 +90,7 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
                         Client-Side Encryption
                       </h5>
                       <p className="card-text">
-                        All data processing uses modern browser security features and remains encrypted 
+                        All data processing uses modern browser security features and remains encrypted
                         within your device's memory.
                       </p>
                     </div>
@@ -104,7 +104,7 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
                         HTTPS Security
                       </h5>
                       <p className="card-text">
-                        Our website uses HTTPS encryption to ensure secure communication between 
+                        Our website uses HTTPS encryption to ensure secure communication between
                         your browser and our servers.
                       </p>
                     </div>
@@ -116,28 +116,78 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
             {/* Cookies and Tracking */}
             <section className="mb-5">
               <h2 className="mb-4">Cookies and Tracking</h2>
-              <div className="alert alert-info">
+              <div className="alert alert-warning">
                 <div className="d-flex align-items-center">
                   <i className="bi bi-info-circle-fill me-3" style={{ fontSize: '1.5rem' }}></i>
                   <div>
-                    <h6 className="alert-heading mb-2">No Tracking</h6>
+                    <h6 className="alert-heading mb-2">Google Analytics</h6>
                     <p className="mb-0">
-                      We do not use tracking cookies, analytics, or any form of user monitoring. 
-                      Essential cookies may be used only for basic website functionality.
+                      We use Google Analytics to understand how visitors use our website and improve the user experience.
+                      This service uses cookies to collect anonymous usage data.
                     </p>
                   </div>
                 </div>
               </div>
+              <h5 className="mt-4 mb-3">What Data is Collected?</h5>
+              <ul>
+                <li><strong>Usage Metrics:</strong> Page views, button clicks, time spent on pages</li>
+                <li><strong>Technical Information:</strong> Browser type, device type, screen resolution</li>
+                <li><strong>Anonymous Analytics:</strong> Number of files uploaded, calculation success/error rates</li>
+                <li><strong>NOT Collected:</strong> Your transaction data, file contents, or any personally identifiable information</li>
+              </ul>
+              <h5 className="mt-4 mb-3">Your Choices</h5>
+              <p>
+                You can opt out of Google Analytics by:
+              </p>
+              <ul>
+                <li>Using browser privacy settings to block analytics cookies</li>
+                <li>Installing the <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">Google Analytics Opt-out Browser Add-on</a></li>
+                <li>Using private/incognito browsing mode</li>
+              </ul>
             </section>
 
             {/* Third-Party Services */}
             <section className="mb-5">
               <h2 className="mb-4">Third-Party Services</h2>
               <p>
-                We do not integrate with third-party analytics, advertising, or data collection services. 
-                The calculator operates as a standalone application without external dependencies that could 
-                compromise your privacy.
+                We use the following third-party services to improve our website:
               </p>
+              <div className="card mb-3">
+                <div className="card-body">
+                  <h5 className="card-title">
+                    <i className="bi bi-bar-chart text-primary me-2"></i>
+                    Google Analytics
+                  </h5>
+                  <p className="card-text">
+                    We use Google Analytics to collect anonymous usage statistics. This helps us understand
+                    how visitors use the calculator and identify areas for improvement.
+                  </p>
+                  <p className="card-text mb-0">
+                    <strong>Data Shared:</strong> Anonymous usage metrics only (page views, clicks, timing)
+                    <br />
+                    <strong>NOT Shared:</strong> Your transaction files, calculation results, or any personal data
+                    <br />
+                    <strong>Privacy Policy:</strong> <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google Privacy Policy</a>
+                  </p>
+                </div>
+              </div>
+              <div className="card mb-3">
+                <div className="card-body">
+                  <h5 className="card-title">
+                    <i className="bi bi-badge-ad text-success me-2"></i>
+                    Google AdSense
+                  </h5>
+                  <p className="card-text mb-0">
+                    We display ads through Google AdSense to support this free service. AdSense may use cookies
+                    for ad personalization. You can manage ad preferences in your Google account settings.
+                  </p>
+                </div>
+              </div>
+              <div className="alert alert-success mt-3">
+                <strong>Important:</strong> While we use these services for analytics and advertising,
+                your financial data and transaction files are NEVER shared with any third party.
+                All calculations remain local to your browser.
+              </div>
             </section>
 
             {/* Data Retention */}
@@ -147,7 +197,7 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
                 <div className="card-body">
                   <h5 className="card-title">Zero Data Retention</h5>
                   <p className="card-text">
-                    No data is retained on our servers because no data is sent to our servers. 
+                    No data is retained on our servers because no data is sent to our servers.
                     Your information exists only temporarily in your browser's memory during use.
                   </p>
                   <ul className="mb-0">
@@ -196,7 +246,7 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
               <div className="card">
                 <div className="card-body">
                   <p>
-                    If you have questions about this privacy policy or our data practices, 
+                    If you have questions about this privacy policy or our data practices,
                     please contact us:
                   </p>
                   <div className="row">
@@ -225,13 +275,13 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
             <section className="mb-5">
               <h2 className="mb-4">Policy Updates</h2>
               <p>
-                We may update this privacy policy from time to time to reflect changes in our practices 
-                or for other operational, legal, or regulatory reasons. Any changes will be posted on this page 
+                We may update this privacy policy from time to time to reflect changes in our practices
+                or for other operational, legal, or regulatory reasons. Any changes will be posted on this page
                 with an updated effective date.
               </p>
               <div className="alert alert-secondary">
                 <small>
-                  Since we don't collect contact information, we cannot notify users directly of policy changes. 
+                  Since we don't collect contact information, we cannot notify users directly of policy changes.
                   Please review this policy periodically for updates.
                 </small>
               </div>
@@ -242,12 +292,12 @@ export const Privacy: React.FC<PrivacyProps> = ({ className = '' }) => {
               <div className="row">
                 <div className="col-md-6">
                   <small className="text-muted">
-                    <strong>Effective Date:</strong> September 2024
+                    <strong>Effective Date:</strong> November 2024
                   </small>
                 </div>
                 <div className="col-md-6">
                   <small className="text-muted">
-                    <strong>Version:</strong> 1.0
+                    <strong>Version:</strong> 1.1
                   </small>
                 </div>
               </div>

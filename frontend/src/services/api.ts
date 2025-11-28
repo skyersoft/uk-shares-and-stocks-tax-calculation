@@ -99,17 +99,22 @@ export async function detectBroker(file: File): Promise<BrokerDetectionResult> {
 }
 
 export async function submitCalculation({
-  file,
+  files,
   taxYear,
   analysisType
 }: {
-  file: File;
+  files: File[];
   taxYear: string;
   analysisType: string;
 }) {
   const base = import.meta.env.DEV ? '/api' : (window.location.origin + '/prod');
   const form = new FormData();
-  form.append('file', file);
+
+  // Append each file with a unique field name (file0, file1, etc.)
+  files.forEach((file, index) => {
+    form.append(`file${index}`, file);
+  });
+
   form.append('tax_year', taxYear);
   form.append('analysis_type', analysisType);
   const resp = await fetch(base + '/calculate', { method: 'POST', body: form });

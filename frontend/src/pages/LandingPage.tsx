@@ -4,6 +4,7 @@ import AffiliateGrid from '../components/affiliate/AffiliateGrid';
 import { AffiliateProduct } from '../types/affiliate';
 import affiliateProductsData from '../data/affiliateProducts.json';
 import SEOHead from '../components/seo/SEOHead';
+import { trackCTAClick } from '../utils/analytics';
 
 type FeatureCard = {
   icon: string;
@@ -236,10 +237,22 @@ const LandingPage: React.FC = () => {
     []
   );
 
-  const handleGetStarted = () => navigate('/calculator');
-  const handleViewGuide = () => navigate('/guide');
-  const handleViewBlog = () => navigate('/blog');
-  const handleViewHelp = () => navigate('/help');
+  const handleGetStarted = () => {
+    trackCTAClick('Start Calculation', 'hero');
+    navigate('/calculator');
+  };
+  const handleViewGuide = () => {
+    trackCTAClick('View Guide', 'content');
+    navigate('/guide');
+  };
+  const handleViewBlog = () => {
+    trackCTAClick('View Blog', 'content');
+    navigate('/blog');
+  };
+  const handleViewHelp = () => {
+    trackCTAClick('View Help', 'content');
+    navigate('/help');
+  };
 
   return (
     <div className="landing-page">
