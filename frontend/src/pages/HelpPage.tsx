@@ -108,7 +108,7 @@ const HelpPage: React.FC = () => {
                             <li><strong>Spouse Transfers:</strong> Transfers to a spouse (TRANSFER_OUT) are handled as "no gain/no loss" disposals.</li>
                             <li><strong>Share Restructuring:</strong> Stock splits and consolidations (SPLIT) automatically adjust the share pool quantity while preserving the total cost basis.</li>
                             <li><strong>Allowable Costs:</strong> Broker fees and stamp duty are deducted from proceeds or added to cost basis.</li>
-                            <li><strong>Currency:</strong> Foreign currency transactions are converted to GBP using HMRC-approved exchange rates.</li>
+                            <li><strong>Currency:</strong> Foreign currency transactions are converted to GBP using official HMRC exchange rates.</li>
                           </ul>
                         </div>
                       </div>

@@ -367,7 +367,7 @@ const LandingPage: React.FC = () => {
                   <div className="col-lg-9">
                     <div className="bg-white p-4 p-lg-5 rounded shadow-sm">
                       <h4 className="fw-bold mb-3 text-primary">
-                        The HMRC-compliant Calculation Pipeline
+                        The Calculation Pipeline Following HMRC Rules
                       </h4>
                       <p className="mb-3">
                         The calculator follows HMRC requirements to evaluate your trading activity, match disposals, and apply
@@ -663,7 +663,7 @@ const LandingPage: React.FC = () => {
                   <div className="col-lg-8">
                     <h2 className="display-5 fw-bold mb-4 text-white">Ready to Calculate Your UK Taxes?</h2>
                     <p className="lead text-white-50 mb-4">
-                      Join thousands of UK investors who trust this platform for accurate HMRC-compliant tax calculations.
+                      Join thousands of UK investors who trust this platform for accurate tax calculations following HMRC rules.
                     </p>
                     <div className="d-flex gap-3 justify-content-center flex-wrap">
                       <button onClick={handleGetStarted} className="btn btn-light btn-lg px-5 py-3">
@@ -688,7 +688,7 @@ const LandingPage: React.FC = () => {
               <h3>UK Tax Calculator for Stocks and Shares</h3>
               <p>
                 Calculate capital gains tax, dividend tax, and currency gains for UK investors using Interactive Brokers, Trading 212, and other platforms via CSV.
-                The SPA replicates the production landing page so HMRC-compliant outputs remain consistent across web experiences.
+                The SPA replicates the production landing page so outputs following HMRC rules remain consistent across web experiences.
               </p>
               <ul>
                 <li>Capital gains tax calculation with Section 104 pooling</li>
