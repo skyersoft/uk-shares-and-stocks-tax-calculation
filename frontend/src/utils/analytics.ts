@@ -8,11 +8,7 @@
 // Extend Window interface to include gtag
 declare global {
     interface Window {
-        gtag?: (
-            command: 'config' | 'event' | 'js' | 'set',
-            targetId: string | Date,
-            config?: Record<string, any>
-        ) => void;
+        gtag?: any; // Use 'any' to avoid conflict with other declarations
         dataLayer?: any[];
     }
 }
@@ -117,10 +113,13 @@ export function trackCTAClick(
  */
 export function trackPageView(pagePath: string, pageTitle: string): void {
     if (typeof window !== 'undefined' && window.gtag) {
+        console.log(`[Analytics] Sending GA4 config update for: ${pagePath}`);
         window.gtag('config', 'G-Y32G88HFJ4', {
             page_path: pagePath,
             page_title: pageTitle,
         });
+    } else {
+        console.warn('[Analytics] window.gtag not found - page view not tracked');
     }
 }
 

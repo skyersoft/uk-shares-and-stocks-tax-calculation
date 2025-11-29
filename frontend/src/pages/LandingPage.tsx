@@ -42,9 +42,11 @@ const LandingPage: React.FC = () => {
       .slice(0, 6)
       .map(product => ({
         ...product,
-        fallbackImageUrl: (product as AffiliateProduct & { fallbackImageUrl?: string }).fallbackImageUrl || '/images/book-placeholder.jpg'
+        fallbackImageUrl: (product as AffiliateProduct & { fallbackImageUrl?: string }).fallbackImageUrl || '/images/book-placeholder.svg'
       })) as AffiliateProduct[];
   }, []);
+
+  console.log('[LandingPage] Featured Products:', featuredProducts.length, featuredProducts);
 
   const featureCards: FeatureCard[] = useMemo(
     () => [

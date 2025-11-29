@@ -3,7 +3,7 @@
     "associateTag": "cgttaxtool-20",
     "defaultDisclosure": "As an Amazon Associate, we earn from qualifying purchases. This helps support our free tax calculation tools.",
     "enableTracking": true,
-    "placeholderImage": "/images/book-placeholder.jpg",
+    "placeholderImage": "/images/book-placeholder.svg",
     "amazonBaseUrl": "https://www.amazon.co.uk"
   },
   "products": [
@@ -15,7 +15,12 @@
       "affiliateUrl": "https://amzn.to/4pCCh96",
       "imageUrl": "https://m.media-amazon.com/images/I/61v-3RYPZPL._SY522_.jpg",
       "category": "tax",
-      "tags": ["uk-tax", "capital-gains", "income-tax", "reference"],
+      "tags": [
+        "uk-tax",
+        "capital-gains",
+        "income-tax",
+        "reference"
+      ],
       "price": "£143.99",
       "rating": 5.0,
       "reviewCount": 1,
@@ -32,7 +37,12 @@
       "affiliateUrl": "https://amzn.to/3KkWtfx",
       "imageUrl": "https://m.media-amazon.com/images/I/519DCz1azmL.jpg",
       "category": "tax",
-      "tags": ["capital-gains", "uk-tax", "property", "shares"],
+      "tags": [
+        "capital-gains",
+        "uk-tax",
+        "property",
+        "shares"
+      ],
       "price": "£13.56",
       "rating": 5.0,
       "reviewCount": 1,
@@ -49,7 +59,12 @@
       "affiliateUrl": "https://amzn.to/46yvrbV",
       "imageUrl": "https://m.media-amazon.com/images/I/71piwvkH0sL._SY522_.jpg",
       "category": "trading",
-      "tags": ["investing", "value-investing", "warren-buffett", "classic"],
+      "tags": [
+        "investing",
+        "value-investing",
+        "warren-buffett",
+        "classic"
+      ],
       "price": "£14.45",
       "rating": 4.7,
       "reviewCount": 382,
@@ -66,7 +81,12 @@
       "affiliateUrl": "https://amzn.to/4gG21xn",
       "imageUrl": "https://m.media-amazon.com/images/I/814Z8SEGU0L._SY522_.jpg",
       "category": "trading",
-      "tags": ["passive-investing", "index-funds", "portfolio", "bogle"],
+      "tags": [
+        "passive-investing",
+        "index-funds",
+        "portfolio",
+        "bogle"
+      ],
       "price": "£16.39",
       "rating": 4.7,
       "reviewCount": 2940,
@@ -83,7 +103,12 @@
       "affiliateUrl": "https://amzn.to/3KDzcW9",
       "imageUrl": "https://m.media-amazon.com/images/I/81BE7eeKzAL._SY522_.jpg",
       "category": "finance",
-      "tags": ["financial-literacy", "passive-income", "mindset", "bestseller"],
+      "tags": [
+        "financial-literacy",
+        "passive-income",
+        "mindset",
+        "bestseller"
+      ],
       "price": "£10.87",
       "rating": 4.6,
       "reviewCount": 88909,
@@ -100,7 +125,11 @@
       "affiliateUrl": "https://amzn.to/480kIto",
       "imageUrl": "https://m.media-amazon.com/images/I/61chEPZcj1L._SY522_.jpg",
       "category": "tax",
-      "tags": ["property-tax", "landlords", "uk-tax"],
+      "tags": [
+        "property-tax",
+        "landlords",
+        "uk-tax"
+      ],
       "price": "£28.00",
       "rating": 4.6,
       "reviewCount": 143,
@@ -203,7 +232,12 @@
       "affiliateUrl": "https://amzn.to/4pFDr3y",
       "imageUrl": "https://m.media-amazon.com/images/I/91h1hHF7awL._SY522_.jpg",
       "category": "trading",
-      "tags": ["psychology", "trading-mindset", "discipline", "emotions"],
+      "tags": [
+        "psychology",
+        "trading-mindset",
+        "discipline",
+        "emotions"
+      ],
       "price": "£27.80",
       "rating": 4.6,
       "reviewCount": 9202,
@@ -220,7 +254,12 @@
       "affiliateUrl": "https://amzn.to/3KkZfS3",
       "imageUrl": "https://m.media-amazon.com/images/I/61PCti3j6yL._SY522_.jpg",
       "category": "business",
-      "tags": ["business-tax", "corporation-tax", "vat", "small-business"],
+      "tags": [
+        "business-tax",
+        "corporation-tax",
+        "vat",
+        "small-business"
+      ],
       "price": "£6.59",
       "rating": 4.5,
       "reviewCount": 583,
@@ -228,74 +267,6 @@
       "publishedDate": "2024-02-20",
       "author": "The Rebel Accountant",
       "isbn": "978-1800960879"
-    },
-    {
-      "id": "thinking-fast-and-slow",
-      "title": "Thinking, Fast and Slow",
-      "description": "Daniel Kahneman's seminal work on the two systems that drive the way we think. Essential for understanding and overcoming cognitive biases in trading.",
-      "asin": "0141033576",
-      "affiliateUrl": "https://www.amazon.co.uk/Thinking-Fast-Slow-Daniel-Kahneman/dp/0141033576",
-      "imageUrl": "https://m.media-amazon.com/images/I/71m6X-iOAOL._SY522_.jpg",
-      "category": "trading",
-      "tags": ["psychology", "cognitive-bias", "mindset", "kahneman"],
-      "price": "£11.99",
-      "rating": 4.6,
-      "reviewCount": 25000,
-      "featured": true,
-      "publishedDate": "2012-04-10",
-      "author": "Daniel Kahneman",
-      "isbn": "978-0141033570"
-    },
-    {
-      "id": "technical-analysis-of-financial-markets",
-      "title": "Technical Analysis of the Financial Markets",
-      "description": "A comprehensive guide to technical analysis, considered by many to be the bible of the subject. Covers chart patterns, indicators, and trading theory.",
-      "asin": "0735200661",
-      "affiliateUrl": "https://www.amazon.co.uk/Technical-Analysis-Financial-Markets-Comprehensive/dp/0735200661",
-      "imageUrl": "https://m.media-amazon.com/images/I/71p6T1m2VjL._SY522_.jpg",
-      "category": "trading",
-      "tags": ["technical-analysis", "charting", "indicators", "classic"],
-      "price": "£65.50",
-      "rating": 4.7,
-      "reviewCount": 4500,
-      "featured": false,
-      "publishedDate": "1999-01-15",
-      "author": "John J. Murphy",
-      "isbn": "978-0735200661"
-    },
-    {
-      "id": "mastering-the-market-cycle",
-      "title": "Mastering the Market Cycle: Getting the Odds on Your Side",
-      "description": "Howard Marks provides a brilliant framework for understanding market cycles, helping investors know where they stand and how to act.",
-      "asin": "147214044X",
-      "affiliateUrl": "https://www.amazon.co.uk/Mastering-Market-Cycle-Getting-odds/dp/1473695686/",
-      "imageUrl": "https://m.media-amazon.com/images/I/71y3-f-i2AL._SY522_.jpg",
-      "category": "investing",
-      "tags": ["market-cycles", "investing-strategy", "howard-marks", "economics"],
-      "price": "£12.99",
-      "rating": 4.6,
-      "reviewCount": 2300,
-      "featured": false,
-      "publishedDate": "2020-07-09",
-      "author": "Howard Marks",
-      "isbn": "978-1472140443"
-    },
-    {
-      "id": "reminiscences-of-a-stock-operator",
-      "title": "Reminiscences of a Stock Operator",
-      "description": "A fictionalized biography of Jesse Livermore, this book is a timeless classic on speculation, crowd psychology, and the art of trading.",
-      "asin": "0471770884",
-      "affiliateUrl": "https://amzn.to/433dvVR",
-      "imageUrl": "https://m.media-amazon.com/images/I/815fdzmtwAL._SY522_.jpg",
-      "category": "trading",
-      "tags": ["classic", "trading-psychology", "speculation", "jesse-livermore"],
-      "price": "£16.98",
-      "rating": 4.4,
-      "reviewCount": 4567,
-      "featured": false,
-      "publishedDate": "2006-05-12",
-      "author": "Edwin Lefèvre",
-      "isbn": "978-0471770886"
     }
   ]
 }

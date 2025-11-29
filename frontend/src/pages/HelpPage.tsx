@@ -108,7 +108,7 @@ const HelpPage: React.FC = () => {
                             <li><strong>Spouse Transfers:</strong> Transfers to a spouse (TRANSFER_OUT) are handled as "no gain/no loss" disposals.</li>
                             <li><strong>Share Restructuring:</strong> Stock splits and consolidations (SPLIT) automatically adjust the share pool quantity while preserving the total cost basis.</li>
                             <li><strong>Allowable Costs:</strong> Broker fees and stamp duty are deducted from proceeds or added to cost basis.</li>
-                            <li><strong>Currency:</strong> Foreign currency transactions are converted to GBP using official HMRC exchange rates.</li>
+                            <li><strong>Currency:</strong> Foreign currency transactions should be in GBP or include exchange rates in your CSV file.</li>
                           </ul>
                         </div>
                       </div>
@@ -127,7 +127,13 @@ const HelpPage: React.FC = () => {
                       </h2>
                       <div id="dataPrivacy" className="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                         <div className="accordion-body">
-                          <p>Yes! All calculations are performed locally in your browser. Your financial data never leaves your device and is not stored on our servers.</p>
+                          <p>Your financial data is processed securely and is not stored permanently on our servers.</p>
+                          <ul>
+                            <li><strong>Processing:</strong> Files are uploaded to our secure backend for calculation, then immediately deleted after processing</li>
+                            <li><strong>No Storage:</strong> We do not retain your transaction data, files, or calculation results</li>
+                            <li><strong>Temporary Only:</strong> Data exists only during the calculation process (typically seconds)</li>
+                            <li><strong>HTTPS:</strong> All data transmission is encrypted using industry-standard SSL/TLS</li>
+                          </ul>
                         </div>
                       </div>
                     </div>
@@ -141,6 +147,215 @@ const HelpPage: React.FC = () => {
                       <div id="accuracy" className="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                         <div className="accordion-body">
                           <p>Our calculator follows HMRC guidelines and has been tested with various scenarios. However, always consult with a qualified tax advisor for official tax guidance.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Broker-Specific Documentation */}
+              <div className="row mt-5">
+                <div className="col-12">
+                  <h2>Supported Brokers</h2>
+                  <p className="lead">
+                    Detailed information about CSV formats and requirements for each supported broker.
+                  </p>
+
+                  <div className="accordion" id="brokerAccordion">
+                    {/* Trading 212 */}
+                    <div className="accordion-item">
+                      <h2 className="accordion-header">
+                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trading212">
+                          <strong>Trading 212</strong> - Full Support with Exchange Rates
+                        </button>
+                      </h2>
+                      <div id="trading212" className="accordion-collapse collapse" data-bs-parent="#brokerAccordion">
+                        <div className="accordion-body">
+                          <div className="alert alert-success">
+                            <strong>✅ Exchange Rates:</strong> Trading 212 CSVs include exchange rates - no manual conversion needed!
+                          </div>
+                          <h6>Expected Columns:</h6>
+                          <ul className="small">
+                            <li><code>Action</code> - Transaction type (Buy, Sell, Dividend, etc.)</li>
+                            <li><code>Time</code> - Date and time (YYYY-MM-DD HH:MM:SS)</li>
+                            <li><code>ISIN</code> - Security identifier</li>
+                            <li><code>Ticker</code> - Stock symbol</li>
+                            <li><code>Name</code> - Security name</li>
+                            <li><code>No. of shares</code> - Quantity</li>
+                            <li><code>Price / share</code> - Price per share</li>
+                            <li><code>Currency (Price / share)</code> - Transaction currency</li>
+                            <li><code>Exchange rate</code> - FX rate to GBP (if applicable)</li>
+                            <li><code>Total</code> - Total amount</li>
+                            <li><code>Withholding tax</code>, <code>Stamp duty reserve tax</code>, <code>Currency conversion fee</code> - Fees</li>
+                          </ul>
+                          <h6>How to Export:</h6>
+                          <ol className="small">
+                            <li>Log into Trading 212</li>
+                            <li>Go to History → Export</li>
+                            <li>Select date range and download CSV</li>
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interactive Brokers */}
+                    <div className="accordion-item">
+                      <h2 className="accordion-header">
+                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ibkr">
+                          <strong>Interactive Brokers (IBKR)</strong> - QFX Format
+                        </button>
+                      </h2>
+                      <div id="ibkr" className="accordion-collapse collapse" data-bs-parent="#brokerAccordion">
+                        <div className="accordion-body">
+                          <div className="alert alert-info">
+                            <strong>ℹ️ Format:</strong> IBKR uses QFX files, not CSV. Upload your Activity Statement in QFX format.
+                          </div>
+                          <h6>How to Export:</h6>
+                          <ol className="small">
+                            <li>Log into IBKR Client Portal</li>
+                            <li>Go to Performance & Reports → Statements</li>
+                            <li>Select Activity Statement</li>
+                            <li>Choose date range and format: <strong>QFX</strong></li>
+                            <li>Download and upload to calculator</li>
+                          </ol>
+                          <p className="small text-muted mb-0">
+                            The calculator automatically processes trades, dividends, and corporate actions from QFX files.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Freetrade */}
+                    <div className="accordion-item">
+                      <h2 className="accordion-header">
+                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#freetrade">
+                          <strong>Freetrade</strong> - CSV Export
+                        </button>
+                      </h2>
+                      <div id="freetrade" className="accordion-collapse collapse" data-bs-parent="#brokerAccordion">
+                        <div className="accordion-body">
+                          <div className="alert alert-warning">
+                            <strong>⚠️ Currency:</strong> Freetrade CSVs do NOT include exchange rates. Ensure all transactions are in GBP or manually convert foreign currency values.
+                          </div>
+                          <h6>Expected Columns:</h6>
+                          <ul className="small">
+                            <li><code>Date</code> - Transaction date (YYYY-MM-DD)</li>
+                            <li><code>Type</code> - BUY, SELL, DIVIDEND, etc.</li>
+                            <li><code>Ticker</code> - Stock symbol</li>
+                            <li><code>Name</code> - Security name</li>
+                            <li><code>Quantity</code> - Number of shares</li>
+                            <li><code>Price</code> - Price per share</li>
+                            <li><code>Total</code> - Total amount</li>
+                            <li><code>Currency</code> - Transaction currency (GBP, USD, EUR)</li>
+                            <li><code>Fee</code> - Trading fees</li>
+                          </ul>
+                          <h6>How to Export:</h6>
+                          <ol className="small">
+                            <li>Open Freetrade app</li>
+                            <li>Go to Account → Statements</li>
+                            <li>Request transaction history export</li>
+                            <li>Download CSV file</li>
+                          </ol>
+                          <p className="small text-danger">
+                            <strong>Important:</strong> If you have USD/EUR stocks, you must manually convert prices to GBP in your CSV before uploading.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Fidelity */}
+                    <div className="accordion-item">
+                      <h2 className="accordion-header">
+                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fidelity">
+                          <strong>Fidelity UK</strong> - CSV Export
+                        </button>
+                      </h2>
+                      <div id="fidelity" className="accordion-collapse collapse" data-bs-parent="#brokerAccordion">
+                        <div className="accordion-body">
+                          <div className="alert alert-warning">
+                            <strong>⚠️ Currency:</strong> Fidelity CSVs do NOT include exchange rates. Ensure all transactions are in GBP or manually convert foreign currency values.
+                          </div>
+                          <h6>Expected Columns:</h6>
+                          <ul className="small">
+                            <li><code>Trade Date</code> - Transaction date</li>
+                            <li><code>Settlement Date</code> - Settlement date</li>
+                            <li><code>Action</code> - Transaction type (YOU BOUGHT, YOU SOLD, DIVIDEND)</li>
+                            <li><code>Symbol</code> - Stock ticker</li>
+                            <li><code>Security Description</code> - Security name</li>
+                            <li><code>Quantity</code> - Number of shares</li>
+                            <li><code>Price</code> - Price per share</li>
+                            <li><code>Amount</code> - Total amount</li>
+                            <li><code>Commission</code> - Trading commission</li>
+                            <li><code>Fees</code> - Other fees</li>
+                            <li><code>Settlement Currency</code> - Currency (GBP, USD, EUR)</li>
+                          </ul>
+                          <h6>Date Format:</h6>
+                          <p className="small">Supports DD/MM/YYYY or YYYY-MM-DD</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hargreaves Lansdown */}
+                    <div className="accordion-item">
+                      <h2 className="accordion-header">
+                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#hl">
+                          <strong>Hargreaves Lansdown</strong> - CSV Export
+                        </button>
+                      </h2>
+                      <div id="hl" className="accordion-collapse collapse" data-bs-parent="#brokerAccordion">
+                        <div className="accordion-body">
+                          <div className="alert alert-info">
+                            <strong>ℹ️ Assumption:</strong> HL converts all foreign transactions to GBP. All values are treated as GBP.
+                          </div>
+                          <h6>Expected Columns:</h6>
+                          <ul className="small">
+                            <li><code>Date</code> - Transaction date (DD/MM/YYYY)</li>
+                            <li><code>Transaction Type</code> - Purchase, Sale, Dividend, etc.</li>
+                            <li><code>Security</code> - Security name</li>
+                            <li><code>ISIN</code> - Security identifier</li>
+                            <li><code>Quantity</code> - Number of shares</li>
+                            <li><code>Price</code> - Price per share (may be in pence)</li>
+                            <li><code>Value</code> - Total value in GBP</li>
+                            <li><code>Account Type</code> - ISA, SIPP, etc.</li>
+                          </ul>
+                          <h6>Special Handling:</h6>
+                          <ul className="small">
+                            <li>Automatically detects if prices are in pence and converts to pounds</li>
+                            <li>ISA and SIPP accounts are flagged for tax-exempt treatment</li>
+                            <li>No ticker symbol provided - uses ISIN or security name</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Generic CSV */}
+                    <div className="accordion-item">
+                      <h2 className="accordion-header">
+                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#genericCsv">
+                          <strong>Generic CSV</strong> - Custom Format
+                        </button>
+                      </h2>
+                      <div id="genericCsv" className="accordion-collapse collapse" data-bs-parent="#brokerAccordion">
+                        <div className="accordion-body">
+                          <p>If your broker isn't listed above, you can create a custom CSV with these columns:</p>
+                          <h6>Required Columns:</h6>
+                          <ul className="small">
+                            <li><code>Date</code> - YYYY-MM-DD or DD/MM/YYYY</li>
+                            <li><code>Type</code> - BUY, SELL, DIVIDEND, SPLIT, TRANSFER_OUT</li>
+                            <li><code>Symbol</code> - Stock ticker</li>
+                            <li><code>Quantity</code> - Number of shares (positive for buys, negative for sells)</li>
+                            <li><code>Price</code> - Price per share in GBP</li>
+                          </ul>
+                          <h6>Optional Columns:</h6>
+                          <ul className="small">
+                            <li><code>Fees</code> - Trading fees and commissions</li>
+                            <li><code>Currency</code> - GBP (default if omitted)</li>
+                            <li><code>Name</code> - Security name</li>
+                          </ul>
+                          <div className="alert alert-danger mt-3">
+                            <strong>⚠️ Important:</strong> All prices and amounts must be in GBP. The calculator does not perform currency conversion for generic CSVs.
+                          </div>
                         </div>
                       </div>
                     </div>

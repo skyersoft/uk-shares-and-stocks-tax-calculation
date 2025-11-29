@@ -13,11 +13,16 @@ import GuidePage from './pages/GuidePage';
 import BlogPage from './pages/BlogPage';
 import AffiliateDemo from './pages/AffiliateDemo';
 
+import { ScrollToTop } from './components/common/ScrollToTop';
+import { PageTracker } from './components/common/PageTracker';
+
 const App: React.FC = () => {
   console.log('[SPA] App component rendering with HashRouter...');
 
   return (
     <Router>
+      <ScrollToTop />
+      <PageTracker />
       <HelmetProvider>
         <ToastProvider position="top-end">
           <CalculationProvider>

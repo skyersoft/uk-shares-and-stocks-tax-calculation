@@ -3,8 +3,14 @@
  * Handles loading, validation, and filtering of affiliate product data
  */
 
-import { affiliateData } from '../data/affiliateProducts';
+import affiliateDataJson from '../data/affiliateProducts.json';
 import { AffiliateProduct, AffiliateConfig, AffiliateValidationError } from '../types/affiliate';
+
+// Cast JSON import to proper type
+const affiliateData = affiliateDataJson as {
+  config: Record<string, any>;
+  products: any[];
+};
 
 let productsCache: AffiliateProduct[] | null = null;
 let configCache: AffiliateConfig | null = null;
