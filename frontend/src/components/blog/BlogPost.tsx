@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card } from '../ui/Card';
+import './BlogContent.css';
 
 export interface BlogPostData {
   id: string;
@@ -18,9 +19,9 @@ interface BlogPostProps {
   className?: string;
 }
 
-export const BlogPost: React.FC<BlogPostProps> = ({ 
-  post, 
-  className = '' 
+export const BlogPost: React.FC<BlogPostProps> = ({
+  post,
+  className = ''
 }) => {
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -39,7 +40,7 @@ export const BlogPost: React.FC<BlogPostProps> = ({
           <h1 className="blog-post-title h2 mb-3 text-primary">
             {post.title}
           </h1>
-          
+
           {/* Meta information */}
           <div className="blog-post-meta d-flex flex-wrap align-items-center text-muted small mb-3">
             {post.author && (
@@ -69,8 +70,8 @@ export const BlogPost: React.FC<BlogPostProps> = ({
           {post.tags && post.tags.length > 0 && (
             <div className="blog-post-tags mb-3">
               {post.tags.map((tag) => (
-                <span 
-                  key={tag} 
+                <span
+                  key={tag}
                   className="badge bg-light text-dark me-2 mb-1"
                 >
                   #{tag}
@@ -83,9 +84,9 @@ export const BlogPost: React.FC<BlogPostProps> = ({
         {/* Content */}
         <div className="blog-post-content">
           {/* Simple content rendering - will be enhanced with MDX later */}
-          <div 
+          <div
             className="prose"
-            dangerouslySetInnerHTML={{ 
+            dangerouslySetInnerHTML={{
               __html: post.content
                 // Remove newlines that are immediately after opening block-level tags or before closing block-level tags
                 .replace(/(<\/?(ul|ol|li|div|p|h[1-6]|blockquote|pre|table|tr|td|th|thead|tbody)>)\s*\n+\s*/gi, '$1')

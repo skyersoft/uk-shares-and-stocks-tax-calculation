@@ -108,7 +108,7 @@ class FidelityConverter(BaseBrokerConverter):
             price=price,
             transaction_currency=currency,
             name=row.get('Security Description', ''),
-            gross_amount=amount,
+            gross_amount=abs(amount),
             commission=commission,
             other_fees=fees,
             broker="Fidelity"

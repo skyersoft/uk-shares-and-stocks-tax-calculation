@@ -50,8 +50,13 @@ class TestCsvParserInterface:
             'Taxes': '0'
         }]
         
-        # Mock the csv.DictReader to return our mock data
-        with patch('csv.DictReader', return_value=mock_rows):
+        # Create a mock reader that is iterable AND has fieldnames
+        mock_reader = MagicMock()
+        mock_reader.__iter__.return_value = mock_rows
+        mock_reader.fieldnames = mock_rows[0].keys()
+        
+        # Mock the csv.DictReader to return our mock reader
+        with patch('csv.DictReader', return_value=mock_reader):
             with patch('builtins.open', MagicMock()):
                 result = self.parser.parse('dummy_path.csv')
                 

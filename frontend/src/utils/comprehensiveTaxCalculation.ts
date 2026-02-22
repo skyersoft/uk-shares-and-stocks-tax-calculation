@@ -251,7 +251,7 @@ export function calculateComprehensiveTax(
     };
 }
 
-function getTaxBands(taxYear: string, residency: string): TaxBands {
+function getTaxBands(_taxYear: string, residency: string): TaxBands {
     if (residency === 'england-wales-ni') {
         return {
             personalAllowance: 12570,
@@ -276,7 +276,7 @@ function getTaxBands(taxYear: string, residency: string): TaxBands {
 function getAllowances(taxYear: string) {
     if (taxYear === '2023-2024') {
         return { cgtAllowance: 6000, dividendAllowance: 1000, savingsAllowance: 1000 };
-    } else if (taxYear === '2024-2025') {
+    } else if (taxYear === '2024-2025' || taxYear === '2025-2026') {
         return { cgtAllowance: 3000, dividendAllowance: 500, savingsAllowance: 1000 };
     } else if (taxYear === '2022-2023') {
         return { cgtAllowance: 12300, dividendAllowance: 2000, savingsAllowance: 1000 };

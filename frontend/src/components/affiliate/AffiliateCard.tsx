@@ -18,6 +18,7 @@ const AffiliateCard: React.FC<AffiliateCardProps> = ({
   ctaText = 'View on Amazon',
   compact = false
 }) => {
+  console.log('[AffiliateCard] Rendering:', product.id);
   const cardClassName = [
     'affiliate-card',
     'card',

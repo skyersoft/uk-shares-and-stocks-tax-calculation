@@ -248,7 +248,10 @@ class TestEnhancedTaxYearCalculator:
         cgt_summary.tax_year = "2024-2025"
         cgt_summary.total_gains = 4000.0 # Corrected to total_gains
         cgt_summary.taxable_gain = 1000.0
-        cgt_summary.disposals = [Mock(spec=Disposal)] # Needs to be a list for len()
+        mock_disposal = Mock(spec=Disposal)
+        mock_disposal.sell_date = datetime(2024, 7, 1)
+        mock_disposal.gain_or_loss = 4000.0  # Matches total_gains to produce taxable_gain=1000 after AEA
+        cgt_summary.disposals = [mock_disposal] # Needs to be a list for len()
         
         # To get taxable_dividend_income = 600.0 (after 500.0 allowance), total_net_gbp must be 1100.0
         div_summary = DividendSummary(tax_year="2024-2025", dividends=[

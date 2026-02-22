@@ -4,6 +4,10 @@ import base64
 import tempfile
 import os
 from typing import Dict, Any
+import boto3
+import uuid
+import datetime
+import re
 from io import StringIO
 
 # Import our application components
@@ -128,6 +132,10 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
         elif path == '/ads.txt':
             return serve_ads_txt()
 
+    # Handle feedback submission
+    elif method == 'POST' and path == '/feedback':
+        return handle_feedback_request(event)
+
     # Handle file upload and processing
     elif method == 'POST' and (path == '/calculate' or path == '/'):
         return handle_calculation_request(event)
@@ -145,6 +153,170 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
         },
         'body': '<h1>404 - Page Not Found</h1>'
     }
+
+
+def handle_feedback_request(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle feedback submission."""
+    try:
+        # Parse request body
+        if event.get('isBase64Encoded', False):
+            body = base64.b64decode(event['body']).decode('utf-8')
+        else:
+            body = event['body']
+            
+        if not body:
+             return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': 'Empty request body'})
+            }
+
+        data = json.loads(body)
+        message = data.get('message', '').strip()
+        contact = data.get('contact', '').strip() # Optional contact info
+
+        # Validation
+        if not message:
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': 'Message is required'})
+            }
+        
+        if len(message) > 1000:
+             return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': 'Message too long (max 1000 characters)'})
+            }
+            
+        # Basic sanitization (prevent XSS if we ever display this HTML/Raw)
+        # We allow basic punishment/alphanumeric. 
+        # Actually for text file storage, strict sanitization isn't strictly necessary for security 
+        # (it won't execute), but good practice for reading logs.
+        # We'll replace non-printable characters.
+        cleaned_message = "".join(ch for ch in message if ch.isprintable() or ch in '\n\r\t')
+        
+        # Determine bucket from environment or hardcode fallback (not ideal for strict prod but acceptable here)
+        # In Terraform, we pass bucket name usually? Or we can deduce it.
+        # The frontend bucket is known: ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo
+        # We can write to the same bucket in a private folder.
+        bucket_name = os.environ.get('S3_BUCKET_NAME', 'ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo')
+        
+        timestamp = datetime.datetime.utcnow().isoformat()
+        request_id = str(uuid.uuid4())
+        today = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+        key = f"feedback/{today}/{request_id}.txt"
+        
+        file_content = f"Date: {timestamp}\nID: {request_id}\nContact: {contact}\n\nMessage:\n{cleaned_message}"
+        
+        s3 = boto3.client('s3')
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=key,
+            Body=file_content,
+            ContentType='text/plain'
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'message': 'Feedback received', 'id': request_id})
+        }
+
+    except Exception as e:
+        print(f"Error handling feedback: {e}")
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'error': 'Internal server error'})
+        }
+
+
+def log_error_file_to_s3(file_content: str, filename: str, error_type: str, error_message: str, extra_metadata: dict = None) -> str:
+    """
+    Log problematic files to S3 for debugging parsing failures.
+    
+    Args:
+        file_content: The content of the file that caused the error
+        filename: Original filename
+        error_type: Type of error (e.g., 'broker_detection', 'csv_validation', 'conversion')
+        error_message: Detailed error message
+        extra_metadata: Additional context (e.g., detected columns, broker hints)
+    
+    Returns:
+        The S3 key where the error was logged, or empty string on failure
+    """
+    try:
+        bucket_name = os.environ.get('S3_BUCKET_NAME', 'ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo')
+        
+        timestamp = datetime.datetime.utcnow()
+        request_id = str(uuid.uuid4())[:8]
+        today = timestamp.strftime('%Y-%m-%d')
+        
+        # Sanitize filename for S3 key
+        safe_filename = re.sub(r'[^a-zA-Z0-9._-]', '_', filename or 'unknown')
+        
+        # Prepare file content (limit to first 500 lines to avoid huge files)
+        lines = file_content.split('\n') if file_content else []
+        truncated_content = '\n'.join(lines[:500])
+        if len(lines) > 500:
+            truncated_content += f"\n\n... [truncated {len(lines) - 500} more lines]"
+        
+        # Create metadata JSON
+        metadata = {
+            'timestamp': timestamp.isoformat(),
+            'request_id': request_id,
+            'original_filename': filename,
+            'error_type': error_type,
+            'error_message': error_message,
+            'file_size_bytes': len(file_content) if file_content else 0,
+            'line_count': len(lines),
+            'first_line': lines[0] if lines else None,
+            **(extra_metadata or {})
+        }
+        
+        s3 = boto3.client('s3')
+        
+        # Save the file content
+        file_key = f"errors/{today}/{request_id}_{safe_filename}"
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=file_key,
+            Body=truncated_content,
+            ContentType='text/plain'
+        )
+        
+        # Save metadata as JSON
+        metadata_key = f"errors/{today}/{request_id}_{safe_filename}.metadata.json"
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=metadata_key,
+            Body=json.dumps(metadata, indent=2),
+            ContentType='application/json'
+        )
+        
+        print(f"Logged error file to S3: {file_key}")
+        return file_key
+        
+    except Exception as e:
+        print(f"Failed to log error file to S3: {e}")
+        return ""
 
 
 def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
@@ -427,9 +599,19 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 detection_result = detect_broker_from_file(temp_file_paths[0])
                 
                 if not detection_result.get('detected'):
-                    # Broker detection failed
+                    # Broker detection failed - log to S3 for debugging
                     error_msg = detection_result.get('error', 'Unknown error')
                     supported_brokers = detection_result.get('supported_brokers', [])
+                    
+                    # Log the problematic file to S3
+                    if files:
+                        log_error_file_to_s3(
+                            file_content=files[0].get('content', ''),
+                            filename=files[0].get('filename', 'unknown'),
+                            error_type='broker_detection',
+                            error_message=error_msg,
+                            extra_metadata={'supported_brokers': supported_brokers}
+                        )
                     
                     return {
                         'statusCode': 400,
@@ -481,7 +663,16 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             }
         
         except BrokerConversionError as e:
-            # Handle broker conversion errors
+            # Handle broker conversion errors - log to S3
+            if files:
+                log_error_file_to_s3(
+                    file_content=files[0].get('content', ''),
+                    filename=files[0].get('filename', 'unknown'),
+                    error_type='broker_conversion',
+                    error_message=str(e),
+                    extra_metadata={'broker': e.broker if hasattr(e, 'broker') else 'Unknown'}
+                )
+            
             return {
                 'statusCode': 400,
                 'headers': {
@@ -496,7 +687,19 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             }
         
         except CSVValidationError as e:
-            # Handle CSV validation errors
+            # Handle CSV validation errors - log to S3
+            if files:
+                log_error_file_to_s3(
+                    file_content=files[0].get('content', ''),
+                    filename=files[0].get('filename', 'unknown'),
+                    error_type='csv_validation',
+                    error_message='Missing required columns',
+                    extra_metadata={
+                        'missing_columns': e.missing_columns if hasattr(e, 'missing_columns') else [],
+                        'required_columns': REQUIRED_CSV_COLUMNS
+                    }
+                )
+            
             return {
                 'statusCode': 400,
                 'headers': {
@@ -506,7 +709,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 'body': json.dumps({
                     'error': 'Invalid CSV format',
                     'message': 'Missing required columns',
-                    'missing_columns': e.missing_columns,
+                    'missing_columns': e.missing_columns if hasattr(e, 'missing_columns') else [],
                     'required_columns': REQUIRED_CSV_COLUMNS
                 })
             }

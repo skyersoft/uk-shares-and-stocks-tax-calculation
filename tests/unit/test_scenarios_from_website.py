@@ -118,5 +118,6 @@ class TestMissingScenarios:
         sell_tx, matches = disposals[0]
         assert sell_tx.transaction_id == "transfer1"
         assert len(matches) == 1
-        assert matches[0].transaction_id == "buy1"
+        # Section 104 pool creates a synthetic POOL_MATCH transaction
+        assert matches[0].transaction_id.startswith("POOL_MATCH_")
         assert matches[0].quantity == 50.0

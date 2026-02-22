@@ -144,34 +144,191 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
         </div>
       )}
 
-      {/* Help Section */}
-      <div className="card bg-light border-0 mt-5">
+      {/* Comprehensive Help Section */}
+      <div className="card border-0 mt-5 shadow-sm">
         <div className="card-body">
-          <h5 className="card-title">
-            <i className="fas fa-question-circle me-2"></i>
-            Need Help?
+          <h5 className="card-title mb-3">
+            <i className="fas fa-book me-2 text-primary"></i>
+            Supported File Formats &amp; Export Guides
           </h5>
-          <div className="row">
-            <div className="col-md-6">
-              <h6 className="text-muted mb-2">File Formats</h6>
-              <ul className="small mb-3">
-                <li><strong>Interactive Brokers:</strong> Activity Statement (CSV/XML)</li>
-                <li><strong>Trading 212:</strong> History export (CSV)</li>
-                <li><strong>Hargreaves Lansdown:</strong> Transaction history (CSV)</li>
-                <li><strong>Freetrade:</strong> Activity export (CSV)</li>
-                <li><strong>Fidelity:</strong> Transactions export (CSV)</li>
-                <li><strong>Others:</strong> Transaction history (CSV)</li>
-              </ul>
+          <p className="text-muted mb-4">
+            Click on your broker below to see detailed instructions on how to export and format your files.
+          </p>
+
+          <div className="accordion" id="brokerHelpAccordion">
+            {/* Trading 212 */}
+            <div className="accordion-item">
+              <h2 className="accordion-header">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#trading212Help">
+                  <strong>Trading 212</strong>&nbsp;- Full Support with Exchange Rates
+                </button>
+              </h2>
+              <div id="trading212Help" className="accordion-collapse collapse" data-bs-parent="#brokerHelpAccordion">
+                <div className="accordion-body">
+                  <div className="alert alert-success py-2 mb-3">
+                    <small><strong>✅ Exchange Rates:</strong> Trading 212 CSVs include exchange rates - no manual conversion needed!</small>
+                  </div>
+                  <h6>Required Columns:</h6>
+                  <ul className="small mb-2">
+                    <li><code>Action</code> - Transaction type (Buy, Sell, Dividend)</li>
+                    <li><code>Time</code> - Date and time (YYYY-MM-DD HH:MM:SS)</li>
+                    <li><code>Ticker</code> - Stock symbol</li>
+                    <li><code>No. of shares</code> - Quantity</li>
+                    <li><code>Price / share</code> - Price per share</li>
+                    <li><code>Currency (Price / share)</code> - Transaction currency</li>
+                    <li><code>Exchange rate</code> - FX rate to GBP</li>
+                  </ul>
+                  <h6>How to Export:</h6>
+                  <ol className="small mb-0">
+                    <li>Log into Trading 212</li>
+                    <li>Go to <strong>History → Export</strong></li>
+                    <li>Select date range and download CSV</li>
+                  </ol>
+                </div>
+              </div>
             </div>
-            <div className="col-md-6">
-              <h6 className="text-muted mb-2">What to Include</h6>
-              <ul className="small mb-0">
-                <li>All trades within the tax year</li>
-                <li>Dividend payments received</li>
-                <li>Interest earned (if applicable)</li>
-                <li>Corporate actions (splits, mergers)</li>
-              </ul>
+
+            {/* Interactive Brokers */}
+            <div className="accordion-item">
+              <h2 className="accordion-header">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ibkrHelp">
+                  <strong>Interactive Brokers (IBKR)</strong>&nbsp;- QFX or CSV Format
+                </button>
+              </h2>
+              <div id="ibkrHelp" className="accordion-collapse collapse" data-bs-parent="#brokerHelpAccordion">
+                <div className="accordion-body">
+                  <div className="alert alert-info py-2 mb-3">
+                    <small><strong>ℹ️ Recommended:</strong> Use QFX format for best compatibility. CSV Flex Queries also supported.</small>
+                  </div>
+                  <h6>How to Export QFX:</h6>
+                  <ol className="small mb-3">
+                    <li>Log into IBKR Client Portal</li>
+                    <li>Go to <strong>Performance &amp; Reports → Statements</strong></li>
+                    <li>Select Activity Statement</li>
+                    <li>Choose date range and format: <strong>QFX</strong></li>
+                    <li>Download and upload</li>
+                  </ol>
+                  <h6>CSV Required Columns (Flex Query):</h6>
+                  <ul className="small mb-0">
+                    <li><code>Symbol</code>, <code>TradeDate</code>, <code>Buy/Sell</code>, <code>Quantity</code>, <code>TradePrice</code>, <code>CurrencyPrimary</code></li>
+                    <li>Optional: <code>IBCommission</code>, <code>FXRateToBase</code></li>
+                  </ul>
+                </div>
+              </div>
             </div>
+
+            {/* Freetrade */}
+            <div className="accordion-item">
+              <h2 className="accordion-header">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#freetradeHelp">
+                  <strong>Freetrade</strong>&nbsp;- CSV Export
+                </button>
+              </h2>
+              <div id="freetradeHelp" className="accordion-collapse collapse" data-bs-parent="#brokerHelpAccordion">
+                <div className="accordion-body">
+                  <div className="alert alert-warning py-2 mb-3">
+                    <small><strong>⚠️ No Exchange Rates:</strong> Freetrade CSVs don't include FX rates. Foreign currency values must be manually converted to GBP.</small>
+                  </div>
+                  <h6>Required Columns:</h6>
+                  <ul className="small mb-2">
+                    <li><code>Date</code>, <code>Type</code>, <code>Ticker</code>, <code>Quantity</code>, <code>Price</code>, <code>Total</code>, <code>Currency</code></li>
+                  </ul>
+                  <h6>How to Export:</h6>
+                  <ol className="small mb-0">
+                    <li>Open Freetrade app</li>
+                    <li>Go to <strong>Account → Statements</strong></li>
+                    <li>Request transaction history export</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            {/* Fidelity */}
+            <div className="accordion-item">
+              <h2 className="accordion-header">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fidelityHelp">
+                  <strong>Fidelity UK</strong>&nbsp;- CSV Export
+                </button>
+              </h2>
+              <div id="fidelityHelp" className="accordion-collapse collapse" data-bs-parent="#brokerHelpAccordion">
+                <div className="accordion-body">
+                  <div className="alert alert-warning py-2 mb-3">
+                    <small><strong>⚠️ No Exchange Rates:</strong> Manual FX conversion may be required for non-GBP transactions.</small>
+                  </div>
+                  <h6>Required Columns:</h6>
+                  <ul className="small mb-2">
+                    <li><code>Trade Date</code>, <code>Action</code>, <code>Symbol</code>, <code>Quantity</code>, <code>Price</code>, <code>Amount</code>, <code>Settlement Currency</code></li>
+                  </ul>
+                  <h6>Action Values:</h6>
+                  <p className="small mb-0">YOU BOUGHT, YOU SOLD, DIVIDEND</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Hargreaves Lansdown */}
+            <div className="accordion-item">
+              <h2 className="accordion-header">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#hlHelp">
+                  <strong>Hargreaves Lansdown</strong>&nbsp;- CSV Export
+                </button>
+              </h2>
+              <div id="hlHelp" className="accordion-collapse collapse" data-bs-parent="#brokerHelpAccordion">
+                <div className="accordion-body">
+                  <div className="alert alert-info py-2 mb-3">
+                    <small><strong>ℹ️ GBP Only:</strong> HL converts all foreign transactions to GBP. All values are treated as GBP.</small>
+                  </div>
+                  <h6>Required Columns:</h6>
+                  <ul className="small mb-2">
+                    <li><code>Date</code>, <code>Transaction Type</code>, <code>Security</code>, <code>ISIN</code>, <code>Quantity</code>, <code>Price</code>, <code>Value</code></li>
+                  </ul>
+                  <h6>Special Handling:</h6>
+                  <ul className="small mb-0">
+                    <li>Automatically detects if prices are in pence and converts to pounds</li>
+                    <li>ISA and SIPP accounts are flagged for tax-exempt treatment</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Generic CSV */}
+            <div className="accordion-item">
+              <h2 className="accordion-header">
+                <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#genericHelp">
+                  <strong>Generic CSV</strong>&nbsp;- Any Broker
+                </button>
+              </h2>
+              <div id="genericHelp" className="accordion-collapse collapse" data-bs-parent="#brokerHelpAccordion">
+                <div className="accordion-body">
+                  <p className="small">If your broker isn't listed, create a CSV with these columns:</p>
+                  <h6>Required Columns:</h6>
+                  <ul className="small mb-2">
+                    <li><code>Date</code> - YYYY-MM-DD or DD/MM/YYYY</li>
+                    <li><code>Type</code> - BUY, SELL, DIVIDEND, SPLIT</li>
+                    <li><code>Symbol</code> - Stock ticker</li>
+                    <li><code>Quantity</code> - Number of shares</li>
+                    <li><code>Price</code> - Price per share</li>
+                  </ul>
+                  <h6>Optional Columns:</h6>
+                  <ul className="small mb-0">
+                    <li><code>Fees</code>, <code>Currency</code> (default: GBP), <code>Name</code></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Common Errors Section */}
+          <div className="mt-4 p-3 bg-light rounded">
+            <h6><i className="fas fa-exclamation-triangle text-warning me-2"></i>Common Issues</h6>
+            <ul className="small mb-0">
+              <li><strong>Missing columns error:</strong> Ensure your CSV has all required columns for your broker</li>
+              <li><strong>Date format issues:</strong> Use YYYY-MM-DD or DD/MM/YYYY format</li>
+              <li><strong>Currency conversion:</strong> For brokers without FX rates, convert foreign amounts to GBP before uploading</li>
+              <li><strong>File encoding:</strong> Save as UTF-8 if you encounter character issues</li>
+            </ul>
+            <p className="small text-muted mt-2 mb-0">
+              <a href="#help" className="text-primary">View full documentation</a> for detailed examples and sample CSV content.
+            </p>
           </div>
         </div>
       </div>

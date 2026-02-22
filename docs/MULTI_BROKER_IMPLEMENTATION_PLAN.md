@@ -317,10 +317,10 @@ src/main/python/parsers/unified_csv_parser.py
 
 #### Tasks:
 1. ✅ Create branch `feature/multi-broker-csv-support`
-2. ⬜ Define `StandardTransaction` model
-3. ⬜ Create `BrokerConverterInterface`
-4. ⬜ Implement `ConverterFactory` with auto-detection
-5. ⬜ Add comprehensive unit tests for standard format
+2. ✅ Define `StandardTransaction` model
+3. ✅ Create `BrokerConverterInterface`
+4. ✅ Implement `ConverterFactory` with auto-detection
+5. ✅ Add comprehensive unit tests for standard format
 
 **Deliverables**:
 - `src/main/python/models/standard_transaction.py`
@@ -332,11 +332,11 @@ src/main/python/parsers/unified_csv_parser.py
 **Goal**: Refactor existing IBKR parser to use new architecture
 
 #### Tasks:
-1. ⬜ Create `IBKRConverter` class
-2. ⬜ Map IBKR columns to standard format
-3. ⬜ Handle IBKR-specific quirks (splits, dividends, etc.)
-4. ⬜ Migrate existing tests
-5. ⬜ Ensure backward compatibility
+1. ✅ Create `IBKRConverter` class
+2. ✅ Map IBKR columns to standard format
+3. ✅ Handle IBKR-specific quirks (splits, dividends, etc.)
+4. ✅ Migrate existing tests
+5. ✅ Ensure backward compatibility
 
 **Deliverables**:
 - `src/main/python/converters/ibkr_converter.py`
@@ -347,11 +347,11 @@ src/main/python/parsers/unified_csv_parser.py
 **Goal**: Add support for Trading 212 CSV exports
 
 #### Tasks:
-1. ⬜ Research Trading 212 CSV format
-2. ⬜ Create sample data files
-3. ⬜ Implement `Trading212Converter`
-4. ⬜ Handle UK-specific tax scenarios
-5. ⬜ Add comprehensive tests
+1. ✅ Research Trading 212 CSV format
+2. ✅ Create sample data files
+3. ✅ Implement `Trading212Converter`
+4. ✅ Handle UK-specific tax scenarios
+5. ✅ Add comprehensive tests
 
 **CSV Format Analysis**:
 ```csv
@@ -367,11 +367,11 @@ Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share
 **Goal**: Add support for Hargreaves Lansdown
 
 #### Tasks:
-1. ⬜ Research HL CSV format
-2. ⬜ Create sample data files
-3. ⬜ Implement `HargreavesConverter`
-4. ⬜ Handle HL-specific features (ISA accounts, etc.)
-5. ⬜ Add tests
+1. ✅ Research HL CSV format
+2. ✅ Create sample data files
+3. ✅ Implement `HargreavesConverter`
+4. ✅ Handle HL-specific features (ISA accounts, etc.)
+5. ✅ Add tests
 
 **Deliverables**:
 - `src/main/python/converters/hargreaves_converter.py`
@@ -381,10 +381,10 @@ Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share
 **Goal**: Add Freetrade and Fidelity support
 
 #### Tasks:
-1. ⬜ Implement `FreetradeConverter`
-2. ⬜ Implement `FidelityConverter`
-3. ⬜ Add comprehensive tests for both
-4. ⬜ Document CSV formats
+1. ✅ Implement `FreetradeConverter`
+2. ✅ Implement `FidelityConverter`
+3. ✅ Add comprehensive tests for both
+4. ✅ Document CSV formats
 
 **Deliverables**:
 - Converters for both brokers
@@ -394,11 +394,11 @@ Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share
 **Goal**: Update frontend to support broker selection
 
 #### Tasks:
-1. ⬜ Add broker selection dropdown
-2. ⬜ Update file upload component
-3. ⬜ Add broker-specific help text
-4. ⬜ Improve error messages
-5. ⬜ Add CSV format examples
+1. ✅ Add broker selection dropdown
+2. ✅ Update file upload component
+3. ✅ Add broker-specific help text
+4. ✅ Improve error messages
+5. ✅ Add CSV format examples
 
 **Frontend Changes**:
 - `frontend/src/components/calculator/steps/FileUploadStep.tsx`
@@ -414,7 +414,7 @@ Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share
 **Goal**: Comprehensive testing and documentation
 
 #### Tasks:
-1. ⬜ End-to-end tests for each broker
+1. ✅ End-to-end tests for each broker
 2. ⬜ Performance testing with large files
 3. ⬜ Update user documentation
 4. ⬜ Create broker-specific guides

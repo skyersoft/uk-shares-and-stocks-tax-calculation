@@ -59,14 +59,11 @@ class CsvParser(FileParserInterface):
             with open(file_path, 'r', encoding='utf-8') as file:
                 reader = csv.DictReader(file)
                 
-                # NEW: Validate required columns
-                if hasattr(reader, 'fieldnames') and reader.fieldnames:
-                    missing = [col for col in REQUIRED_CSV_COLUMNS 
-                              if col not in reader.fieldnames]
-                    if missing:
-                        self.logger.error(f"CSV missing columns: {missing}")
-                        raise CSVValidationError(missing)
-                
+                # Check if file has headers
+                if not reader.fieldnames:
+                    self.logger.error("CSV file contains no headers")
+                    raise CSVValidationError(["No headers found"])
+
                 for row in reader:
                     # Create transaction
                     transaction = self._create_transaction_from_row(row)
@@ -104,10 +101,7 @@ class CsvParser(FileParserInterface):
             self.logger.warning(f"Invalid price in row: {row}")
             return False
         
-        fx_rate_str = row.get('FXRateToBase') or row.get('CurrencyRate', '')
-        if not fx_rate_str or fx_rate_str.strip() == '':
-            self.logger.warning(f"Invalid FX rate in row: {row}")
-            return False
+        # FX Rate is optional, defaults to 1.0 in _create_transaction_from_row
         
         return True
     
@@ -158,7 +152,7 @@ class CsvParser(FileParserInterface):
                 return None
             price_per_unit = float(price_per_unit_str)
             
-            commission = abs(float(row.get('IBCommission') or row.get('Commission', '0')))
+            commission = abs(float(row.get('IBCommission') or row.get('Commission') or row.get('Fee') or row.get('Fees', '0')))
             taxes = abs(float(row.get('Taxes', '0')))
             
             # Extract additional fields (these are not critical for basic transaction creation)
@@ -167,11 +161,9 @@ class CsvParser(FileParserInterface):
             fifo_pnl_realized = float(row.get('FifoPnlRealized', '0'))
             
             # Create currency (handle alternative field names)
-            currency_code = row.get('CurrencyPrimary') or row.get('Currency', self.base_currency)
+            currency_code = row.get('CurrencyPrimary') or row.get('Currency') or row.get('Settlement Currency', self.base_currency)
             fx_rate_str = row.get('FXRateToBase') or row.get('CurrencyRate', '1.0')
-            if not fx_rate_str:
-                self.logger.warning(f"Skipping row due to missing FX rate: {row}")
-                return None
+            
             fx_rate = float(fx_rate_str)
             currency = Currency(code=currency_code, rate_to_base=fx_rate)
             
@@ -197,14 +189,15 @@ class CsvParser(FileParserInterface):
         asset_class = row.get('AssetClass', '')
         buy_sell = row.get('Buy/Sell', '')
         transaction_type_str = row.get('TransactionType', '')
+        type_str = row.get('Type', '') # Support "Type" column for generic CSV
 
         if asset_class == 'CASH':
             return TransactionType.CURRENCY_EXCHANGE
-        elif buy_sell == 'BUY':
+        elif buy_sell == 'BUY' or type_str == 'BUY':
             return TransactionType.BUY
-        elif buy_sell == 'SELL':
+        elif buy_sell == 'SELL' or type_str == 'SELL':
             return TransactionType.SELL
-        elif buy_sell == 'DIV' or 'DIV' in transaction_type_str:
+        elif buy_sell == 'DIV' or 'DIV' in transaction_type_str or type_str == 'DIVIDEND':
             return TransactionType.DIVIDEND
         elif 'INT' in transaction_type_str:
             return TransactionType.INTEREST
@@ -212,13 +205,13 @@ class CsvParser(FileParserInterface):
             return TransactionType.COMMISSION
         elif 'TAX' in transaction_type_str:
             return TransactionType.TAX_WITHHOLDING
-        elif 'SPLIT' in transaction_type_str:
+        elif 'SPLIT' in transaction_type_str or type_str == 'SPLIT':
             return TransactionType.SPLIT
         elif 'MERGER' in transaction_type_str:
             return TransactionType.MERGER
-        elif 'TRANSFER_IN' in transaction_type_str:
+        elif 'TRANSFER_IN' in transaction_type_str or type_str == 'TRANSFER_IN':
             return TransactionType.TRANSFER_IN
-        elif 'TRANSFER_OUT' in transaction_type_str:
+        elif 'TRANSFER_OUT' in transaction_type_str or type_str == 'TRANSFER_OUT':
             return TransactionType.TRANSFER_OUT
         elif 'CASH_ADJ' in transaction_type_str:
             return TransactionType.CASH_ADJUSTMENT

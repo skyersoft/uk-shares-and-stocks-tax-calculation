@@ -14,7 +14,6 @@ interface DetailedTaxBreakdownProps {
 export const DetailedTaxBreakdown: React.FC<DetailedTaxBreakdownProps> = ({
     normalizedResults,
     wizardData,
-    taxCalculations,
     className = ''
 }) => {
     const formatCurrency = (amount: number) => {
@@ -28,7 +27,7 @@ export const DetailedTaxBreakdown: React.FC<DetailedTaxBreakdownProps> = ({
 
     // Calculate comprehensive tax including all wizard inputs
     // MEMOIZED to prevent expensive recalculation on every render
-    const taxYear = wizardData?.taxYear || normalizedResults.taxYear || '2024-2025';
+    const taxYear = wizardData?.taxYear || normalizedResults.taxYear || '2025-2026';
     const comprehensiveTax = useMemo(
         () => calculateComprehensiveTax(normalizedResults, wizardData, taxYear),
         [normalizedResults, wizardData, taxYear]

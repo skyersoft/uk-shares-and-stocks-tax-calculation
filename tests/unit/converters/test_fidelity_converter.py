@@ -55,7 +55,7 @@ class TestFidelityConverter:
             'Security Description': 'Apple Inc',
             'Quantity': '10',
             'Price': '150.00',
-            'Amount': '1500.00',
+            'Amount': '-1500.00',
             'Commission': '10.00',
             'Fees': '0.50',
             'Settlement Currency': 'USD'

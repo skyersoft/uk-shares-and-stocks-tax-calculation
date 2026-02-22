@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCalculation } from '../context/CalculationContext';
 import { submitCalculation, CSVValidationError } from '../services/api';
 import { MultiStepCalculator } from '../components/calculator/MultiStepCalculator';
@@ -15,6 +16,7 @@ import SEOHead from '../components/seo/SEOHead';
 const CalculatorPage: React.FC = () => {
   console.log('[CalculatorPage] Rendering component');
   const { dispatch } = useCalculation();
+  const navigate = useNavigate();
 
   // Handle form completion from MultiStepCalculator
   const handleCalculatorComplete = async (data: any) => {
@@ -77,8 +79,8 @@ const CalculatorPage: React.FC = () => {
 
       console.log('[CalculatorPage] Navigating to results...');
       // Navigate to results
-      window.location.hash = 'results';
-      console.log('[CalculatorPage] Navigation complete, hash:', window.location.hash);
+      navigate('/results');
+      console.log('[CalculatorPage] Navigation complete, routed to /results');
     } catch (error: any) {
       console.error('[CalculatorPage] Submission error:', error);
 
@@ -115,15 +117,15 @@ const CalculatorPage: React.FC = () => {
             <div className="row justify-content-center">
               <div className="col-lg-10 text-center">
                 <div className="calculator-hero-content fade-in-up">
-                  <h1 className="mb-4">
+                  <h1 className="mb-2">
                     UK Tax Calculator
                   </h1>
-                  <p className="lead mb-4">
+                  <p className="lead mb-2">
                     Calculate your Capital Gains Tax and income tax for informational purposes.
                     This tool follows HMRC guidelines but results are for reference only.
                   </p>
                   <div className="disclaimer-banner">
-                    <div className="alert alert-warning border-0 mb-4">
+                    <div className="alert alert-warning border-0 mb-3 py-2">
                       <i className="bi bi-exclamation-triangle-fill me-2"></i>
                       <strong>Important:</strong> This calculator is for informational purposes only.
                       You are solely responsible for verifying calculations and submitting accurate information to HMRC.
@@ -137,7 +139,7 @@ const CalculatorPage: React.FC = () => {
         </section>
 
         {/* Multi-Step Calculator */}
-        <section className="calculator-section py-5">
+        <section className="calculator-section py-3">
           <div className="container">
             <div className="row justify-content-center">
               <div className="col-lg-10">

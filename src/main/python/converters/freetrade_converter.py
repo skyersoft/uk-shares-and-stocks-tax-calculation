@@ -31,14 +31,18 @@ class FreetradeConverter(BaseBrokerConverter):
                 header = f.readline().strip()
                 
             # Check for key columns
-            required_cols = ["Date", "Type", "Ticker", "Name", "Quantity", "Price", "Total", "Currency"]
-            if all(col in header for col in required_cols):
-                return 1.0
+            # Required: Date, Type, Quantity, Price, Currency
+            # One of: Ticker/Symbol
+            # One of: Fee/Fees
             
-            # Partial match
-            if "Freetrade" in header or ("Date" in header and "Ticker" in header and "Type" in header):
-                return 0.5
-                
+            has_basics = all(col in header for col in ["Date", "Type", "Quantity", "Price", "Currency"])
+            has_symbol = "Ticker" in header or "Symbol" in header
+            
+            if has_basics and has_symbol:
+                if "Freetrade" in header:
+                    return 1.0
+                return 0.9 if "Total" in header else 0.8
+            
             return 0.0
         except Exception:
             return 0.0
@@ -97,8 +101,11 @@ class FreetradeConverter(BaseBrokerConverter):
         # Parse amounts
         quantity = Decimal(row.get('Quantity', '0') or '0')
         price = Decimal(row.get('Price', '0') or '0')
-        total = Decimal(row.get('Total', '0') or '0')
-        fee = Decimal(row.get('Fee', '0') or '0')
+        
+        total_str = row.get('Total')
+        total = Decimal(total_str) if total_str else None
+        
+        fee = Decimal(row.get('Fee', '0') or row.get('Fees', '0') or '0')
         currency = row.get('Currency', 'GBP')
         
         # Adjust quantity sign for Sells
@@ -108,13 +115,13 @@ class FreetradeConverter(BaseBrokerConverter):
         # Create transaction
         tx = StandardTransaction(
             date=date,
-            symbol=row.get('Ticker', ''),
+            symbol=row.get('Ticker', '') or row.get('Symbol', ''),
             transaction_type=tx_type,
             quantity=quantity,
             price=price,
             transaction_currency=currency,
             name=row.get('Name', ''),
-            gross_amount=total,
+            gross_amount=total, # Can be None, StandardTransaction will calculate
             commission=fee,
             broker="Freetrade"
         )

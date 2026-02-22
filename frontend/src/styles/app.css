@@ -18,7 +18,7 @@
   --macos-green: #34C759;
   --macos-teal: #5AC8FA;
   --macos-indigo: #5856D6;
-  
+
   /* Primary Colors */
   --primary-color: #007AFF;
   --secondary-color: #5856D6;
@@ -26,7 +26,7 @@
   --danger-color: #FF3B30;
   --warning-color: #FF9500;
   --info-color: #5AC8FA;
-  
+
   /* Neutral Colors - MacOS Style */
   --bg-primary: #FFFFFF;
   --bg-secondary: #F5F5F7;
@@ -36,18 +36,18 @@
   --text-tertiary: #86868B;
   --border-color: #D2D2D7;
   --divider-color: #E5E5EA;
-  
+
   /* Gradients */
   --gradient-primary: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
   --gradient-success: linear-gradient(135deg, #34C759 0%, #30D158 100%);
   --gradient-bg: linear-gradient(180deg, #FAFAFA 0%, #F5F5F7 100%);
-  
+
   /* Shadows - MacOS Style */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.10);
   --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.12);
-  
+
   /* Typography */
   --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-family-mono: 'SF Mono', Monaco, Consolas, 'Courier New', monospace;
@@ -59,7 +59,7 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
-  
+
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -68,19 +68,19 @@
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
   --spacing-3xl: 4rem;
-  
+
   /* Border Radius - MacOS Style */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 18px;
   --radius-full: 9999px;
-  
+
   /* Transitions */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   /* Z-index layers */
   --z-dropdown: 1000;
   --z-sticky: 1020;
@@ -222,6 +222,7 @@ img {
 }
 
 @media (max-width: 1199.98px) {
+
   .ad-column,
   .start-ad-slot,
   .end-ad-slot {
@@ -267,8 +268,8 @@ img {
 .calculator-hero {
   background: var(--gradient-primary);
   color: white;
-  padding: 60px 0 80px;
-  margin-bottom: -60px;
+  padding: 30px 0 40px;
+  margin-bottom: -30px;
 }
 
 .calculator-hero h1 {
@@ -541,8 +542,13 @@ img {
   color: var(--secondary-color);
 }
 
-.prose h4 { font-size: var(--font-size-xl); }
-.prose h5 { font-size: var(--font-size-lg); }
+.prose h4 {
+  font-size: var(--font-size-xl);
+}
+
+.prose h5 {
+  font-size: var(--font-size-lg);
+}
 
 .prose ul,
 .prose ol {
@@ -895,15 +901,39 @@ img {
   letter-spacing: 0.025em;
 }
 
-.badge.bg-primary { background: var(--primary-color); color: white; }
-.badge.bg-secondary { background: var(--text-secondary); color: white; }
-.badge.bg-success { background: var(--success-color); color: white; }
-.badge.bg-danger { background: var(--danger-color); color: white; }
-.badge.bg-warning { background: var(--warning-color); color: white; }
-.badge.bg-info { background: var(--info-color); color: white; }
-.badge.bg-light { 
-  background: var(--bg-tertiary); 
-  color: var(--text-primary); 
+.badge.bg-primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.badge.bg-secondary {
+  background: var(--text-secondary);
+  color: white;
+}
+
+.badge.bg-success {
+  background: var(--success-color);
+  color: white;
+}
+
+.badge.bg-danger {
+  background: var(--danger-color);
+  color: white;
+}
+
+.badge.bg-warning {
+  background: var(--warning-color);
+  color: white;
+}
+
+.badge.bg-info {
+  background: var(--info-color);
+  color: white;
+}
+
+.badge.bg-light {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
   border: 1px solid var(--border-color);
 }
 
@@ -962,6 +992,7 @@ img {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -969,8 +1000,13 @@ img {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .fade-in-up {
@@ -1004,31 +1040,39 @@ img {
   .calculator-hero {
     padding: 40px 0 60px;
   }
-  
+
   .calculator-hero h1 {
     font-size: 2rem;
   }
-  
+
   .modern-file-upload {
     padding: 2rem 1rem;
   }
-  
+
   .feature-card {
     margin-bottom: 1.5rem;
   }
-  
+
   .trust-indicators {
     gap: 1rem;
   }
-  
+
   .prose {
     font-size: var(--font-size-sm);
   }
-  
-  .prose h1 { font-size: var(--font-size-3xl); }
-  .prose h2 { font-size: var(--font-size-2xl); }
-  .prose h3 { font-size: var(--font-size-xl); }
-  
+
+  .prose h1 {
+    font-size: var(--font-size-3xl);
+  }
+
+  .prose h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .prose h3 {
+    font-size: var(--font-size-xl);
+  }
+
   .prose table {
     font-size: var(--font-size-xs);
   }
@@ -1038,16 +1082,16 @@ img {
   .calculator-hero {
     padding: 30px 0 50px;
   }
-  
+
   .modern-file-upload {
     padding: 1.5rem 1rem;
   }
-  
+
   .file-upload-icon {
     width: 48px;
     height: 48px;
   }
-  
+
   .toast-container {
     left: 0.5rem;
     right: 0.5rem;
@@ -1081,17 +1125,17 @@ img {
   .no-print {
     display: none;
   }
-  
+
   .card {
     box-shadow: none;
     border: 1px solid var(--border-color);
   }
-  
+
   .prose {
     color: #000;
     font-size: 12pt;
   }
-  
+
   .prose h1,
   .prose h2,
   .prose h3 {
@@ -1104,6 +1148,7 @@ img {
    REDUCED MOTION
    ============================================================================ */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -1111,4 +1156,19 @@ img {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============================================================================
+   ADSENSE LAYOUT FIXES
+   ============================================================================ */
+/* Prevent Google Auto Ads from inserting large unfilled gaps */
+ins.adsbygoogle[data-ad-status="unfilled"] {
+  display: none !important;
+  height: 0 !important;
+}
+
+/* Specifically prevent ads from breaking the calculator hero section layout */
+.calculator-hero ins.adsbygoogle,
+.calculator-hero .google-auto-placed {
+  display: none !important;
 }

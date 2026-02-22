@@ -63,7 +63,7 @@ deployment/dns-update.json
 .DS_Store
 
 # Private Data Files - DO NOT COMMIT
-data/
+#data/
 !frontend/src/data
 uploads/
 *.csv
@@ -77,6 +77,10 @@ uploads/
 !package.json
 !README.txt
 !LICENSE.txt
+
+api_deployment_package
+deployment_package_full
+playwright-report
 
 # Build & Distribution
 *.zip
@@ -128,6 +132,8 @@ Thumbs.db
 *.ico
 !static/images/logo*
 !static/favicon.ico
+!frontend/public/images/book-placeholder.svg
+!frontend/public/images/book-placeholder.jpg
 
 # Test artifacts & responses
 tests/responses/*.png
@@ -169,3 +175,12 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+
+# AI Agent & Automation Scripts
+.agent/
+reddit_response.md
+reproduce_issue.py
+test_multipart_upload.py
+verify_samples.py
+playwright-junit.xml
+frontend/vite-react-ssg-readme.md

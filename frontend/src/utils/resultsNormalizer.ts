@@ -356,8 +356,8 @@ const computeMetrics = (raw: any): ResultsMetrics => {
   const totalTaxLiability =
     toNumber(taxReport?.summary?.estimated_tax_liability?.total_estimated_tax) ||
     toNumber(taxReport?.summary?.estimated_tax_liability?.capital_gains_tax) +
-      toNumber(taxReport?.summary?.estimated_tax_liability?.dividend_tax) +
-      toNumber(taxReport?.summary?.estimated_tax_liability?.currency_gains_tax);
+    toNumber(taxReport?.summary?.estimated_tax_liability?.dividend_tax) +
+    toNumber(taxReport?.summary?.estimated_tax_liability?.currency_gains_tax);
 
   const portfolioValue =
     toNumber(portfolioReport?.grand_total?.total_value) ||
@@ -384,7 +384,7 @@ const deriveTaxYear = (raw: any): string | null => {
 };
 
 const shouldShowCgtWarning = (taxYear: string | null): boolean =>
-  taxYear === '2024-2025';
+  taxYear === '2024-2025' || taxYear === '2025-2026';
 
 export const normalizeCalculationResults = (raw: CalculationResult | any): NormalizedResults => {
   const disposals = normalizeDisposals(raw);

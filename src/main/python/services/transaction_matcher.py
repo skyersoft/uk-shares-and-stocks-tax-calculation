@@ -17,6 +17,17 @@ class UKTransactionMatcher(TransactionMatcherInterface):
         """Initialize the transaction matcher."""
         self.logger = logging.getLogger(__name__)
     
+    @staticmethod
+    def _securities_match(sec_a: Security, sec_b: Security) -> bool:
+        """Check if two securities represent the same instrument.
+        
+        Uses ISIN when both are non-empty, otherwise falls back to symbol.
+        This ensures correct matching for brokers that don't provide ISINs.
+        """
+        if sec_a.isin and sec_b.isin:
+            return sec_a.isin == sec_b.isin
+        return sec_a.symbol == sec_b.symbol
+    
     def match_disposals(self, transactions: List[Transaction]) -> List[Tuple[Transaction, List[Transaction]]]:
         """
         Match sell transactions with corresponding buy transactions according to UK tax rules.
@@ -70,7 +81,7 @@ class UKTransactionMatcher(TransactionMatcherInterface):
             # Buys on the same day.
             same_day_buys = [
                 b for b in all_buys 
-                if b.security.isin == sell_tx.security.isin 
+                if self._securities_match(b.security, sell_tx.security)
                 and b.date.date() == sell_tx.date.date()
                 and buy_quantities[b.transaction_id] > 0
             ]
@@ -86,7 +97,7 @@ class UKTransactionMatcher(TransactionMatcherInterface):
                 end_date = sell_tx.date + timedelta(days=BED_AND_BREAKFAST_RULE_DAYS)
                 next_30_day_buys = [
                     b for b in all_buys
-                    if b.security.isin == sell_tx.security.isin
+                    if self._securities_match(b.security, sell_tx.security)
                     and sell_tx.date < b.date <= end_date
                     and buy_quantities[b.transaction_id] > 0
                 ]
@@ -106,7 +117,7 @@ class UKTransactionMatcher(TransactionMatcherInterface):
                 # Identify candidates: Buys before sell date, with remaining quantity > 0
                 pool_candidates = [
                     b for b in all_buys
-                    if b.security.isin == sell_tx.security.isin
+                    if self._securities_match(b.security, sell_tx.security)
                     and b.date.date() < sell_tx.date.date()
                     and buy_quantities[b.transaction_id] > 0
                 ]

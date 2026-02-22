@@ -7,6 +7,7 @@ import { IncomeSourcesStep } from './steps/IncomeSourcesStep';
 import { UploadDetailsStep } from './steps/UploadDetailsStep';
 import { PersonalDetailsStep } from './steps/PersonalDetailsStep';
 import { ReviewStep } from './steps/ReviewStep';
+import { useCalculation } from '../../context/CalculationContext';
 
 interface MultiStepCalculatorProps {
   onComplete: (data: WizardData) => void;
@@ -29,7 +30,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
       otherCapitalGains: false,
       pensionContributions: false
     },
-    taxYear: '2024-2025',
+    taxYear: '2025-2026',
     analysisType: 'both',
     brokerFiles: [],
     personalDetails: {
@@ -43,6 +44,9 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
     }
   });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Get submission state from context for API errors
+  const { state: calculationState } = useCalculation();
 
   const updateWizardData = (updates: Partial<WizardData>) => {
     setWizardData((prev) => ({ ...prev, ...updates }));
@@ -78,13 +82,13 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
             errors.push('Please upload at least one broker file for portfolio analysis');
           }
         }
-        
+
         if (wizardData.incomeSources?.employmentIncome) {
           if (!wizardData.employmentIncome?.grossSalary || wizardData.employmentIncome.grossSalary <= 0) {
             errors.push('Please enter a valid gross salary for employment income');
           }
         }
-        
+
         if (wizardData.incomeSources?.rentalIncome) {
           if (!wizardData.rentalIncome?.grossRentalIncome || wizardData.rentalIncome.grossRentalIncome <= 0) {
             errors.push('Please enter rental income details');
@@ -135,7 +139,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
     console.log('[MultiStepCalculator] handleSubmit called');
     console.log('[MultiStepCalculator] Current step:', currentStep);
     console.log('[MultiStepCalculator] Wizard data:', wizardData);
-    
+
     if (validateStep(4)) {
       console.log('[MultiStepCalculator] Validation passed, calling onComplete');
       onComplete(wizardData as WizardData);
@@ -197,6 +201,23 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
             steps={WIZARD_STEPS}
           />
 
+          {/* API/Submission Errors from Context */}
+          {calculationState.status === 'error' && calculationState.error && (
+            <Alert variant="danger" className="mb-4">
+              <h5 className="alert-heading">
+                <i className="fas fa-exclamation-circle me-2"></i>
+                Calculation Error
+              </h5>
+              <p className="mb-2">{calculationState.error}</p>
+              <hr />
+              <p className="mb-0 small">
+                <i className="fas fa-info-circle me-1"></i>
+                Please check your file format matches one of the supported brokers in the help section below.
+              </p>
+            </Alert>
+          )}
+
+          {/* Validation Errors */}
           {validationErrors.length > 0 && (
             <Alert variant="danger" className="mb-4">
               <h5 className="alert-heading">

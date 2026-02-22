@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { BlogIndex } from '../components/blog/BlogIndex';
 import { BlogPost as BlogPostComponent, BlogPostData } from '../components/blog/BlogPost';
 import { getAllPosts } from '../content/blogLoader';
@@ -23,7 +24,45 @@ const BlogPage: React.FC = () => {
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const hasRedirectedRef = useRef(false);
 
+  // Filter states lifted from BlogIndex
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [selectedTag, setSelectedTag] = useState('');
+
   const selectedPost = selectedSlug ? posts.find(p => p.id === selectedSlug) || null : null;
+
+  // Compute categories and tags based on all posts
+  const categories = useMemo(() => {
+    return ['All Categories', ...new Set(posts.map(post => post.category))];
+  }, [posts]);
+
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    posts.forEach(post => {
+      if (post.tags) {
+        post.tags.forEach(tag => tags.add(tag));
+      }
+    });
+    return Array.from(tags).sort();
+  }, [posts]);
+
+  // Filter posts based on search term, category, and tag
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => {
+      const matchesSearch = searchTerm === '' ||
+        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesCategory = selectedCategory === 'All Categories' ||
+        post.category === selectedCategory;
+
+      const matchesTag = selectedTag === '' ||
+        (post.tags && post.tags.includes(selectedTag));
+
+      return matchesSearch && matchesCategory && matchesTag;
+    });
+  }, [posts, searchTerm, selectedCategory, selectedTag]);
 
   // Get relevant books based on blog post content
   const getRelevantBooks = useCallback((post: BlogPostData) => {
@@ -41,19 +80,19 @@ const BlogPage: React.FC = () => {
     return relevantBooks.slice(0, 3); // Limit to 3 books
   }, []);
 
-  // Load posts once
+  // Load posts index once
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
-        const loaded = await getAllPosts(); // LoadedBlogPost[]
+        const loaded = await getAllPosts(); // LoadedBlogPost[] (content might be empty)
         if (!cancelled) {
           // Adapt loader BlogPost -> component BlogPostData shape
           const adapted: BlogPostData[] = loaded.map((p: LoadedBlogPost) => ({
             id: p.slug,
             title: p.title,
-            content: p.content,
+            content: p.content, // Initially empty for fresh loads
             excerpt: p.excerpt,
             author: p.author,
             publishedDate: p.date,
@@ -72,52 +111,98 @@ const BlogPage: React.FC = () => {
     return () => { cancelled = true; };
   }, []);
 
-  // Parse hash for deep-link (e.g., #blog/post/slug or legacy #blog/post/2)
-  const parseHash = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    const rawHash = window.location.hash;
-    const path = rawHash.startsWith('#') ? rawHash.substring(1) : rawHash; // blog/post/...
-    if (path === 'blog') {
-      setSelectedSlug(null);
+  // Fetch full content when a slug is selected
+  useEffect(() => {
+    if (!selectedSlug) return;
+
+    // Check if we already have content
+    const currentPost = posts.find(p => p.id === selectedSlug);
+    if (!currentPost || (currentPost.content && currentPost.content.length > 0)) {
       return;
     }
-    if (path.startsWith('blog/')) {
-      const segments = path.split('/');
-      // Accept patterns: blog/slug OR blog/post/slug OR legacy numeric blog/post/2
+
+    // Fetch content
+    (async () => {
+      try {
+        const fullPost = await import('../content/blogLoader').then(m => m.getPostBySlug(selectedSlug));
+        if (fullPost && fullPost.content) {
+          setPosts(prevPosts => prevPosts.map(p =>
+            p.id === selectedSlug ? { ...p, content: fullPost.content, readingTime: fullPost.readingTime } : p
+          ));
+        }
+      } catch (err) {
+        console.error("Failed to load post content", err);
+      }
+    })();
+  }, [selectedSlug, posts]);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Parse path for deep-link (e.g., /blog/post/slug or legacy #blog/post/2)
+  const parseRoute = useCallback(() => {
+    const rawHash = location.hash;
+    const hashPath = rawHash.startsWith('#') ? rawHash.substring(1) : rawHash;
+
+    // Legacy hash checking
+    if (hashPath.startsWith('blog/')) {
+      const segments = hashPath.split('/');
       let potential = '';
       if (segments.length === 2) {
         potential = segments[1];
       } else if (segments.length === 3 && segments[1] === 'post') {
         potential = segments[2];
       }
-      if (potential) {
-        // If legacy numeric, translate to slug and rewrite hash exactly once.
-        if (/^\d+$/.test(potential) && legacyIdToSlug[potential]) {
-          const slug = legacyIdToSlug[potential];
-          if (!hasRedirectedRef.current) {
-            hasRedirectedRef.current = true;
-            window.location.replace(`#blog/post/${slug}`);
-            return; // parsing will happen again after hash change
-          }
+
+      if (potential && /^\\d+$/.test(potential) && legacyIdToSlug[potential]) {
+        const slug = legacyIdToSlug[potential];
+        if (!hasRedirectedRef.current) {
+          hasRedirectedRef.current = true;
+          navigate(`/blog/post/${slug}`, { replace: true });
+          return;
         }
+      } else if (potential) {
+        // Standard legacy hash redirect to pure path
+        if (!hasRedirectedRef.current) {
+          hasRedirectedRef.current = true;
+          navigate(`/blog/post/${potential}`, { replace: true });
+          return;
+        }
+      }
+    }
+
+    // Modern path parsing
+    const pathname = location.pathname;
+    if (pathname === '/blog' || pathname === '/blog/') {
+      setSelectedSlug(null);
+      return;
+    }
+
+    if (pathname.startsWith('/blog/')) {
+      const segments = pathname.split('/').filter(Boolean);
+      // expect segments: ['blog', 'post', 'slug'] or ['blog', 'slug']
+      let potential = '';
+      if (segments.length === 2 && segments[0] === 'blog') {
+        potential = segments[1];
+      } else if (segments.length === 3 && segments[0] === 'blog' && segments[1] === 'post') {
+        potential = segments[2];
+      }
+
+      if (potential) {
         setSelectedSlug(potential);
         return;
       }
     }
+
     setSelectedSlug(null);
-  }, []);
+  }, [location, navigate]);
 
   useEffect(() => {
-    parseHash();
-    const handler = () => parseHash();
-    window.addEventListener('hashchange', handler);
-    return () => window.removeEventListener('hashchange', handler);
-  }, [parseHash]);
+    parseRoute();
+  }, [parseRoute]);
 
   const navigateToPost = (slug: string) => {
-    if (typeof window !== 'undefined') {
-      window.location.hash = `blog/post/${slug}`;
-    }
+    navigate(`/blog/post/${slug}`);
   };
 
   const handlePostClick = (post: BlogPostData) => {
@@ -125,13 +210,19 @@ const BlogPage: React.FC = () => {
   };
 
   const handleBackToList = () => {
-    if (typeof window !== 'undefined') {
-      window.location.hash = 'blog';
+    setSelectedSlug(null);
+    navigate('/blog');
+  };
+
+  const handleTagClick = (tag: string) => {
+    setSelectedTag(selectedTag === tag ? '' : tag);
+    if (selectedPost) {
+      handleBackToList();
     }
   };
 
   return (
-    <div className="container-fluid py-4">
+    <div className="container py-4">
       {selectedPost ? (
         <SEOHead
           title={selectedPost.title}
@@ -152,89 +243,173 @@ const BlogPage: React.FC = () => {
         />
       )}
       <div className="row justify-content-center">
-        <div className="col-12 col-xl-10">
-          {!selectedPost && (
-            <div className="mb-4">
-              <h1 className="h2 text-primary mb-2">Tax Calculator Blog</h1>
-              <p className="text-muted lead">
-                Expert insights, guides, and updates on UK tax calculations for stocks and shares.
-              </p>
-            </div>
-          )}
-          {loading && (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
-            </div>
-          )}
-          {!loading && error && (
-            <div className="alert alert-danger" role="alert">
-              {error}
-            </div>
-          )}
-          {!loading && !error && selectedPost ? (
-            <div className="blog-post-detail">
-              <div className="d-flex align-items-center mb-3">
-                <button className="btn btn-sm btn-outline-secondary me-3" onClick={handleBackToList}>
-                  <i className="bi bi-arrow-left me-1" /> Back to all posts
-                </button>
-                <span className="text-muted small">Post {posts.findIndex(p => p.id === selectedPost.id) + 1} of {posts.length}</span>
-              </div>
-              <BlogPostComponent post={selectedPost} />
-
-              {/* Related Resources Section */}
-              <div className="mt-5 mb-4">
-                <div className="border-top pt-4">
-                  <h4 className="h5 mb-3">
-                    📚 Related Resources
-                  </h4>
-                  <p className="text-muted mb-3">
-                    Deepen your understanding with these expert-recommended books
+        <div className="col-lg-10">
+          <div className="card shadow">
+            <div className="card-body">
+              {!selectedPost && (
+                <div className="mb-4">
+                  <h1 className="card-title">Tax Calculator Blog</h1>
+                  <p className="lead">
+                    Expert insights, guides, and updates on UK tax calculations for stocks and shares.
                   </p>
+                </div>
+              )}
 
-                  <AffiliateGrid
-                    products={getRelevantBooks(selectedPost)}
-                    columns={{ xs: 1, sm: 2, md: 3 }}
-                    showRatings={true}
-                    showCategories={true}
-                    layout="vertical"
-                    emptyStateMessage="No related books found for this topic"
-                  />
+              <div className="row">
+                <div className="col-lg-8">
+                  {loading && (
+                    <div className="text-center py-5">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    </div>
+                  )}
+                  {!loading && error && (
+                    <div className="alert alert-danger" role="alert">
+                      {error}
+                    </div>
+                  )}
+                  {!loading && !error && selectedPost ? (
+                    <div className="blog-post-detail">
+                      <div className="d-flex align-items-center mb-3">
+                        <button className="btn btn-sm btn-outline-secondary me-3" onClick={handleBackToList}>
+                          <i className="bi bi-arrow-left me-1" /> Back to all posts
+                        </button>
+                        <span className="text-muted small">Post {posts.findIndex(p => p.id === selectedPost.id) + 1} of {posts.length}</span>
+                      </div>
+                      <BlogPostComponent post={selectedPost} />
+
+                      {/* Related Resources Section */}
+                      <div className="mt-5 mb-4">
+                        <div className="border-top pt-4">
+                          <h4 className="h5 mb-3">
+                            📚 Related Resources
+                          </h4>
+                          <p className="text-muted mb-3">
+                            Deepen your understanding with these expert-recommended books
+                          </p>
+
+                          <AffiliateGrid
+                            products={getRelevantBooks(selectedPost)}
+                            columns={{ xs: 1, sm: 2, md: 3 }}
+                            showRatings={true}
+                            showCategories={true}
+                            layout="vertical"
+                            emptyStateMessage="No related books found for this topic"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mt-4 d-flex justify-content-between">
+                        <button
+                          className="btn btn-outline-primary btn-sm"
+                          disabled={posts.length === 0 || selectedPost.id === posts[0].id}
+                          onClick={() => {
+                            const currentIndex = posts.findIndex(p => p.id === selectedPost.id);
+                            if (currentIndex > 0) navigateToPost(posts[currentIndex - 1].id);
+                          }}
+                        >
+                          <i className="bi bi-chevron-left me-1" /> Previous
+                        </button>
+                        <button
+                          className="btn btn-outline-primary btn-sm"
+                          disabled={posts.length === 0 || selectedPost.id === posts[posts.length - 1].id}
+                          onClick={() => {
+                            const currentIndex = posts.findIndex(p => p.id === selectedPost.id);
+                            if (currentIndex < posts.length - 1) navigateToPost(posts[currentIndex + 1].id);
+                          }}
+                        >
+                          Next <i className="bi bi-chevron-right ms-1" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  {!loading && !error && !selectedPost && (
+                    <BlogIndex
+                      posts={filteredPosts}
+                      onPostClick={handlePostClick}
+                      className="blog-page-index"
+                      searchTerm={searchTerm}
+                      setSearchTerm={setSearchTerm}
+                    />
+                  )}
+                </div>
+
+                {/* Sidebar */}
+                <div className="col-lg-4">
+                  <div className="sticky-top" style={{ top: '20px' }}>
+                    <div className="card bg-light mb-4">
+                      <div className="card-header">
+                        <h6 className="mb-0">Quick Links</h6>
+                      </div>
+                      <div className="card-body">
+                        <ul className="list-unstyled mb-0">
+                          <li className="mb-2"><a href="/calculator" className="text-decoration-none">🧮 Use Calculator</a></li>
+                          <li className="mb-2"><a href="/guide" className="text-decoration-none">📖 CGT Guide</a></li>
+                          <li><a href="/help" className="text-decoration-none">❓ Get Help</a></li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="card bg-light mb-4">
+                      <div className="card-header d-flex justify-content-between align-items-center">
+                        <h6 className="mb-0">Categories</h6>
+                        {selectedCategory !== 'All Categories' && (
+                          <button className="btn btn-sm text-primary p-0" onClick={() => setSelectedCategory('All Categories')}>
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                      <div className="card-body">
+                        <select
+                          className="form-select form-select-sm"
+                          value={selectedCategory}
+                          onChange={(e) => {
+                            setSelectedCategory(e.target.value);
+                            if (selectedPost) handleBackToList();
+                          }}
+                        >
+                          {categories.map(category => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {allTags.length > 0 && (
+                      <div className="card bg-light">
+                        <div className="card-header d-flex justify-content-between align-items-center">
+                          <h6 className="mb-0">Tags</h6>
+                          {selectedTag && (
+                            <button className="btn btn-sm text-primary p-0" onClick={() => setSelectedTag('')}>
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                        <div className="card-body">
+                          <div className="d-flex flex-wrap gap-2">
+                            {allTags.map(tag => (
+                              <button
+                                key={tag}
+                                className={`btn btn-sm ${selectedTag === tag ? 'btn-primary' : 'btn-outline-primary'
+                                  }`}
+                                onClick={() => handleTagClick(tag)}
+                                style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem' }}
+                              >
+                                #{tag}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              <div className="mt-4 d-flex justify-content-between">
-                <button
-                  className="btn btn-outline-primary btn-sm"
-                  disabled={posts.length === 0 || selectedPost.id === posts[0].id}
-                  onClick={() => {
-                    const currentIndex = posts.findIndex(p => p.id === selectedPost.id);
-                    if (currentIndex > 0) navigateToPost(posts[currentIndex - 1].id);
-                  }}
-                >
-                  <i className="bi bi-chevron-left me-1" /> Previous
-                </button>
-                <button
-                  className="btn btn-outline-primary btn-sm"
-                  disabled={posts.length === 0 || selectedPost.id === posts[posts.length - 1].id}
-                  onClick={() => {
-                    const currentIndex = posts.findIndex(p => p.id === selectedPost.id);
-                    if (currentIndex < posts.length - 1) navigateToPost(posts[currentIndex + 1].id);
-                  }}
-                >
-                  Next <i className="bi bi-chevron-right ms-1" />
-                </button>
-              </div>
             </div>
-          ) : null}
-          {!loading && !error && !selectedPost && (
-            <BlogIndex
-              posts={posts}
-              onPostClick={handlePostClick}
-              className="blog-page-index"
-            />
-          )}
+          </div>
         </div>
       </div>
     </div>

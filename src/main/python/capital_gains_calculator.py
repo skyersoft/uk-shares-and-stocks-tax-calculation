@@ -310,8 +310,10 @@ def create_enhanced_calculator(parser_type: str = "csv") -> EnhancedCapitalGains
 
     # Create parser
     if parser_type.lower() == "csv":
-        from .parsers.csv_parser import CsvParser
-        parser = CsvParser()
+        from .parsers.multi_broker_parser import MultiBrokerParser
+        from .converters import register_default_converters
+        register_default_converters()
+        parser = MultiBrokerParser()
     elif parser_type.lower() == "qfx":
         from .parsers.qfx_parser import QfxParser
         parser = QfxParser()

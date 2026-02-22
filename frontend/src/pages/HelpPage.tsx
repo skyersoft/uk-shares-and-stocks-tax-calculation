@@ -1,5 +1,6 @@
 import React from 'react';
 import { AffiliateGrid } from '../components/affiliate';
+import { FeedbackForm } from '../components/feedback/FeedbackForm';
 
 import SEOHead from '../components/seo/SEOHead';
 
@@ -87,7 +88,7 @@ const HelpPage: React.FC = () => {
                             </table>
                           </div>
                           <p className="small text-muted">
-                            Supported types: BUY, SELL, SPLIT, TRANSFER_OUT. Dates should be YYYY-MM-DD or DD/MM/YYYY.
+                            Supported types: BUY, SELL, DIVIDEND, SPLIT, TRANSFER_IN, TRANSFER_OUT. Dates should be YYYY-MM-DD or DD/MM/YYYY.
                           </p>
                         </div>
                       </div>
@@ -189,6 +190,14 @@ const HelpPage: React.FC = () => {
                             <li><code>Total</code> - Total amount</li>
                             <li><code>Withholding tax</code>, <code>Stamp duty reserve tax</code>, <code>Currency conversion fee</code> - Fees</li>
                           </ul>
+
+                          <h6 className="mt-3">Sample CSV Content:</h6>
+                          <pre className="bg-light p-2 rounded small" style={{ whiteSpace: 'pre-wrap' }}>{`Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Total,Withholding tax,Currency conversion fee
+Market buy,2024-01-15 14:30:00,US0378331005,AAPL,Apple Inc,10,150.00,USD,0.78,0.00,1175.00,0.00,5.00
+Dividend (Ordinary),2024-03-01 10:00:00,US0378331005,AAPL,Apple Inc,10,0.24,USD,0.79,0.00,1.89,0.30,0.00`}</pre>
+                          <a href="/samples/trading212-sample.csv" download className="btn btn-sm btn-outline-primary mt-2 mb-3">
+                            <i className="bi bi-download me-1"></i>Download Sample CSV
+                          </a>
                           <h6>How to Export:</h6>
                           <ol className="small">
                             <li>Log into Trading 212</li>
@@ -226,6 +235,42 @@ const HelpPage: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Interactive Brokers (CSV) */}
+                    <div className="accordion-item">
+                      <h2 className="accordion-header">
+                        <button className="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ibkrCsv">
+                          <strong>Interactive Brokers / Sharesight</strong> - CSV Format
+                        </button>
+                      </h2>
+                      <div id="ibkrCsv" className="accordion-collapse collapse" data-bs-parent="#brokerAccordion">
+                        <div className="accordion-body">
+                          <p>Standard CSV format used by Sharesight and Interactive Brokers Flex Queries.</p>
+                          <h6>Required Columns:</h6>
+                          <ul className="small">
+                            <li><code>Symbol</code> - Stock ticker</li>
+                            <li><code>TradeDate</code> - Transaction date</li>
+                            <li><code>Buy/Sell</code> or <code>Code</code> - Transaction type (Code: O=Buy, C=Sell)</li>
+                            <li><code>Quantity</code> - Number of shares</li>
+                            <li><code>TradePrice</code> or <code>UnitPrice</code> - Price per share</li>
+                            <li><code>CurrencyPrimary</code> - Currency (e.g., USD, GBP)</li>
+                          </ul>
+                          <h6>Optional Columns:</h6>
+                          <ul className="small">
+                            <li><code>IBCommission</code> or <code>Commission</code> - Fees</li>
+                            <li><code>FXRateToBase</code> - Exchange rate to GBP</li>
+                            <li><code>AssetClass</code> - e.g., STK, CASH</li>
+                            <li><code>Description</code> - Security name</li>
+                          </ul>
+
+                          <h6 className="mt-3">Sample CSV Content:</h6>
+                          <pre className="bg-light p-2 rounded small" style={{ whiteSpace: 'pre-wrap' }}>{`Symbol,TradeDate,Buy/Sell,Quantity,TradePrice,CurrencyPrimary,IBCommission,FXRateToBase
+AAPL,2024-01-15,BUY,10,150.00,USD,1.00,0.78
+AAPL,2024-06-20,SELL,5,180.00,USD,1.00,0.79
+MSFT,2024-03-01,DIV,1,2.50,USD,0.00,0.79`}</pre>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Freetrade */}
                     <div className="accordion-item">
                       <h2 className="accordion-header">
@@ -250,6 +295,15 @@ const HelpPage: React.FC = () => {
                             <li><code>Currency</code> - Transaction currency (GBP, USD, EUR)</li>
                             <li><code>Fee</code> - Trading fees</li>
                           </ul>
+
+                          <h6 className="mt-3">Sample CSV Content:</h6>
+                          <pre className="bg-light p-2 rounded small" style={{ whiteSpace: 'pre-wrap' }}>{`Date,Type,Symbol,Quantity,Price,Fees,Currency,Name
+2024-01-15,BUY,AAPL,10,150.00,1.50,USD,Apple Inc
+2024-06-20,SELL,AAPL,5,180.00,1.50,USD,Apple Inc
+2024-03-01,DIVIDEND,AAPL,10,0.24,0.00,USD,Apple Inc`}</pre>
+                          <a href="/samples/freetrade-sample.csv" download className="btn btn-sm btn-outline-primary mt-2 mb-3">
+                            <i className="bi bi-download me-1"></i>Download Sample CSV
+                          </a>
                           <h6>How to Export:</h6>
                           <ol className="small">
                             <li>Open Freetrade app</li>
@@ -290,6 +344,15 @@ const HelpPage: React.FC = () => {
                             <li><code>Fees</code> - Other fees</li>
                             <li><code>Settlement Currency</code> - Currency (GBP, USD, EUR)</li>
                           </ul>
+
+                          <h6 className="mt-3">Sample CSV Content:</h6>
+                          <pre className="bg-light p-2 rounded small" style={{ whiteSpace: 'pre-wrap' }}>{`Trade Date,Settlement Date,Action,Symbol,Security Description,Quantity,Price,Amount,Settlement Currency,Commission
+15/01/2024,17/01/2024,YOU BOUGHT,AAPL,APPLE INC,10,150.00,-1500.00,USD,0.00
+20/06/2024,22/06/2024,YOU SOLD,AAPL,APPLE INC,5,180.00,900.00,USD,0.00
+01/03/2024,01/03/2024,DIVIDEND,AAPL,APPLE INC DIVIDEND,10,0.24,2.40,USD,0.00`}</pre>
+                          <a href="/samples/fidelity-sample.csv" download className="btn btn-sm btn-outline-primary mt-2 mb-3">
+                            <i className="bi bi-download me-1"></i>Download Sample CSV
+                          </a>
                           <h6>Date Format:</h6>
                           <p className="small">Supports DD/MM/YYYY or YYYY-MM-DD</p>
                         </div>
@@ -319,6 +382,15 @@ const HelpPage: React.FC = () => {
                             <li><code>Value</code> - Total value in GBP</li>
                             <li><code>Account Type</code> - ISA, SIPP, etc.</li>
                           </ul>
+
+                          <h6 className="mt-3">Sample CSV Content:</h6>
+                          <pre className="bg-light p-2 rounded small" style={{ whiteSpace: 'pre-wrap' }}>{`Date,Transaction Type,Notes,Security,ISIN,Quantity,Price,Value
+15/01/2024,Purchase,,Apple Inc,US0378331005,10,150.00,1500.00
+20/06/2024,Sale,,Apple Inc,US0378331005,5,180.00,900.00
+01/03/2024,Dividend,,Apple Inc Dividend,US0378331005,10,0.24,2.40`}</pre>
+                          <a href="/samples/hargreaves-lansdown-sample.csv" download className="btn btn-sm btn-outline-primary mt-2 mb-3">
+                            <i className="bi bi-download me-1"></i>Download Sample CSV
+                          </a>
                           <h6>Special Handling:</h6>
                           <ul className="small">
                             <li>Automatically detects if prices are in pence and converts to pounds</li>
@@ -342,19 +414,30 @@ const HelpPage: React.FC = () => {
                           <h6>Required Columns:</h6>
                           <ul className="small">
                             <li><code>Date</code> - YYYY-MM-DD or DD/MM/YYYY</li>
-                            <li><code>Type</code> - BUY, SELL, DIVIDEND, SPLIT, TRANSFER_OUT</li>
+                            <li><code>Type</code> - BUY, SELL, DIVIDEND, SPLIT, TRANSFER_IN, TRANSFER_OUT</li>
                             <li><code>Symbol</code> - Stock ticker</li>
                             <li><code>Quantity</code> - Number of shares (positive for buys, negative for sells)</li>
-                            <li><code>Price</code> - Price per share in GBP</li>
+                            <li><code>Price</code> - Price per share</li>
                           </ul>
                           <h6>Optional Columns:</h6>
                           <ul className="small">
                             <li><code>Fees</code> - Trading fees and commissions</li>
-                            <li><code>Currency</code> - GBP (default if omitted)</li>
+                            <li><code>Currency</code> - Transaction currency (default: GBP)</li>
                             <li><code>Name</code> - Security name</li>
                           </ul>
-                          <div className="alert alert-danger mt-3">
-                            <strong>⚠️ Important:</strong> All prices and amounts must be in GBP. The calculator does not perform currency conversion for generic CSVs.
+
+                          <h6 className="mt-3">Sample CSV Content:</h6>
+                          <pre className="bg-light p-2 rounded small" style={{ whiteSpace: 'pre-wrap' }}>{`Date,Type,Symbol,Name,Quantity,Price,Fees,Currency
+2024-01-15,BUY,AAPL,Apple Inc,10,150.00,1.50,GBP
+2024-06-20,SELL,AAPL,Apple Inc,5,180.00,1.50,GBP
+2024-03-01,DIVIDEND,AAPL,Apple Inc,10,0.24,0.00,GBP
+2024-02-10,BUY,TSLA,Tesla Inc,20,200.00,5.00,GBP`}</pre>
+                          <a href="/samples/generic-sample.csv" download className="btn btn-sm btn-outline-primary mt-2 mb-3">
+                            <i className="bi bi-download me-1"></i>Download Sample CSV
+                          </a>
+
+                          <div className="alert alert-info mt-3">
+                            <strong><i className="bi bi-info-circle"></i> Note:</strong> For SELL transactions, you can use either a negative quantity (e.g., -5) or just "SELL" as the type with a positive quantity. The calculator handles both.
                           </div>
                         </div>
                       </div>
@@ -373,6 +456,10 @@ const HelpPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Feedback Form */}
+              <FeedbackForm />
+
             </div>
           </div>
 
