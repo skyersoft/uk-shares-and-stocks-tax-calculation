@@ -93,13 +93,19 @@ aws s3 sync "${DIST_DIR}" "s3://${S3_BUCKET}" \
     --delete \
     --cache-control "public, max-age=31536000, immutable" \
     --exclude "*.html" \
+    --exclude "*.json" \
+    --exclude "*.xml" \
+    --exclude "*.txt" \
     --profile goker
 
-# Upload HTML files with no-cache
+# Upload HTML, JSON, XML, TXT files with no-cache
 aws s3 sync "${DIST_DIR}" "s3://${S3_BUCKET}" \
     --cache-control "no-cache" \
     --exclude "*" \
     --include "*.html" \
+    --include "*.json" \
+    --include "*.xml" \
+    --include "*.txt" \
     --profile goker
 
 echo -e "${GREEN}✅ Frontend uploaded to S3${NC}"
