@@ -13,6 +13,7 @@ import HelpPage from './pages/HelpPage';
 import GuidePage from './pages/GuidePage';
 import BlogPage from './pages/BlogPage';
 import AffiliateDemo from './pages/AffiliateDemo';
+import NotFoundPage from './pages/NotFoundPage';
 
 import { ScrollToTop } from './components/common/ScrollToTop';
 import { PageTracker } from './components/common/PageTracker';
@@ -51,6 +52,7 @@ export const routes: RouteRecord[] = [
       { path: 'blog', element: <BlogPage /> },
       { path: 'blog/post/:slug', element: <BlogPage /> },
       { path: 'affiliate-demo', element: <AffiliateDemo /> },
+      { path: '*', element: <NotFoundPage /> },
     ]
   }
 ];
