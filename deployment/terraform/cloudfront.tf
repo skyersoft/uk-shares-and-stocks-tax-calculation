@@ -67,6 +67,21 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
+  # SPA Routing Fallback
+  custom_error_response {
+    error_code            = 403
+    response_code         = 200
+    error_caching_min_ttl = 300
+    response_page_path    = "/index.html"
+  }
+
+  custom_error_response {
+    error_code            = 404
+    response_code         = 200
+    error_caching_min_ttl = 300
+    response_page_path    = "/index.html"
+  }
+
   # API Gateway Origin
   origin {
     origin_id   = "APIGateway"

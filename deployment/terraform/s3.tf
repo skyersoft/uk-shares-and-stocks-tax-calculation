@@ -75,7 +75,7 @@ resource "aws_s3_bucket_website_configuration" "website" {
   }
 
   error_document {
-    key = "error.html"
+    key = "index.html"
   }
 }
 
