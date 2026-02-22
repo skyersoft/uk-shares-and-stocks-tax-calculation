@@ -14,25 +14,30 @@ export default defineConfig(({ command, mode }) => {
       entry: 'main.tsx',
       dirStyle: 'nested',
       includedRoutes(paths: string[], routes: any[]) {
-        // Find all blog post files to generate static routes for each
+        // Read the pre-generated index.json to get all valid blog slugs for SSG
         const fs = require('fs');
-        const postsDir = path.resolve(__dirname, 'src/content/posts');
+        const indexPath = path.resolve(__dirname, 'public/blog/index.json');
         const postRoutes: string[] = [];
 
-        if (fs.existsSync(postsDir)) {
-          const files = fs.readdirSync(postsDir);
-          files.forEach((file: string) => {
-            if (file.endsWith('.md')) {
-              const slug = file.replace(/\.md$/, '');
-              postRoutes.push(`/blog/post/${slug}`);
-            }
-          });
+        if (fs.existsSync(indexPath)) {
+          try {
+            const indexData = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+            indexData.forEach((post: { slug: string }) => {
+              if (post.slug) {
+                postRoutes.push(`/blog/post/${post.slug}`);
+              }
+            });
+          } catch (e) {
+            console.error("Failed to parse blog index for SSG:", e);
+          }
         }
+        console.log("SSG Paths received:", paths);
+        console.log("SSG Post Routes:", postRoutes);
 
+        // Remove any dynamic routes with colons that might have slipped through
+        const staticPaths = paths.filter(route => !route.includes(':'));
         // Return original paths plus dynamically discovered blog post routes
-        return paths.flatMap((route: string) =>
-          route === '/blog/post/:slug' ? postRoutes : route
-        );
+        return [...staticPaths, ...postRoutes];
       }
     },
     root: path.resolve(__dirname, 'src'),
