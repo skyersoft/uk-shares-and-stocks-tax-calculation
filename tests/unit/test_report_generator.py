@@ -80,10 +80,10 @@ class TestCSVReportGenerator:
             assert rows[1][0] == '2024-06-15'  # Date
             assert rows[1][1] == 'HSBA (GB00B16KPT44)'  # Security display name
             assert rows[1][2] == '100.0'  # Quantity
-            assert float(rows[1][3]) == 700.00  # Proceeds
-            assert float(rows[1][4]) == 500.00  # Cost
-            assert float(rows[1][5]) == 10.00  # Expenses
-            assert float(rows[1][6]) == 190.00  # Gain/Loss
+            assert float(rows[1][3]) == 1200.00  # Proceeds
+            assert float(rows[1][4]) == 1000.00  # Cost
+            assert float(rows[1][5]) == 25.00  # Expenses
+            assert float(rows[1][6]) == 175.00  # Gain/Loss
             assert rows[1][7] == 'section104'  # Matching Rule
 
             # Check second disposal row
@@ -107,11 +107,11 @@ class TestCSVReportGenerator:
             
             # Check summary values
             assert rows[summary_start + 1] == ['Tax Year', '2024-2025']
-            assert float(rows[summary_start + 2][1]) == 2200.00
-            assert float(rows[summary_start + 3][1]) == 475.00
+            assert float(rows[summary_start + 2][1]) == 2700.00
+            assert float(rows[summary_start + 3][1]) == 460.00
             assert float(rows[summary_start + 4][1]) == 0.00
-            assert float(rows[summary_start + 5][1]) == 475.00
-            assert float(rows[summary_start + 6][1]) == 475.00
+            assert float(rows[summary_start + 5][1]) == 460.00
+            assert float(rows[summary_start + 6][1]) == 460.00
             assert float(rows[summary_start + 7][1]) == 0.00
             
         finally:
@@ -130,7 +130,7 @@ class TestCSVReportGenerator:
             security=security,
             sell_date=datetime(2024, 6, 15),
             quantity=100.0,
-            proceeds=1400.0,
+            proceeds=1020.0, # Adjusted to produce -110.0 loss (1020 - 1100 - 30)
             cost_basis=1100.0,
             expenses=30.0,
             matching_rule="section104"

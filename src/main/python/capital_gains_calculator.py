@@ -154,32 +154,49 @@ class EnhancedCapitalGainsCalculator:
 
     def calculate_comprehensive_analysis(
         self,
-        file_path: str,
+        file_path,  # Union[str, List[str]]
         tax_year: str,
         analysis_type: str = "both"  # "tax", "portfolio", "both"
     ) -> Dict[str, Any]:
-        """Perform comprehensive tax and portfolio analysis."""
+        """Perform comprehensive tax and portfolio analysis.
+        
+        Args:
+            file_path: Path to a single file or list of file paths
+            tax_year: Tax year to analyze
+            analysis_type: Type of analysis to perform
+        """
 
         self.logger.info(f"Starting comprehensive analysis for {tax_year}")
         start_time = time.time()
 
-        # Parse transactions
-        self.logger.info(f"Parsing transactions from {file_path}")
-        transactions = self.parser.parse(file_path)
-        self.logger.info(f"Parsed {len(transactions)} transactions")
+        # Handle both single file and multiple files
+        if isinstance(file_path, list):
+            file_paths = file_path
+        else:
+            file_paths = [file_path]
+
+        # Parse transactions from all files
+        all_transactions = []
+        for path in file_paths:
+            self.logger.info(f"Parsing transactions from {path}")
+            transactions = self.parser.parse(path)
+            self.logger.info(f"Parsed {len(transactions)} transactions from {path}")
+            all_transactions.extend(transactions)
+        
+        self.logger.info(f"Total parsed {len(all_transactions)} transactions from {len(file_paths)} file(s)")
 
         results = {
-            'file_path': file_path,
+            'file_path': file_paths[0] if len(file_paths) == 1 else f"{len(file_paths)} files",
             'tax_year': tax_year,
             'analysis_type': analysis_type,
-            'transaction_count': len(transactions),
+            'transaction_count': len(all_transactions),
             'processing_time': 0.0
         }
 
         if analysis_type in ["tax", "both"]:
             self.logger.info("Calculating comprehensive tax summary")
             tax_summary = self.tax_year_calculator.calculate_comprehensive_tax_summary(
-                transactions, tax_year
+                all_transactions, tax_year
             )
             results['tax_analysis'] = tax_summary
 
@@ -188,22 +205,22 @@ class EnhancedCapitalGainsCalculator:
             results['tax_report'] = tax_report
 
             # Calculate commission summary
-            commission_summary = self._calculate_commission_summary(transactions, tax_year)
+            commission_summary = self._calculate_commission_summary(all_transactions, tax_year)
             results['commission_summary'] = commission_summary
 
         if analysis_type in ["portfolio", "both"]:
             self.logger.info("Calculating portfolio holdings and performance")
 
             # Calculate portfolio holdings
-            holdings = self.portfolio_calculator.calculate_current_holdings(transactions)
+            holdings = self.portfolio_calculator.calculate_current_holdings(all_transactions)
             self.logger.info(f"Calculated {len(holdings)} current holdings")
 
             if holdings:
                 # Calculate performance metrics
-                dividends = self.dividend_processor.process_dividend_transactions(transactions)
+                dividends = self.dividend_processor.process_dividend_transactions(all_transactions)
                 for holding in holdings:
                     self.performance_calculator.calculate_holding_performance(
-                        holding, transactions, dividends
+                        holding, all_transactions, dividends
                     )
 
                 # Group by market and calculate portfolio summary
@@ -293,8 +310,10 @@ def create_enhanced_calculator(parser_type: str = "csv") -> EnhancedCapitalGains
 
     # Create parser
     if parser_type.lower() == "csv":
-        from .parsers.csv_parser import CsvParser
-        parser = CsvParser()
+        from .parsers.multi_broker_parser import MultiBrokerParser
+        from .converters import register_default_converters
+        register_default_converters()
+        parser = MultiBrokerParser()
     elif parser_type.lower() == "qfx":
         from .parsers.qfx_parser import QfxParser
         parser = QfxParser()

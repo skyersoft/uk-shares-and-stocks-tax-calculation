@@ -152,8 +152,8 @@ class TestUKTransactionMatcher:
         assert matched_buys[0].transaction_id == "buy1"
         assert matched_buys[0].quantity == 50.0
         
-        # Second match should be from the section 104 holding
-        assert matched_buys[1].transaction_id == "buy3"
+        # Second match should be from the section 104 pool (synthetic POOL_MATCH transaction)
+        assert matched_buys[1].transaction_id.startswith("POOL_MATCH_")
         assert matched_buys[1].quantity == 50.0
     
     def test_section_104_rule(self):
@@ -212,10 +212,10 @@ class TestUKTransactionMatcher:
         
         assert sell.transaction_id == "sell1"
         
-        # Should match from section 104 holding
-        # The matcher should take shares in order, so first from buy1 then buy2
-        assert len(matched_buys) == 2
-        assert matched_buys[0].transaction_id == "buy1"
-        assert matched_buys[0].quantity == 100.0
-        assert matched_buys[1].transaction_id == "buy2"
-        assert matched_buys[1].quantity == 100.0  # Only need 100 from second buy
+        # Section 104 pool creates a single synthetic POOL_MATCH transaction
+        # with averaged cost basis: (100*4 + 150*5) / 250 = 1150/250 = 4.6
+        assert len(matched_buys) == 1
+        pooled = matched_buys[0]
+        assert pooled.transaction_id.startswith("POOL_MATCH_")
+        assert pooled.quantity == 200.0
+        assert pooled.price_per_unit == pytest.approx(4.6, rel=1e-6)  # Weighted average price

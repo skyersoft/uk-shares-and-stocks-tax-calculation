@@ -1,59 +1,21 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { BlogPostData } from './BlogPost';
 
 interface BlogIndexProps {
   posts: BlogPostData[];
   className?: string;
   onPostClick?: (post: BlogPostData) => void;
+  searchTerm: string;
+  setSearchTerm: (t: string) => void;
 }
 
-export const BlogIndex: React.FC<BlogIndexProps> = ({ 
-  posts, 
-  className = '', 
-  onPostClick 
+export const BlogIndex: React.FC<BlogIndexProps> = ({
+  posts,
+  className = '',
+  onPostClick,
+  searchTerm,
+  setSearchTerm
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
-  const [selectedTag, setSelectedTag] = useState('');
-
-  // Get unique categories and tags
-  const categories = useMemo(() => {
-    const cats = ['All Categories', ...new Set(posts.map(post => post.category))];
-    return cats;
-  }, [posts]);
-
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    posts.forEach(post => {
-      if (post.tags) {
-        post.tags.forEach(tag => tags.add(tag));
-      }
-    });
-    return Array.from(tags).sort();
-  }, [posts]);
-
-  // Filter posts based on search term, category, and tag
-  const filteredPosts = useMemo(() => {
-    return posts.filter(post => {
-      const matchesSearch = searchTerm === '' || 
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      const matchesCategory = selectedCategory === 'All Categories' || 
-        post.category === selectedCategory;
-
-      const matchesTag = selectedTag === '' || 
-        (post.tags && post.tags.includes(selectedTag));
-
-      return matchesSearch && matchesCategory && matchesTag;
-    });
-  }, [posts, searchTerm, selectedCategory, selectedTag]);
-
-  const handleTagClick = (tag: string) => {
-    setSelectedTag(selectedTag === tag ? '' : tag);
-  };
-
   const handlePostClick = (post: BlogPostData) => {
     if (onPostClick) {
       onPostClick(post);
@@ -71,10 +33,10 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({
 
   return (
     <div className={`blog-index ${className}`}>
-      {/* Search and Filter Controls */}
+      {/* Search Controls */}
       <div className="blog-controls mb-4">
         <div className="row g-3">
-          <div className="col-md-6">
+          <div className="col-12">
             <input
               type="text"
               className="form-control"
@@ -83,63 +45,16 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="col-md-3">
-            <select
-              className="form-select"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              {categories.map(category => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="col-md-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <span className="text-muted small">
-                {filteredPosts.length} articles
-              </span>
-              {selectedTag && (
-                <button
-                  className="btn btn-sm btn-outline-secondary"
-                  onClick={() => setSelectedTag('')}
-                >
-                  Clear tag filter
-                </button>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Tags Filter */}
-      {allTags.length > 0 && (
-        <div className="blog-tags mb-4">
-          <div className="d-flex flex-wrap gap-2">
-            {allTags.map(tag => (
-              <button
-                key={tag}
-                className={`btn btn-sm ${
-                  selectedTag === tag ? 'btn-primary' : 'btn-outline-primary'
-                }`}
-                onClick={() => handleTagClick(tag)}
-              >
-                #{tag}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Blog Posts */}
       <div className="blog-posts">
-        {filteredPosts.length > 0 ? (
+        {posts.length > 0 ? (
           <div className="row g-4">
-            {filteredPosts.map(post => (
-              <div key={post.id} className="col-md-6 col-lg-4">
-                <div 
+            {posts.map(post => (
+              <div key={post.id} className="col-md-6">
+                <div
                   className="card h-100 blog-post-card"
                   style={{ cursor: onPostClick ? 'pointer' : 'default' }}
                   onClick={() => handlePostClick(post)}
@@ -150,11 +65,11 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({
                         {post.category}
                       </span>
                     </div>
-                    
+
                     <h5 className="card-title">{post.title}</h5>
-                    
+
                     <p className="card-text flex-grow-1">{post.excerpt}</p>
-                    
+
                     <div className="blog-post-meta mt-auto">
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <small className="text-muted">
@@ -164,7 +79,7 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({
                           {post.readingTime} min read
                         </small>
                       </div>
-                      
+
                       <div className="d-flex justify-content-between align-items-center">
                         <small className="text-muted">
                           {formatDate(post.publishedDate)}
@@ -180,7 +95,7 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({
                             </span>
                           ))}
                           {post.tags && post.tags.length > 2 && (
-                            <span 
+                            <span
                               className="badge bg-light text-dark"
                               style={{ fontSize: '0.7em' }}
                             >
@@ -204,16 +119,12 @@ export const BlogIndex: React.FC<BlogIndexProps> = ({
             <p className="text-muted">
               Try adjusting your search or filter criteria.
             </p>
-            {(searchTerm || selectedCategory !== 'All Categories' || selectedTag) && (
+            {searchTerm && (
               <button
                 className="btn btn-outline-primary"
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedCategory('All Categories');
-                  setSelectedTag('');
-                }}
+                onClick={() => setSearchTerm('')}
               >
-                Clear all filters
+                Clear search
               </button>
             )}
           </div>

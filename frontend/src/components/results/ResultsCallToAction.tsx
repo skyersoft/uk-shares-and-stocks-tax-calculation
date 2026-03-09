@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
@@ -15,12 +16,14 @@ export const ResultsCallToAction: React.FC<ResultsCallToActionProps> = ({
   onGetHelp,
   className = ''
 }) => {
+  const navigate = useNavigate();
+
   const handleNewCalculation = () => {
     if (onNewCalculation) {
       onNewCalculation();
       return;
     }
-    window.location.hash = '';
+    navigate('/calculator');
   };
 
   const handleLearnMore = () => {
@@ -28,7 +31,7 @@ export const ResultsCallToAction: React.FC<ResultsCallToActionProps> = ({
       onLearnMore();
       return;
     }
-    window.location.hash = 'about';
+    navigate('/about');
   };
 
   const handleGetHelp = () => {
@@ -36,7 +39,7 @@ export const ResultsCallToAction: React.FC<ResultsCallToActionProps> = ({
       onGetHelp();
       return;
     }
-    window.location.hash = 'help';
+    navigate('/help');
   };
 
   return (

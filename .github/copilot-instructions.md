@@ -54,13 +54,13 @@ npm test               # Playwright E2E
 
 ### AWS Deployment
 ```bash
+# Current working deployment process:
 cd deployment/
-./deploy-all.sh        # Complete deployment (package → infra → code → test)
+bash 01-package-api.sh          # Creates api-lambda-deployment.zip (~29MB)
+mv api-lambda-deployment.zip ../lambda-deployment.zip  # Rename for Terraform
 
-# Manual steps:
-./01-package.sh        # Creates lambda-deployment.zip
-./02-deploy-infrastructure.sh  # CloudFormation stack
-./03-deploy-code.sh    # Update Lambda code
+cd terraform/
+terraform apply                  # Deploys Lambda + API Gateway + CloudFront
 
 # Frontend deployment (React SPA)
 cd frontend && npm run build     # Creates dist/
@@ -71,6 +71,16 @@ aws cloudfront create-invalidation --distribution-id E3CPZK9XL7GR6Q \
 ```
 
 **AWS Profile**: Always use `--profile goker` (Account: 286154443186)
+
+**IMPORTANT - Deployment Scripts**:
+- ✅ **USE**: `01-package-api.sh` - Packages Lambda with all dependencies
+- 🚫 **DO NOT USE**: `01-package.sh` - OBSOLETE (slow, inconsistent)
+- 🚫 **DO NOT USE**: `03-deploy-api-code.sh` - OBSOLETE (use Terraform instead)
+
+**Recent Fixes Applied**:
+1. **Broker Detection**: Changed `ConverterFactory()` → `get_factory()` in lambda_handler.py
+2. **Import Fix**: Removed typer import from `src/main/python/__init__.py` to avoid heavy CLI dependencies
+3. **Handler**: Uses `deployment/lambda_handler.py` (has all endpoints including /detect-broker)
 
 ## Project-Specific Conventions
 

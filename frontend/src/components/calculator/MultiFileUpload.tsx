@@ -1,7 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { BrokerFile, BrokerType, BROKER_OPTIONS } from '../../types/calculator';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
+import { Modal } from '../ui/Modal';
+import { FileValidationPreview } from './FileValidationPreview';
+import { BrokerDetectionResult } from '../../services/api';
 
 interface MultiFileUploadProps {
   files: BrokerFile[];
@@ -22,26 +25,35 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detectionResults, setDetectionResults] = useState<Record<string, BrokerDetectionResult>>({});
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
+
+  // Keep a ref to the latest files to avoid stale closures in async operations
+  const filesRef = useRef<BrokerFile[]>(files);
+
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
 
   const generateId = () => `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   const validateFile = (file: File): string | null => {
     const allowedExtensions = ['.csv', '.qfx', '.ofx'];
     const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-    
+
     if (!allowedExtensions.includes(extension)) {
       return `File "${file.name}" has an invalid format. Only CSV, QFX, and OFX files are accepted.`;
     }
-    
+
     if (file.size > maxSizePerFile) {
       const sizeMB = (maxSizePerFile / (1024 * 1024)).toFixed(0);
       return `File "${file.name}" is too large. Maximum size is ${sizeMB}MB.`;
     }
-    
+
     return null;
   };
 
-  const handleFiles = (newFiles: FileList | null) => {
+  const handleFiles = async (newFiles: FileList | null) => {
     if (!newFiles || newFiles.length === 0) return;
 
     setError(null);
@@ -54,16 +66,22 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     const brokerFiles: BrokerFile[] = [];
     const errors: string[] = [];
 
+    // Validate and create initial broker file objects
     Array.from(newFiles).forEach((file) => {
       const validationError = validateFile(file);
       if (validationError) {
         errors.push(validationError);
       } else {
+        const isCSV = file.name.toLowerCase().endsWith('.csv');
         brokerFiles.push({
           id: generateId(),
           file,
           broker: 'interactive-brokers', // default
-          accountName: undefined
+          accountName: undefined,
+          detectionStatus: isCSV ? 'pending' : undefined,
+          detectedBroker: undefined,
+          confidence: undefined,
+          transactionCount: undefined
         });
       }
     });
@@ -73,7 +91,78 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       return;
     }
 
-    onChange([...files, ...brokerFiles]);
+    // Add files immediately (with pending status)
+    const updatedFiles = [...files, ...brokerFiles];
+    onChange(updatedFiles);
+
+    // Detect broker for CSV files asynchronously
+    for (const brokerFile of brokerFiles) {
+      if (brokerFile.detectionStatus === 'pending') {
+        detectBrokerForFile(brokerFile.id, brokerFile.file);
+      }
+    }
+  };
+
+  const detectBrokerForFile = async (fileId: string, file: File) => {
+    // Import detectBroker function
+    const { detectBroker } = await import('../../services/api');
+
+    // Update status to detecting
+    // Use filesRef.current to get the latest files array
+    onChange(filesRef.current.map(f =>
+      f.id === fileId ? { ...f, detectionStatus: 'detecting' as const } : f
+    ));
+
+    try {
+      const result = await detectBroker(file);
+
+      if (result.detected) {
+        // Store full result
+        setDetectionResults(prev => ({ ...prev, [fileId]: result }));
+
+        // Map broker name to BrokerType
+        const brokerTypeMap: Record<string, BrokerType> = {
+          'Interactive Brokers': 'interactive-brokers',
+          'Trading 212': 'trading212',
+          'Hargreaves Lansdown': 'hargreaves-lansdown',
+          'Freetrade': 'freetrade',
+          'Fidelity': 'fidelity',
+          'eToro': 'etoro',
+          'Vanguard': 'vanguard',
+          'AJ Bell': 'aj-bell'
+        };
+
+        const brokerType = brokerTypeMap[result.broker!] || 'manual-csv';
+
+        onChange(filesRef.current.map(f =>
+          f.id === fileId ? {
+            ...f,
+            broker: brokerType,
+            detectionStatus: 'detected' as const,
+            detectedBroker: result.broker,
+            confidence: result.confidence,
+            transactionCount: result.metadata?.transaction_count
+          } : f
+        ));
+      } else {
+        onChange(filesRef.current.map(f =>
+          f.id === fileId ? {
+            ...f,
+            detectionStatus: 'error' as const,
+            detectionError: result.error || 'Could not detect broker'
+          } : f
+        ));
+      }
+    } catch (error) {
+      console.error('Broker detection failed:', error);
+      onChange(filesRef.current.map(f =>
+        f.id === fileId ? {
+          ...f,
+          detectionStatus: 'error' as const,
+          detectionError: error instanceof Error ? error.message : 'Detection failed'
+        } : f
+      ));
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -122,7 +211,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   return (
     <div className="multi-file-upload">
       {error && (
-        <Alert variant="danger" className="mb-3" onClose={() => setError(null)}>
+        <Alert variant="danger" className="mb-3">
           <i className="fas fa-exclamation-triangle me-2"></i>
           {error}
         </Alert>
@@ -130,9 +219,8 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
 
       {/* Drop Zone */}
       <div
-        className={`border-2 border-dashed rounded p-4 text-center ${
-          dragOver ? 'border-primary bg-light' : 'border-secondary'
-        }`}
+        className={`border-2 border-dashed rounded p-4 text-center ${dragOver ? 'border-primary bg-light' : 'border-secondary'
+          }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -147,7 +235,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
           onChange={handleFileInput}
           style={{ display: 'none' }}
         />
-        
+
         <div className="py-3">
           <i className={`fas fa-cloud-upload-alt ${dragOver ? 'text-primary' : 'text-secondary'} mb-3`} style={{ fontSize: '3rem' }}></i>
           <h5 className="mb-2">
@@ -174,7 +262,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
           </div>
 
           <div className="list-group">
-            {files.map((brokerFile, index) => (
+            {files.map((brokerFile) => (
               <div key={brokerFile.id} className="list-group-item">
                 <div className="row g-3 align-items-center">
                   {/* File Info */}
@@ -187,7 +275,35 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                         </div>
                         <div className="small text-muted">
                           {formatFileSize(brokerFile.file.size)}
+                          {brokerFile.transactionCount && (
+                            <span className="ms-2">
+                              • {brokerFile.transactionCount} transactions
+                            </span>
+                          )}
                         </div>
+                        {/* Detection Status */}
+                        {brokerFile.detectionStatus && (
+                          <div className="mt-1">
+                            {brokerFile.detectionStatus === 'detecting' && (
+                              <small className="text-info">
+                                <i className="fas fa-spinner fa-spin me-1"></i>
+                                Detecting broker...
+                              </small>
+                            )}
+                            {brokerFile.detectionStatus === 'detected' && (
+                              <small className="text-success">
+                                <i className="fas fa-check-circle me-1"></i>
+                                {brokerFile.detectedBroker} ({Math.round((brokerFile.confidence || 0) * 100)}%)
+                              </small>
+                            )}
+                            {brokerFile.detectionStatus === 'error' && (
+                              <small className="text-danger">
+                                <i className="fas fa-exclamation-triangle me-1"></i>
+                                {brokerFile.detectionError || 'Detection failed'}
+                              </small>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -198,6 +314,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                       className="form-select form-select-sm"
                       value={brokerFile.broker}
                       onChange={(e) => handleBrokerChange(brokerFile.id, e.target.value as BrokerType)}
+                      disabled={brokerFile.detectionStatus === 'detecting'}
                     >
                       {BROKER_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -220,6 +337,17 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
 
                   {/* Remove Button */}
                   <div className="col-12 col-md-2 text-end">
+                    {brokerFile.detectionStatus === 'detected' && (
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => setPreviewFileId(brokerFile.id)}
+                        title="Preview file details"
+                      >
+                        <i className="fas fa-eye"></i>
+                      </Button>
+                    )}
                     <Button
                       variant="outline-danger"
                       size="sm"
@@ -251,6 +379,22 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
           <i className="fas fa-info-circle me-2"></i>
           <strong>Tip:</strong> You can upload files from multiple brokers. We'll combine them automatically.
         </div>
+      )}
+
+      {/* Preview Modal */}
+      {previewFileId && detectionResults[previewFileId] && (
+        <Modal
+          isOpen={!!previewFileId}
+          onClose={() => setPreviewFileId(null)}
+          title="File Validation Preview"
+          size="lg"
+        >
+          <FileValidationPreview
+            detection={detectionResults[previewFileId]}
+            onConfirm={() => setPreviewFileId(null)}
+            onCancel={() => setPreviewFileId(null)}
+          />
+        </Modal>
       )}
     </div>
   );

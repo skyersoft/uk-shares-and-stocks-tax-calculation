@@ -13,18 +13,26 @@ export interface IncomeSourceSelection {
   pensionContributions: boolean;
 }
 
+
 export interface BrokerFile {
   id: string;
   file: File;
   broker: BrokerType;
   accountName?: string;
+  // Broker detection metadata
+  detectionStatus?: 'pending' | 'detecting' | 'detected' | 'error';
+  detectedBroker?: string;
+  confidence?: number;
+  transactionCount?: number;
+  detectionError?: string;
 }
 
-export type BrokerType = 
+export type BrokerType =
   | 'interactive-brokers'
   | 'hargreaves-lansdown'
   | 'trading212'
   | 'freetrade'
+  | 'fidelity'
   | 'etoro'
   | 'vanguard'
   | 'aj-bell'
@@ -35,6 +43,7 @@ export const BROKER_OPTIONS: Array<{ value: BrokerType; label: string }> = [
   { value: 'hargreaves-lansdown', label: 'Hargreaves Lansdown' },
   { value: 'trading212', label: 'Trading 212' },
   { value: 'freetrade', label: 'Freetrade' },
+  { value: 'fidelity', label: 'Fidelity' },
   { value: 'etoro', label: 'eToro' },
   { value: 'vanguard', label: 'Vanguard' },
   { value: 'aj-bell', label: 'AJ Bell' },
@@ -116,7 +125,7 @@ export interface WizardData {
   incomeSources: IncomeSourceSelection;
   taxYear: string;
   analysisType: 'both' | 'tax' | 'portfolio';
-  
+
   // Step 2
   brokerFiles: BrokerFile[];
   employmentIncome?: EmploymentIncomeData;
@@ -124,7 +133,7 @@ export interface WizardData {
   savingsInterest?: SavingsInterestData;
   otherCapitalGains?: OtherCapitalGainsData;
   otherDividends?: OtherDividendsData;
-  
+
   // Step 3
   personalDetails: PersonalTaxDetails;
 }

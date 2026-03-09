@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Step 1: Package the application for deployment
-# This script creates the deployment package with all dependencies
+# OBSOLETE: Use 01-package-api.sh instead
+# This script is deprecated - it installs dependencies slowly
+# and doesn't include all required packages consistently.
+#
+# Use: bash 01-package-api.sh
 
 set -e  # Exit on any error
 

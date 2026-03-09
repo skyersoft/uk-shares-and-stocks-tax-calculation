@@ -26,8 +26,8 @@ echo -e "${YELLOW}📋 Copying source code...${NC}"
 # Copy source code (the actual calculator)
 cp -r src/ $DEPLOY_DIR/
 
-# Copy our new API-only Lambda handler
-cp deployment/api_lambda_handler.py $DEPLOY_DIR/lambda_handler.py
+# Copy Lambda handler (deployment/lambda_handler.py has detect-broker endpoint)
+cp deployment/lambda_handler.py $DEPLOY_DIR/lambda_handler.py
 
 echo -e "${YELLOW}📥 Installing dependencies...${NC}"
 

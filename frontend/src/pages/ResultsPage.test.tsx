@@ -1,14 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HelmetProvider } from 'react-helmet-async';
+import { MemoryRouter } from 'react-router-dom';
 import ResultsPage from './ResultsPage';
 import { CalculationProvider } from '../context/CalculationContext';
 import { NormalizedResults } from '../types/calculation';
+
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
 
 interface CalculationState {
   status: 'idle' | 'submitting' | 'success' | 'error';
   error: string | null;
   result: NormalizedResults | null;
   raw: any | null;
+  wizardData?: any;
 }
 
 jest.mock('../components/results/PortfolioSummary', () => ({
@@ -289,9 +298,13 @@ const mockErrorState: CalculationState = {
 
 const renderWithProvider = (initialState: CalculationState) =>
   render(
-    <CalculationProvider initialState={initialState}>
-      <ResultsPage />
-    </CalculationProvider>
+    <HelmetProvider>
+      <MemoryRouter>
+        <CalculationProvider initialState={initialState}>
+          <ResultsPage />
+        </CalculationProvider>
+      </MemoryRouter>
+    </HelmetProvider>
   );
 
 describe('ResultsPage', () => {
@@ -300,6 +313,7 @@ describe('ResultsPage', () => {
     window.location = { hash: '', href: '' } as any;
     window.print = jest.fn();
     window.open = jest.fn();
+    mockNavigate.mockClear();
   });
 
   it('renders loading state correctly', () => {
@@ -318,7 +332,7 @@ describe('ResultsPage', () => {
 
     const tryAgainButton = screen.getByRole('button', { name: /try again/i });
     await user.click(tryAgainButton);
-    expect(window.location.hash).toBe('');
+    expect(mockNavigate).toHaveBeenCalledWith('/calculator');
   });
 
   it('renders idle state correctly', async () => {
@@ -330,7 +344,7 @@ describe('ResultsPage', () => {
 
     const startButton = screen.getByRole('button', { name: /start tax calculation/i });
     await user.click(startButton);
-    expect(window.location.hash).toBe('');
+    expect(mockNavigate).toHaveBeenCalledWith('/calculator');
   });
 
   it('renders success state with all components', () => {
@@ -439,7 +453,7 @@ describe('ResultsPage', () => {
 
     const newCalcButtons = screen.getAllByRole('button', { name: /new calculation/i });
     await user.click(newCalcButtons[0]);
-    expect(window.location.hash).toBe('');
+    expect(mockNavigate).toHaveBeenCalledWith('/calculator');
 
     const printButton = screen.getByRole('button', { name: /print results/i });
     await user.click(printButton);
@@ -452,7 +466,7 @@ describe('ResultsPage', () => {
 
     const runNewButton = screen.getByRole('button', { name: /run new calculation/i });
     await user.click(runNewButton);
-    expect(window.location.hash).toBe('');
+    expect(mockNavigate).toHaveBeenCalledWith('/calculator');
 
     const homeButton = screen.getByRole('button', { name: /back to home/i });
     await user.click(homeButton);

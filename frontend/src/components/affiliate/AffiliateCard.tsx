@@ -18,6 +18,7 @@ const AffiliateCard: React.FC<AffiliateCardProps> = ({
   ctaText = 'View on Amazon',
   compact = false
 }) => {
+  console.log('[AffiliateCard] Rendering:', product.id);
   const cardClassName = [
     'affiliate-card',
     'card',
@@ -27,17 +28,17 @@ const AffiliateCard: React.FC<AffiliateCardProps> = ({
     className
   ].filter(Boolean).join(' ');
 
-  const description = showFullDescription 
-    ? product.description 
-    : product.description.length > 120 
-      ? `${product.description.substring(0, 120)}...` 
+  const description = showFullDescription
+    ? product.description
+    : product.description.length > 120
+      ? `${product.description.substring(0, 120)}...`
       : product.description;
 
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
     const emptyStars = 5 - Math.ceil(rating);
-    
+
     return (
       <div className="affiliate-rating d-flex align-items-center">
         {[...Array(fullStars)].map((_, i) => (
@@ -63,9 +64,10 @@ const AffiliateCard: React.FC<AffiliateCardProps> = ({
           loading="lazy"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            // Use fallback image from product data, or default placeholder
-            if (target.src !== (product.fallbackImageUrl || '/images/book-placeholder.jpg')) {
-              target.src = product.fallbackImageUrl || '/images/book-placeholder.jpg';
+            const fallback = product.fallbackImageUrl || '/images/book-placeholder.svg';
+            // Prevent infinite loop by checking if we're already trying to load the fallback
+            if (!target.src.endsWith(fallback)) {
+              target.src = fallback;
             }
           }}
         />
@@ -121,8 +123,10 @@ const AffiliateCard: React.FC<AffiliateCardProps> = ({
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              if (target.src !== (product.fallbackImageUrl || '/images/book-placeholder.jpg')) {
-                target.src = product.fallbackImageUrl || '/images/book-placeholder.jpg';
+              const fallback = product.fallbackImageUrl || '/images/book-placeholder.svg';
+              // Prevent infinite loop by checking if we're already trying to load the fallback
+              if (!target.src.endsWith(fallback)) {
+                target.src = fallback;
               }
             }}
           />
@@ -172,7 +176,7 @@ const AffiliateCard: React.FC<AffiliateCardProps> = ({
   return (
     <div className={cardClassName}>
       {layout === 'horizontal' ? renderHorizontalLayout() : renderVerticalLayout()}
-      
+
       {/* Category badge */}
       {product.category && (
         <div className="position-absolute top-0 end-0 m-2">
@@ -181,7 +185,7 @@ const AffiliateCard: React.FC<AffiliateCardProps> = ({
           </span>
         </div>
       )}
-      
+
       {/* Featured badge */}
       {product.featured && (
         <div className="position-absolute top-0 start-0 m-2">

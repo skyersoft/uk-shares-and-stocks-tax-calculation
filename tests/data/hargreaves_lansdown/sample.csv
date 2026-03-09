@@ -1,0 +1,5 @@
+Date,Transaction Type,Security,ISIN,Quantity,Price,Value,Account Type
+01/04/2023,Purchase,Vanguard LifeStrategy 80% Equity,GB00B4PQW151,10.5,250.00,2625.00,Stocks & Shares ISA
+15/05/2023,Sale,Tesco PLC,GB00BLGZ9862,100,2.80,280.00,Fund & Share Account
+20/06/2023,Dividend,Apple Inc,US0378331005,0,0,15.50,Fund & Share Account
+10/07/2023,Purchase,Amazon.com Inc,US0231351067,5,130.00,650.00,Fund & Share Account

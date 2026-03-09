@@ -70,7 +70,8 @@ const INCOME_SOURCE_OPTIONS = [
 ];
 
 const TAX_YEARS = [
-  { value: '2024-2025', label: '2024-2025 (Current)' },
+  { value: '2025-2026', label: '2025-2026 (Current)' },
+  { value: '2024-2025', label: '2024-2025' },
   { value: '2023-2024', label: '2023-2024' },
   { value: '2022-2023', label: '2022-2023' },
   { value: '2021-2022', label: '2021-2022' }
@@ -159,13 +160,12 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
       <div className="row g-3">
         {INCOME_SOURCE_OPTIONS.map((option) => {
           const isSelected = incomeSources[option.key];
-          
+
           return (
             <div key={option.key} className="col-12 col-md-6 col-lg-4">
               <div
-                className={`card h-100 cursor-pointer ${
-                  isSelected ? `border-${option.color} border-2` : 'border'
-                }`}
+                className={`card h-100 cursor-pointer ${isSelected ? `border-${option.color} border-2` : 'border'
+                  }`}
                 onClick={() => handleSourceToggle(option.key)}
                 style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
               >
@@ -173,9 +173,8 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
                   <div className="d-flex align-items-start">
                     <div className="flex-shrink-0">
                       <div
-                        className={`rounded-circle d-flex align-items-center justify-content-center ${
-                          isSelected ? `bg-${option.color} text-white` : 'bg-light text-muted'
-                        }`}
+                        className={`rounded-circle d-flex align-items-center justify-content-center ${isSelected ? `bg-${option.color} text-white` : 'bg-light text-muted'
+                          }`}
                         style={{ width: '45px', height: '45px' }}
                       >
                         <i className={`fas ${option.icon}`}></i>

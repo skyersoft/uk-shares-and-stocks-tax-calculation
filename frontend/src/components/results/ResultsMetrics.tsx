@@ -74,14 +74,14 @@ export const ResultsMetricsSummary: React.FC<ResultsMetricsProps> = ({
         ))}
       </div>
 
-      {(showCgtWarning || taxYear === '2024-2025') && (
+      {(showCgtWarning || taxYear === '2024-2025' || taxYear === '2025-2026') && (
         <Alert variant="warning" className="shadow-sm border-0">
           <div className="d-flex align-items-start">
             <i className="fas fa-exclamation-triangle me-3 text-warning fa-2x" aria-hidden="true"></i>
             <div>
-              <h5 className="mb-2">Important: 2024-2025 CGT Rate Changes</h5>
+              <h5 className="mb-2">Important: Recent CGT Rate Changes</h5>
               <p className="mb-3 small">
-                The annual CGT allowance has been reduced to £6,000 for the 2024-2025 tax year. Higher-rate taxpayers remain at 20%. Ensure your calculations account for these updated thresholds.
+                The annual CGT allowance is £3,000 for the 2024-2025 and 2025-2026 tax years. Higher-rate taxpayers remain at 20%. Ensure your calculations account for these updated thresholds.
               </p>
               <div className="d-flex flex-wrap gap-3 small">
                 <div>
@@ -91,7 +91,7 @@ export const ResultsMetricsSummary: React.FC<ResultsMetricsProps> = ({
                   <strong>Higher/Additional Rate:</strong> 20% (unchanged)
                 </div>
                 <div>
-                  <strong>Annual Exemption:</strong> £6,000
+                  <strong>Annual Exemption:</strong> £3,000
                 </div>
               </div>
             </div>

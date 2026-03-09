@@ -1,0 +1,4 @@
+Trade Date,Settlement Date,Action,Symbol,Security Description,Quantity,Price,Amount,Commission,Fees,Settlement Currency
+15/01/2023,17/01/2023,YOU BOUGHT,AAPL,Apple Inc,10,150.00,1500.00,10.00,0.50,USD
+20/02/2023,22/02/2023,YOU SOLD,AAPL,Apple Inc,5,160.00,800.00,10.00,0.50,USD
+05/04/2023,05/04/2023,DIVIDEND RECEIVED,AAPL,Apple Inc,0,0,2.50,0.00,0.00,USD

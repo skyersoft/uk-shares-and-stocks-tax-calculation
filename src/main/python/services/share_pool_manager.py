@@ -31,6 +31,10 @@ class SharePoolManager(SharePoolManagerInterface):
             self._process_buy(transaction)
         elif transaction.transaction_type == TransactionType.SELL:
             self._process_sell(transaction)
+        elif transaction.transaction_type == TransactionType.SPLIT:
+            self._process_split(transaction)
+        elif transaction.transaction_type == TransactionType.TRANSFER_OUT:
+            self._process_transfer_out(transaction)
     
     def get_pool(self, security: Security) -> Optional[SharePool]:
         """
@@ -116,3 +120,48 @@ class SharePoolManager(SharePoolManagerInterface):
         # Remove empty pools
         if pool.quantity <= 0:
             del self.pools[security_id]
+
+    def _process_split(self, transaction: Transaction) -> None:
+        """
+        Process a stock split/consolidation.
+        
+        Args:
+            transaction: The split transaction. 
+                         quantity is used as the split ratio (e.g. 2.0 for 2:1 split, 0.5 for 1:2 consolidation).
+        """
+        security_id = transaction.security.isin
+        
+        if security_id not in self.pools:
+            self.logger.warning(f"Attempting to split shares of {security_id} but no shares in pool")
+            return
+            
+        pool = self.pools[security_id]
+        old_quantity = pool.quantity
+        
+        # If quantity is provided, treat it as the ratio
+        # Ensure ratio is positive
+        ratio = abs(transaction.quantity)
+        if ratio == 0:
+            self.logger.warning(f"Split ratio cannot be 0 for {security_id}")
+            return
+            
+        new_quantity = old_quantity * ratio
+        pool.quantity = new_quantity
+        
+        # Cost basis remains the same, so average cost changes
+        
+        self.logger.info(
+            f"Processed split for {security_id}. "
+            f"Old qty: {old_quantity}, New qty: {new_quantity}, Ratio: {ratio}. "
+            f"Cost basis remains: {pool.cost_basis}"
+        )
+
+    def _process_transfer_out(self, transaction: Transaction) -> None:
+        """
+        Process a transfer out (treated as a disposal for pool purposes).
+        
+        Args:
+            transaction: The transfer transaction
+        """
+        # Transfer out reduces the pool just like a sell
+        self._process_sell(transaction)

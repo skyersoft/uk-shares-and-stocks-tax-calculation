@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import '@testing-library/jest-dom';
 import CalculatorPage from './CalculatorPage';
 
@@ -44,28 +45,30 @@ describe('CalculatorPage', () => {
 
   const renderPage = () => {
     return render(
-      <BrowserRouter>
-        <CalculatorPage />
-      </BrowserRouter>
+      <HelmetProvider>
+        <BrowserRouter>
+          <CalculatorPage />
+        </BrowserRouter>
+      </HelmetProvider>
     );
   };
 
   it('renders the page with hero section', () => {
     renderPage();
-    
+
     expect(screen.getByRole('heading', { name: /UK Tax Calculator/i })).toBeInTheDocument();
     expect(screen.getByText(/Calculate your Capital Gains Tax and income tax for informational purposes/i)).toBeInTheDocument();
   });
 
   it('renders the disclaimer', () => {
     renderPage();
-    
+
     expect(screen.getByText(/This calculator is for informational purposes only/i)).toBeInTheDocument();
   });
 
   it('renders the MultiStepCalculator component', () => {
     renderPage();
-    
+
     expect(screen.getByTestId('multi-step-calculator')).toBeInTheDocument();
   });
 });

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import AffiliateGrid from '../components/affiliate/AffiliateGrid';
 import { AffiliateProduct } from '../types/affiliate';
 import affiliateProductsData from '../data/affiliateProducts.json';
+import SEOHead from '../components/seo/SEOHead';
+import { trackCTAClick } from '../utils/analytics';
 
 type FeatureCard = {
   icon: string;
@@ -40,16 +42,18 @@ const LandingPage: React.FC = () => {
       .slice(0, 6)
       .map(product => ({
         ...product,
-        fallbackImageUrl: (product as AffiliateProduct & { fallbackImageUrl?: string }).fallbackImageUrl || '/images/book-placeholder.jpg'
+        fallbackImageUrl: (product as AffiliateProduct & { fallbackImageUrl?: string }).fallbackImageUrl || '/images/book-placeholder.svg'
       })) as AffiliateProduct[];
   }, []);
+
+  console.log('[LandingPage] Featured Products:', featuredProducts.length, featuredProducts);
 
   const featureCards: FeatureCard[] = useMemo(
     () => [
       {
         icon: 'fas fa-calculator fa-xl',
         iconVariant: 'bg-primary',
-        title: 'HMRC Compliant',
+        title: 'Follows HMRC Rules',
         description: 'Accurate UK tax calculations following HMRC guidelines for capital gains, dividends, and currency gains.'
       },
       {
@@ -235,25 +239,46 @@ const LandingPage: React.FC = () => {
     []
   );
 
-  const handleGetStarted = () => navigate('/calculator');
-  const handleViewGuide = () => navigate('/guide');
-  const handleViewBlog = () => navigate('/blog');
-  const handleViewHelp = () => navigate('/help');
-  const handleViewAbout = () => navigate('/about');
+  const handleGetStarted = () => {
+    trackCTAClick('Start Calculation', 'hero');
+    navigate('/calculator');
+  };
+  const handleViewGuide = () => {
+    trackCTAClick('View Guide', 'content');
+    navigate('/guide');
+  };
+  const handleViewBlog = () => {
+    trackCTAClick('View Blog', 'content');
+    navigate('/blog');
+  };
+  const handleViewHelp = () => {
+    trackCTAClick('View Help', 'content');
+    navigate('/help');
+  };
 
   return (
     <div className="landing-page">
+      <SEOHead
+        title="UK Stock Tax Calculator - Capital Gains & Dividend Tax Tool"
+        description="Calculate your UK capital gains tax, dividend income, and portfolio performance for shares and stocks. Support for Interactive Brokers, Trading 212, and CSV imports. Calculations following HMRC rules with detailed reporting."
+        keywords={['UK stock tax calculator', 'share tax calculator', 'capital gains tax calculator', 'CGT calculator', 'HMRC reporting', 'Interactive Brokers tax', 'Trading 212 tax']}
+        canonical="https://cgttaxtool.uk/"
+        ogTitle="UK Stock Tax Calculator - Capital Gains & Dividend Tax Tool"
+        ogDescription="Calculate your UK capital gains tax, dividend income, and portfolio performance for shares and stocks. Calculations following HMRC rules."
+        ogImage="https://cgttaxtool.uk/images/calculator-preview.png"
+        twitterCard="summary_large_image"
+      />
       <section id="calculator" className="hero-section py-5 mb-5 position-relative overflow-hidden text-white">
         <div className="container">
           <div className="row align-items-center min-vh-75">
             <div className="col-lg-7">
               <h1 className="display-3 fw-bold mb-4">
                 UK Tax Calculator for
-                <span className="d-block text-warning">Interactive Brokers</span>
+                <span className="d-block text-warning">Stocks & Shares</span>
               </h1>
               <p className="lead mb-4 fs-5">
-                Calculate your UK capital gains tax, dividend income, and portfolio performance from IBKR transactions.
-                HMRC compliant calculations with detailed reporting.
+                Calculate your UK capital gains tax, dividend income, and portfolio performance from Interactive Brokers, Trading 212, and other platforms.
+                Calculations following HMRC rules with detailed reporting.
               </p>
               <div className="d-flex gap-3 mb-4 flex-wrap">
                 <button onClick={handleGetStarted} className="btn btn-light btn-lg px-4 py-3 fw-semibold">
@@ -268,7 +293,7 @@ const LandingPage: React.FC = () => {
               <div className="d-flex gap-4 text-light small opacity-90 flex-wrap">
                 <div className="d-flex align-items-center">
                   <i className="fas fa-shield-alt me-2" />
-                  HMRC Compliant
+                  Follows HMRC Rules
                 </div>
                 <div className="d-flex align-items-center">
                   <i className="fas fa-users me-2" />
@@ -308,7 +333,7 @@ const LandingPage: React.FC = () => {
                       Why Choose Our Tax Calculator?
                     </h2>
                     <p className="lead text-muted">
-                      Comprehensive UK tax calculations designed specifically for Interactive Brokers users.
+                      Comprehensive UK tax calculations designed for investors using Interactive Brokers, Trading 212, and other platforms.
                     </p>
                   </div>
                 </div>
@@ -344,7 +369,7 @@ const LandingPage: React.FC = () => {
                   <div className="col-lg-9">
                     <div className="bg-white p-4 p-lg-5 rounded shadow-sm">
                       <h4 className="fw-bold mb-3 text-primary">
-                        The HMRC-compliant Calculation Pipeline
+                        The Calculation Pipeline Following HMRC Rules
                       </h4>
                       <p className="mb-3">
                         The calculator follows HMRC requirements to evaluate your trading activity, match disposals, and apply
@@ -441,7 +466,7 @@ const LandingPage: React.FC = () => {
                           <li>Commission, fees, and taxes</li>
                           <li>Corporate actions and adjustments</li>
                         </ul>
-                        <button onClick={handleViewGuide} className="btn btn-outline-primary btn-sm">
+                        <button onClick={handleViewHelp} className="btn btn-outline-primary btn-sm">
                           How to export →
                         </button>
                       </div>
@@ -467,7 +492,7 @@ const LandingPage: React.FC = () => {
                           <li>Currency and FX rates where applicable</li>
                           <li>Optional: Fees, commissions, and withholding taxes</li>
                         </ul>
-                        <button onClick={handleViewGuide} className="btn btn-outline-success btn-sm">
+                        <button onClick={handleViewHelp} className="btn btn-outline-success btn-sm">
                           View CSV format →
                         </button>
                       </div>
@@ -640,7 +665,7 @@ const LandingPage: React.FC = () => {
                   <div className="col-lg-8">
                     <h2 className="display-5 fw-bold mb-4 text-white">Ready to Calculate Your UK Taxes?</h2>
                     <p className="lead text-white-50 mb-4">
-                      Join thousands of UK investors who trust this platform for accurate HMRC-compliant tax calculations.
+                      Join thousands of UK investors who trust this platform for accurate tax calculations following HMRC rules.
                     </p>
                     <div className="d-flex gap-3 justify-content-center flex-wrap">
                       <button onClick={handleGetStarted} className="btn btn-light btn-lg px-5 py-3">
@@ -662,10 +687,10 @@ const LandingPage: React.FC = () => {
             </section>
 
             <section className="d-none">
-              <h3>UK Tax Calculator for Interactive Brokers Users</h3>
+              <h3>UK Tax Calculator for Stocks and Shares</h3>
               <p>
-                Calculate capital gains tax, dividend tax, and currency gains for UK investors using Interactive Brokers.
-                The SPA replicates the production landing page so HMRC-compliant outputs remain consistent across web experiences.
+                Calculate capital gains tax, dividend tax, and currency gains for UK investors using Interactive Brokers, Trading 212, and other platforms via CSV.
+                The SPA replicates the production landing page so outputs following HMRC rules remain consistent across web experiences.
               </p>
               <ul>
                 <li>Capital gains tax calculation with Section 104 pooling</li>
@@ -675,7 +700,7 @@ const LandingPage: React.FC = () => {
                 <li>Support for stocks, ETFs, and other securities</li>
               </ul>
               <p>
-                Keywords: UK tax calculator, Interactive Brokers tax, IBKR CGT, capital gains tax calculator, HMRC compliance,
+                Keywords: UK tax calculator, Interactive Brokers tax, Trading 212 tax, capital gains tax calculator, HMRC compliance,
                 Section 104 pooling, UK investment tax, Self Assessment, portfolio analytics.
               </p>
             </section>

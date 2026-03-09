@@ -4,6 +4,10 @@ import base64
 import tempfile
 import os
 from typing import Dict, Any
+import boto3
+import uuid
+import datetime
+import re
 from io import StringIO
 
 # Import our application components
@@ -12,15 +16,31 @@ sys.path.append('/opt/python')  # Lambda layer path
 sys.path.append('.')
 sys.path.append('./main/python')  # Add the main/python directory to path
 
+# Global flags
+CALCULATOR_AVAILABLE = False
+CONVERTERS_AVAILABLE = False
+
+# Import converters (light dependencies)
 try:
-    # In Lambda, the files are at root level after packaging
+    from main.python.converters.converter_factory import get_factory
+    from main.python.converters import register_default_converters
+    from main.python.parsers.multi_broker_parser import MultiBrokerParser
+    from main.python.interfaces.broker_converter import BrokerConversionError
+    
+    # Register all available converters
+    register_default_converters()
+    CONVERTERS_AVAILABLE = True
+except ImportError as e:
+    print(f"Converter import error: {e}")
+
+# Import calculator (heavy dependencies like pandas)
+try:
     from main.python.capital_gains_calculator import create_enhanced_calculator
     from main.python.services.portfolio_report_generator import PortfolioReportGenerator
     from main.python.parsers.csv_parser import CSVValidationError, REQUIRED_CSV_COLUMNS
-    IMPORTS_OK = True
+    CALCULATOR_AVAILABLE = True
 except ImportError as e:
-    print(f"Import error: {e}")
-    IMPORTS_OK = False
+    print(f"Calculator import error: {e}")
     # Fallback - we'll handle this in the handler
     CSVValidationError = None
     REQUIRED_CSV_COLUMNS = []
@@ -33,17 +53,6 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Supports both API Gateway and direct invocation.
     """
     try:
-        # Check if imports worked
-        if not IMPORTS_OK:
-            return {
-                'statusCode': 500,
-                'headers': {
-                    'Content-Type': 'text/html',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': '<h1>Import Error</h1><p>Failed to import required modules</p>'
-            }
-
         # Parse the request
         if 'httpMethod' in event:
             # API Gateway request
@@ -123,9 +132,17 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
         elif path == '/ads.txt':
             return serve_ads_txt()
 
+    # Handle feedback submission
+    elif method == 'POST' and path == '/feedback':
+        return handle_feedback_request(event)
+
     # Handle file upload and processing
     elif method == 'POST' and (path == '/calculate' or path == '/'):
         return handle_calculation_request(event)
+    
+    # Handle broker detection preview
+    elif method == 'POST' and path == '/detect-broker':
+        return handle_broker_detection_request(event)
     
     # 404 for unknown paths
     return {
@@ -138,9 +155,268 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
     }
 
 
-def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
-    """Handle tax calculation request with file upload."""
+def handle_feedback_request(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle feedback submission."""
+    try:
+        # Parse request body
+        if event.get('isBase64Encoded', False):
+            body = base64.b64decode(event['body']).decode('utf-8')
+        else:
+            body = event['body']
+            
+        if not body:
+             return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': 'Empty request body'})
+            }
 
+        data = json.loads(body)
+        message = data.get('message', '').strip()
+        contact = data.get('contact', '').strip() # Optional contact info
+
+        # Validation
+        if not message:
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': 'Message is required'})
+            }
+        
+        if len(message) > 1000:
+             return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({'error': 'Message too long (max 1000 characters)'})
+            }
+            
+        # Basic sanitization (prevent XSS if we ever display this HTML/Raw)
+        # We allow basic punishment/alphanumeric. 
+        # Actually for text file storage, strict sanitization isn't strictly necessary for security 
+        # (it won't execute), but good practice for reading logs.
+        # We'll replace non-printable characters.
+        cleaned_message = "".join(ch for ch in message if ch.isprintable() or ch in '\n\r\t')
+        
+        # Determine bucket from environment or hardcode fallback (not ideal for strict prod but acceptable here)
+        # In Terraform, we pass bucket name usually? Or we can deduce it.
+        # The frontend bucket is known: ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo
+        # We can write to the same bucket in a private folder.
+        bucket_name = os.environ.get('S3_BUCKET_NAME', 'ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo')
+        
+        timestamp = datetime.datetime.utcnow().isoformat()
+        request_id = str(uuid.uuid4())
+        today = datetime.datetime.utcnow().strftime('%Y-%m-%d')
+        key = f"feedback/{today}/{request_id}.txt"
+        
+        file_content = f"Date: {timestamp}\nID: {request_id}\nContact: {contact}\n\nMessage:\n{cleaned_message}"
+        
+        s3 = boto3.client('s3')
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=key,
+            Body=file_content,
+            ContentType='text/plain'
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'message': 'Feedback received', 'id': request_id})
+        }
+
+    except Exception as e:
+        print(f"Error handling feedback: {e}")
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({'error': 'Internal server error'})
+        }
+
+
+def log_error_file_to_s3(file_content: str, filename: str, error_type: str, error_message: str, extra_metadata: dict = None) -> str:
+    """
+    Log problematic files to S3 for debugging parsing failures.
+    
+    Args:
+        file_content: The content of the file that caused the error
+        filename: Original filename
+        error_type: Type of error (e.g., 'broker_detection', 'csv_validation', 'conversion')
+        error_message: Detailed error message
+        extra_metadata: Additional context (e.g., detected columns, broker hints)
+    
+    Returns:
+        The S3 key where the error was logged, or empty string on failure
+    """
+    try:
+        bucket_name = os.environ.get('S3_BUCKET_NAME', 'ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo')
+        
+        timestamp = datetime.datetime.utcnow()
+        request_id = str(uuid.uuid4())[:8]
+        today = timestamp.strftime('%Y-%m-%d')
+        
+        # Sanitize filename for S3 key
+        safe_filename = re.sub(r'[^a-zA-Z0-9._-]', '_', filename or 'unknown')
+        
+        # Prepare file content (limit to first 500 lines to avoid huge files)
+        lines = file_content.split('\n') if file_content else []
+        truncated_content = '\n'.join(lines[:500])
+        if len(lines) > 500:
+            truncated_content += f"\n\n... [truncated {len(lines) - 500} more lines]"
+        
+        # Create metadata JSON
+        metadata = {
+            'timestamp': timestamp.isoformat(),
+            'request_id': request_id,
+            'original_filename': filename,
+            'error_type': error_type,
+            'error_message': error_message,
+            'file_size_bytes': len(file_content) if file_content else 0,
+            'line_count': len(lines),
+            'first_line': lines[0] if lines else None,
+            **(extra_metadata or {})
+        }
+        
+        s3 = boto3.client('s3')
+        
+        # Save the file content
+        file_key = f"errors/{today}/{request_id}_{safe_filename}"
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=file_key,
+            Body=truncated_content,
+            ContentType='text/plain'
+        )
+        
+        # Save metadata as JSON
+        metadata_key = f"errors/{today}/{request_id}_{safe_filename}.metadata.json"
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=metadata_key,
+            Body=json.dumps(metadata, indent=2),
+            ContentType='application/json'
+        )
+        
+        print(f"Logged error file to S3: {file_key}")
+        return file_key
+        
+    except Exception as e:
+        print(f"Failed to log error file to S3: {e}")
+        return ""
+
+
+def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
+    """
+    Detect broker from file and return metadata.
+    
+    Returns:
+        Dictionary with broker detection results and file metadata
+    """
+    try:
+        if not CONVERTERS_AVAILABLE:
+            return {
+                'detected': False,
+                'error': 'Broker detection unavailable (missing dependencies)'
+            }
+            
+        factory = get_factory()
+        
+        # Detect broker
+        detection = factory.detect_broker(file_path, min_confidence=0.5)
+        
+        if not detection:
+            return {
+                'detected': False,
+                'error': 'Could not detect broker from file. Please ensure the file is in a supported format.',
+                'supported_brokers': factory.list_brokers()
+            }
+        
+        broker_name = detection['broker']
+        confidence = detection['confidence']
+        converter = detection['converter']
+        
+        # Validate file structure
+        validation = converter.validate_file_structure(file_path)
+        
+        # Try to parse a preview of transactions
+        transaction_preview = []
+        date_range = None
+        
+        try:
+            transactions = converter.convert(file_path, base_currency="GBP")
+            transaction_count = len(transactions)
+            
+            # Get date range
+            if transactions:
+                dates = [tx.date for tx in transactions if tx.date]
+                if dates:
+                    date_range = {
+                        'start': min(dates).isoformat(),
+                        'end': max(dates).isoformat()
+                    }
+                
+                # Get preview of first few transactions
+                for tx in transactions[:5]:
+                    transaction_preview.append({
+                        'date': tx.date.isoformat() if tx.date else None,
+                        'symbol': tx.symbol,
+                        'type': tx.transaction_type.value if hasattr(tx.transaction_type, 'value') else str(tx.transaction_type),
+                        'quantity': float(tx.quantity),
+                        'price': float(tx.price),
+                        'currency': tx.transaction_currency
+                    })
+        except Exception as e:
+            print(f"Warning: Could not parse transaction preview: {e}")
+            transaction_count = validation.get('row_count', 0)
+        
+        return {
+            'detected': True,
+            'broker': broker_name,
+            'confidence': confidence,
+            'validation': {
+                'valid': validation['valid'],
+                'errors': validation.get('errors', []),
+                'warnings': validation.get('warnings', []),
+                'row_count': validation.get('row_count', 0)
+            },
+            'metadata': {
+                'transaction_count': transaction_count,
+                'date_range': date_range,
+                'transaction_preview': transaction_preview
+            },
+            'alternatives': [
+                {
+                    'broker': alt['broker'],
+                    'confidence': alt['confidence']
+                }
+                for alt in detection.get('alternatives', [])[:3]
+            ]
+        }
+        
+    except Exception as e:
+        return {
+            'detected': False,
+            'error': f'Error detecting broker: {str(e)}'
+        }
+
+
+def handle_broker_detection_request(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle broker detection preview request."""
+    
     try:
         # Parse request body
         if event.get('isBase64Encoded', False):
@@ -152,11 +428,127 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
         content_type = event.get('headers', {}).get('content-type', '') or event.get('headers', {}).get('Content-Type', '')
 
         if 'multipart/form-data' in content_type:
+            files, _, _ = parse_multipart_data_proper(body, content_type)
+            if not files:
+                return {
+                    'statusCode': 400,
+                    'headers': {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    },
+                    'body': json.dumps({
+                        'error': 'No file content received'
+                    })
+                }
+            # Use the first file for detection
+            file_content = files[0]['content']
+            filename = files[0]['filename']
+        else:
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'error': 'Invalid request format. Expected multipart/form-data.'
+                })
+            }
+
+        if not file_content:
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'error': 'No file content received'
+                })
+            }
+
+        # Determine file type from filename
+        file_type = "csv"  # default
+        if filename:
+            if filename.lower().endswith(('.qfx', '.ofx')):
+                file_type = "qfx"
+            elif filename.lower().endswith('.csv'):
+                file_type = "csv"
+
+        # Create temporary file
+        file_suffix = f'.{file_type}'
+        with tempfile.NamedTemporaryFile(mode='w', suffix=file_suffix, delete=False) as temp_file:
+            temp_file.write(file_content)
+            temp_file_path = temp_file.name
+
+        try:
+            # Detect broker
+            detection_result = detect_broker_from_file(temp_file_path)
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    **detection_result,
+                    'filename': filename,
+                    'file_type': file_type
+                })
+            }
+            
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_file_path):
+                os.unlink(temp_file_path)
+    
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            },
+            'body': json.dumps({
+                'error': str(e),
+                'message': 'Error processing broker detection request'
+            })
+        }
+
+
+def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle tax calculation request with file upload."""
+
+    try:
+        if not CALCULATOR_AVAILABLE:
+            return {
+                'statusCode': 503,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'error': 'Service Unavailable',
+                    'message': 'Calculation service is currently unavailable due to missing dependencies.'
+                })
+            }
+
+        # Parse request body
+        if event.get('isBase64Encoded', False):
+            body = base64.b64decode(event['body'])
+        else:
+            body = event['body'].encode('utf-8') if isinstance(event['body'], str) else event['body']
+
+        # Parse multipart form data
+        content_type = event.get('headers', {}).get('content-type', '') or event.get('headers', {}).get('Content-Type', '')
+
+        if 'multipart/form-data' in content_type:
             # Extract file content and parameters from multipart data
-            file_content, tax_year, analysis_type, filename = parse_multipart_data_proper(body, content_type)
-            print(f"Parsed multipart data: file_content length={len(file_content)}, tax_year={tax_year}, analysis_type={analysis_type}, filename={filename}")
-            if file_content:
-                print(f"File content preview: {file_content[:200]}...")
+            files, tax_year, analysis_type = parse_multipart_data_proper(body, content_type)
+            print(f"Parsed multipart data: {len(files)} files, tax_year={tax_year}, analysis_type={analysis_type}")
+            if files:
+                print(f"First file: {files[0]['filename']}")
             else:
                 print("WARNING: No file content received!")
         else:
@@ -164,9 +556,10 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             try:
                 data = json.loads(body.decode('utf-8') if isinstance(body, bytes) else body)
                 file_content = data.get('file_content', '')
+                filename = data.get('filename', '')
+                files = [{'content': file_content, 'filename': filename}]
                 tax_year = data.get('tax_year', '2024-2025')
                 analysis_type = data.get('analysis_type', 'both')
-                filename = data.get('filename', '')
             except:
                 return {
                     'statusCode': 400,
@@ -177,31 +570,88 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                     'body': '<h1>Error</h1><p>Invalid request format. Please use the web form to upload files.</p>'
                 }
 
-        # Determine file type from filename
-        file_type = "csv"  # default
-        if filename:
-            if filename.lower().endswith(('.qfx', '.ofx')):
-                file_type = "qfx"
-            elif filename.lower().endswith('.csv'):
-                file_type = "csv"
-
-        # Create temporary file with correct extension
-        file_suffix = f'.{file_type}'
-        with tempfile.NamedTemporaryFile(mode='w', suffix=file_suffix, delete=False) as temp_file:
-            temp_file.write(file_content)
-            temp_file_path = temp_file.name
-
+        # Process files
+        temp_file_paths = []
+        file_type = "csv" # Default
+        
         try:
-            # Process the file with correct parser
+            for file_data in files:
+                file_content = file_data['content']
+                filename = file_data['filename']
+                
+                # Determine file type from filename (use the first file's type if multiple)
+                if filename:
+                    if filename.lower().endswith(('.qfx', '.ofx')):
+                        file_type = "qfx"
+                    elif filename.lower().endswith('.csv'):
+                        file_type = "csv"
+
+                # Create temporary file with correct extension
+                file_suffix = f'.{file_type}'
+                with tempfile.NamedTemporaryFile(mode='w', suffix=file_suffix, delete=False) as temp_file:
+                    temp_file.write(file_content)
+                    temp_file_paths.append(temp_file.name)
+
+            # Detect broker and get metadata (for CSV files) - only for the first file for now
+            broker_metadata = None
+            if file_type == 'csv' and temp_file_paths:
+                print(f"Detecting broker for CSV file: {files[0]['filename']}")
+                detection_result = detect_broker_from_file(temp_file_paths[0])
+                
+                if not detection_result.get('detected'):
+                    # Broker detection failed - log to S3 for debugging
+                    error_msg = detection_result.get('error', 'Unknown error')
+                    supported_brokers = detection_result.get('supported_brokers', [])
+                    
+                    # Log the problematic file to S3
+                    if files:
+                        log_error_file_to_s3(
+                            file_content=files[0].get('content', ''),
+                            filename=files[0].get('filename', 'unknown'),
+                            error_type='broker_detection',
+                            error_message=error_msg,
+                            extra_metadata={'supported_brokers': supported_brokers}
+                        )
+                    
+                    return {
+                        'statusCode': 400,
+                        'headers': {
+                            'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'
+                        },
+                        'body': json.dumps({
+                            'error': 'Broker detection failed',
+                            'message': error_msg,
+                            'supported_brokers': supported_brokers
+                        })
+                    }
+                
+                broker_metadata = {
+                    'broker': detection_result['broker'],
+                    'confidence': detection_result['confidence'],
+                    'transaction_count': detection_result['metadata']['transaction_count'],
+                    'date_range': detection_result['metadata']['date_range']
+                }
+                
+                print(f"Detected broker: {broker_metadata['broker']} (confidence: {broker_metadata['confidence']})")
+            
+            # Process the files with correct parser
             calculator = create_enhanced_calculator(file_type)
-            print(f"Using {file_type} parser for file: {filename}")
+            print(f"Using {file_type} parser for {len(temp_file_paths)} files")
+            
+            # Pass list of files if multiple, or single file if just one
+            files_to_process = temp_file_paths if len(temp_file_paths) > 1 else temp_file_paths[0]
+            
             results = calculator.calculate_comprehensive_analysis(
-                temp_file_path, tax_year, analysis_type
+                files_to_process, tax_year, analysis_type
             )
             
             # Serialize results to JSON
-            # This is the main fix: returning JSON instead of HTML
             json_results = serialize_results(results, calculator)
+            
+            # Add broker metadata to response if available
+            if broker_metadata:
+                json_results['broker_metadata'] = broker_metadata
             
             return {
                 'statusCode': 200,
@@ -212,8 +662,44 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 'body': json.dumps(json_results)
             }
         
+        except BrokerConversionError as e:
+            # Handle broker conversion errors - log to S3
+            if files:
+                log_error_file_to_s3(
+                    file_content=files[0].get('content', ''),
+                    filename=files[0].get('filename', 'unknown'),
+                    error_type='broker_conversion',
+                    error_message=str(e),
+                    extra_metadata={'broker': e.broker if hasattr(e, 'broker') else 'Unknown'}
+                )
+            
+            return {
+                'statusCode': 400,
+                'headers': {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                },
+                'body': json.dumps({
+                    'error': 'Broker conversion failed',
+                    'message': str(e),
+                    'broker': e.broker if hasattr(e, 'broker') else 'Unknown'
+                })
+            }
+        
         except CSVValidationError as e:
-            # Handle CSV validation errors
+            # Handle CSV validation errors - log to S3
+            if files:
+                log_error_file_to_s3(
+                    file_content=files[0].get('content', ''),
+                    filename=files[0].get('filename', 'unknown'),
+                    error_type='csv_validation',
+                    error_message='Missing required columns',
+                    extra_metadata={
+                        'missing_columns': e.missing_columns if hasattr(e, 'missing_columns') else [],
+                        'required_columns': REQUIRED_CSV_COLUMNS
+                    }
+                )
+            
             return {
                 'statusCode': 400,
                 'headers': {
@@ -223,15 +709,19 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 'body': json.dumps({
                     'error': 'Invalid CSV format',
                     'message': 'Missing required columns',
-                    'missing_columns': e.missing_columns,
+                    'missing_columns': e.missing_columns if hasattr(e, 'missing_columns') else [],
                     'required_columns': REQUIRED_CSV_COLUMNS
                 })
             }
             
         finally:
-            # Clean up temporary file
-            if os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
+            # Clean up temporary files
+            for path in temp_file_paths:
+                if os.path.exists(path):
+                    try:
+                        os.unlink(path)
+                    except Exception as e:
+                        print(f"Error deleting temp file {path}: {e}")
     
     except Exception as e:
         return {
@@ -297,15 +787,15 @@ def parse_multipart_data_proper(body: bytes, content_type: str) -> tuple:
         parser = MultipartParser(boundary.encode())
         parts = parser.parse(body)
 
-        file_content = ""
-        filename = ""
+        files = []
         tax_year = "2024-2025"
         analysis_type = "both"
 
         for part in parts:
             name = part.name
-            if name == 'file':
+            if name and name.startswith('file'):  # Match file, file0, file1, etc.
                 file_content = part.raw.decode('utf-8')
+                filename = ""
                 # Extract filename from Content-Disposition header
                 # Try different ways to get the filename
                 if hasattr(part, 'filename') and part.filename:
@@ -320,13 +810,18 @@ def parse_multipart_data_proper(body: bytes, content_type: str) -> tuple:
                         match = re.search(pattern, content_disp)
                         if match:
                             filename = match.group(1)
+                
                 print(f"Extracted filename: '{filename}' from file part")
+                files.append({
+                    'content': file_content,
+                    'filename': filename
+                })
             elif name == 'tax_year':
                 tax_year = part.value
             elif name == 'analysis_type':
                 analysis_type = part.value
 
-        return file_content, tax_year, analysis_type, filename
+        return files, tax_year, analysis_type
 
     except Exception:
         # Fallback to simple parsing if multipart library fails
@@ -338,8 +833,9 @@ def parse_multipart_data_simple(body: str) -> tuple:
     """Parse multipart form data (simplified implementation)."""
     # This is a basic implementation - fallback method
     lines = body.split('\n')
-    file_content = ""
-    filename = ""
+    files = []
+    current_file_content = ""
+    current_filename = ""
     tax_year = "2024-2025"
     analysis_type = "both"
 
@@ -348,7 +844,16 @@ def parse_multipart_data_simple(body: str) -> tuple:
     current_field = None
 
     for i, line in enumerate(lines):
-        if 'name="file"' in line:
+        if 'name="file' in line:  # Match name="file", name="file0", name="file1", etc.
+            # If we were processing a file, save it
+            if current_filename or current_file_content:
+                files.append({
+                    'content': current_file_content.strip(),
+                    'filename': current_filename
+                })
+                current_file_content = ""
+                current_filename = ""
+            
             in_file = True
             current_field = 'file'
             # Extract filename from Content-Disposition
@@ -357,7 +862,7 @@ def parse_multipart_data_simple(body: str) -> tuple:
                 pattern = r'filename="?([^"]+)"?'
                 match = re.search(pattern, line)
                 if match:
-                    filename = match.group(1)
+                    current_filename = match.group(1)
             continue
         elif 'name="tax_year"' in line:
             current_field = 'tax_year'
@@ -368,19 +873,33 @@ def parse_multipart_data_simple(body: str) -> tuple:
             in_file = False
             continue
         elif line.startswith('--') and current_field:
+            if current_field == 'file':
+                files.append({
+                    'content': current_file_content.strip(),
+                    'filename': current_filename
+                })
+                current_file_content = ""
+                current_filename = ""
             current_field = None
             in_file = False
             continue
         elif current_field == 'file' and in_file and line.strip() and not line.startswith('Content-'):
-            file_content += line + '\n'
+            current_file_content += line + '\n'
         elif current_field == 'tax_year' and line.strip() and not line.startswith('Content-'):
             tax_year = line.strip()
             current_field = None
         elif current_field == 'analysis_type' and line.strip() and not line.startswith('Content-'):
             analysis_type = line.strip()
             current_field = None
+            
+    # Add the last file if exists
+    if current_filename or current_file_content:
+        files.append({
+            'content': current_file_content.strip(),
+            'filename': current_filename
+        })
 
-    return file_content.strip(), tax_year, analysis_type, filename
+    return files, tax_year, analysis_type
 
 
 def serialize_results(results: Dict[str, Any], calculator=None) -> Dict[str, Any]:

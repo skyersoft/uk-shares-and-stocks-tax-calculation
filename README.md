@@ -107,16 +107,63 @@ The QFX parser is designed to be robust and handle various edge cases found in r
 
 ### CSV Parser Features
 
-The CSV parser supports Sharesight and similar export formats:
+The CSV parser now supports **multiple broker formats** with automatic detection:
 
-- **Column Mapping**: Automatically maps columns from standard CSV export formats
-- **Security Identifier Handling**: Supports various security identifier formats (ISIN, CUSIP, etc.)
-- **Currency Conversion**: Handles multiple currencies and conversion rates
-- **Error Handling**: Validates required fields and provides detailed error messages
+- **Multi-Broker Support**: Automatically detects and parses CSV files from:
+  - **Interactive Brokers** (Flex Query and Sharesight formats)
+  - **Trading 212** (standard CSV export)
+  - Extensible architecture for adding more brokers
+- **Auto-Detection**: Automatically identifies broker from file structure
+- **Unified Processing**: All broker formats converted to standard internal format
+- **Currency Conversion**: Handles multiple currencies with broker-provided FX rates
+- **Comprehensive Validation**: Validates data integrity before processing
 
-#### Supported CSV Format
+#### Supported Brokers
 
-The CSV parser expects the following columns:
+##### Interactive Brokers (IBKR)
+
+IBKR Flex Query format with columns like:
+- `Symbol`, `Quantity`, `TradePrice`, `TradeDate`
+- `IBCommission`, `FXRateToBase`, `AssetClass`
+- `Code` (transaction type: O=Open, C=Close, etc.)
+
+Also supports Sharesight-compatible IBKR exports.
+
+##### Trading 212
+
+Trading 212 CSV export format with columns like:
+- `Action`, `Time`, `ISIN`, `Ticker`, `Name`
+- `No. of shares`, `Price / share`, `Total`
+- `Exchange rate`, `Withholding tax`, `Stamp duty reserve tax`
+- `Currency conversion fee`
+
+#### Example Usage
+
+```python
+from src.main.python.converters import ConverterFactory
+
+# Auto-detect broker and convert
+factory = ConverterFactory()
+transactions = factory.convert_file("my_trades.csv")
+
+# Or specify broker explicitly
+transactions = factory.convert_file("my_trades.csv", broker="Trading 212")
+```
+
+#### Adding New Brokers
+
+The system is designed for easy extension. To add a new broker:
+
+1. Create a converter class extending `BaseBrokerConverter`
+2. Implement required methods (`broker_name`, `convert`, etc.)
+3. Register with the factory
+4. Add tests
+
+See `src/main/python/converters/` for examples.
+
+#### Legacy CSV Format (Sharesight)
+
+For backward compatibility, the original CSV format is still supported:
 
 | Column Name | Description | Required |
 |-------------|-------------|----------|
@@ -171,6 +218,20 @@ The implementation uses:
 - Python 3.10+ (recommended)
 - Required libraries: (listed in requirements.txt/web_requirements.txt)
 - Anaconda or Miniconda (recommended for conda environment)
+
+## Deployment
+
+The application is deployed as a serverless web application on AWS. For deployment instructions:
+
+- **Quick Start**: See `deployment/README.md` for step-by-step guide
+- **Full Documentation**: See `docs/DEPLOYMENT.md` for comprehensive deployment information
+- **Infrastructure**: Managed with Terraform in `deployment/terraform/`
+
+### Live Website
+- **Production URL**: https://cgttaxtool.uk
+- **API Endpoints**: `/calculate`, `/detect-broker`, `/download-report`, `/health`
+
+For local development and testing, see `docs/TESTING.md`.
 
 ## Future Enhancements
 

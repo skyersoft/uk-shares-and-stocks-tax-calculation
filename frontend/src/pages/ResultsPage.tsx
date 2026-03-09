@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCalculation } from '../context/CalculationContext';
 import { Button } from '../components/ui/Button';
 import { Alert } from '../components/ui/Alert';
@@ -21,6 +22,7 @@ import { CalculationParameters } from '../components/results/CalculationParamete
 import { DetailedTaxBreakdown } from '../components/results/DetailedTaxBreakdown';
 import { ResultsTabs } from '../components/results/ResultsTabs';
 import { calculateComprehensiveTax } from '../utils/comprehensiveTaxCalculation';
+import SEOHead from '../components/seo/SEOHead';
 
 interface AdditionalIncomeData {
   otherIncome: number;
@@ -30,6 +32,7 @@ interface AdditionalIncomeData {
 
 const ResultsPage: React.FC = () => {
   const { state } = useCalculation();
+  const navigate = useNavigate();
   const [additionalIncome, setAdditionalIncome] = useState<AdditionalIncomeData>({
     otherIncome: 0,
     otherDividends: 0,
@@ -112,7 +115,7 @@ const ResultsPage: React.FC = () => {
   // Calculate comprehensive tax including all wizard inputs
   const comprehensiveTax = useMemo(() => {
     if (!normalizedResults) return null;
-    const taxYear = state.wizardData?.taxYear || normalizedResults.taxYear || '2024-2025';
+    const taxYear = state.wizardData?.taxYear || normalizedResults.taxYear || '2025-2026';
     return calculateComprehensiveTax(normalizedResults, state.wizardData, taxYear);
   }, [normalizedResults, state.wizardData]);
 
@@ -162,7 +165,7 @@ const ResultsPage: React.FC = () => {
               </p>
               <Button
                 variant="primary"
-                onClick={() => (window.location.hash = '')}
+                onClick={() => navigate('/calculator')}
                 className="me-2"
               >
                 <i className="fas fa-calculator me-2"></i>
@@ -190,7 +193,7 @@ const ResultsPage: React.FC = () => {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => (window.location.hash = '')}
+              onClick={() => navigate('/calculator')}
             >
               <i className="fas fa-calculator me-2"></i>
               Start Tax Calculation
@@ -212,7 +215,7 @@ const ResultsPage: React.FC = () => {
                 The calculation completed but some results data is missing. Please try running the
                 calculation again.
               </p>
-              <Button variant="primary" onClick={() => (window.location.hash = '')}>
+              <Button variant="primary" onClick={() => navigate('/calculator')}>
                 Run New Calculation
               </Button>
             </Alert>
@@ -227,6 +230,11 @@ const ResultsPage: React.FC = () => {
       className="container-fluid py-4"
       style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}
     >
+      <SEOHead
+        title="Calculation Results - UK Stock Tax Calculator"
+        description="View your detailed UK capital gains tax calculation results, including Section 104 pools, dividend tax, and portfolio analysis."
+        robots="noindex, nofollow"
+      />
       <div className="row mb-4">
         <div className="col-12">
           <div className="d-flex justify-content-between align-items-center bg-white rounded shadow-sm p-4 flex-wrap gap-3">
@@ -246,7 +254,7 @@ const ResultsPage: React.FC = () => {
               <Button
                 variant="outline-primary"
                 size="sm"
-                onClick={() => (window.location.hash = '')}
+                onClick={() => navigate('/calculator')}
                 className="me-2"
               >
                 <i className="fas fa-calculator me-2"></i>
@@ -425,7 +433,7 @@ const ResultsPage: React.FC = () => {
               </p>
             </div>
             <div className="d-flex justify-content-center gap-3 flex-wrap">
-              <Button variant="primary" onClick={() => (window.location.hash = '')}>
+              <Button variant="primary" onClick={() => navigate('/calculator')}>
                 <i className="fas fa-calculator me-2"></i>
                 Run New Calculation
               </Button>

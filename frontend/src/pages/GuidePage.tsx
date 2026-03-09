@@ -1,8 +1,18 @@
 import React from 'react';
 
+import SEOHead from '../components/seo/SEOHead';
+
 const GuidePage: React.FC = () => {
   return (
     <div className="container py-4">
+      <SEOHead
+        title="UK Capital Gains Tax Guide - 2024/25 Rules"
+        description="Comprehensive guide to UK Capital Gains Tax for investors. Learn about Section 104 pools, 30-day rule, allowances, and rates for 2024/25."
+        keywords={['UK CGT guide', 'capital gains tax rules', 'Section 104 holding', '30-day rule', 'bed and breakfasting', 'CGT allowance']}
+        canonical="https://cgttaxtool.uk/guide"
+        articleSection="Tax Guide"
+        articleTags={['UK Tax', 'Capital Gains Tax', 'Investing', 'HMRC']}
+      />
       <div className="row justify-content-center">
         <div className="col-lg-10">
           <div className="card shadow">
@@ -11,22 +21,26 @@ const GuidePage: React.FC = () => {
               <p className="lead">
                 A comprehensive guide to understanding UK Capital Gains Tax for shares and investments.
               </p>
-              
+
               <div className="row">
                 <div className="col-lg-8">
                   <h2>What is Capital Gains Tax?</h2>
                   <p>
-                    Capital Gains Tax (CGT) is a tax on the profit when you sell (or 'dispose of') something (an 'asset') that's gone up in value. 
+                    Capital Gains Tax (CGT) is a tax on the profit when you sell (or 'dispose of') something (an 'asset') that's gone up in value.
                     It's the gain you make that's taxed, not the amount of money you receive.
                   </p>
-                  
+
                   <h3>CGT Rates for 2024/25</h3>
+                  <div className="alert alert-warning mb-3">
+                    <strong>Important:</strong> Tax rates for shares increased on 30 October 2024
+                  </div>
                   <div className="table-responsive">
                     <table className="table table-striped">
                       <thead>
                         <tr>
                           <th>Tax Band</th>
-                          <th>Rate (Shares)</th>
+                          <th>Rate (Shares) - Before 30 Oct</th>
+                          <th>Rate (Shares) - From 30 Oct</th>
                           <th>Rate (Residential Property)</th>
                         </tr>
                       </thead>
@@ -34,29 +48,34 @@ const GuidePage: React.FC = () => {
                         <tr>
                           <td>Basic Rate</td>
                           <td>10%</td>
+                          <td><strong>18%</strong></td>
                           <td>18%</td>
                         </tr>
                         <tr>
                           <td>Higher Rate</td>
                           <td>20%</td>
+                          <td><strong>24%</strong></td>
                           <td>28%</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                  
+
                   <h3>Annual Exempt Amount</h3>
                   <p>
-                    You can make gains of up to £6,000 (2024/25) before you need to pay Capital Gains Tax. 
+                    You can make gains of up to <strong>£3,000</strong> (2024/25) before you need to pay Capital Gains Tax.
                     This is known as your annual exempt amount or 'allowance'.
                   </p>
-                  
+                  <p className="text-muted small">
+                    Note: The AEA was £6,000 in 2023/24 and £12,300 in 2022/23.
+                  </p>
+
                   <h3>Section 104 Holdings</h3>
                   <p>
-                    When you buy shares of the same company at different times, they are pooled together in what's called a 'Section 104 holding'. 
+                    When you buy shares of the same company at different times, they are pooled together in what's called a 'Section 104 holding'.
                     This means you calculate the average cost when you sell shares.
                   </p>
-                  
+
                   <div className="alert alert-info">
                     <h4 className="alert-heading">Example Calculation:</h4>
                     <p>If you bought 100 shares at £10 each and later bought 50 shares at £15 each:</p>
@@ -66,13 +85,27 @@ const GuidePage: React.FC = () => {
                       <li>Average cost per share: £1,750 ÷ 150 = £11.67</li>
                     </ul>
                   </div>
-                  
-                  <h3>The 30-Day Rule</h3>
+
+                  <h3>The Same-Day Rule (1-Day Rule)</h3>
                   <p>
-                    If you sell shares and buy the same shares within 30 days, special rules apply to prevent 'bed and breakfasting' 
+                    If you buy and sell shares of the same company on the same day, these transactions are matched together first.
+                    This is known as the same-day rule or 1-day rule.
+                  </p>
+                  <div className="alert alert-warning">
+                    <strong>Important:</strong> Same-day matching takes priority over all other matching rules, including the 30-day rule and Section 104 pooling.
+                  </div>
+                  <p>
+                    <strong>Example:</strong> If you sell 50 shares of Company X on 15 March and buy 30 shares of Company X on the same day,
+                    those 30 shares are matched with 30 of the shares you sold. The remaining 20 shares sold are then matched using the 30-day rule
+                    or Section 104 pool.
+                  </p>
+
+                  <h3>The 30-Day Rule (Bed and Breakfasting)</h3>
+                  <p>
+                    If you sell shares and buy the same shares within 30 days, special rules apply to prevent 'bed and breakfasting'
                     (selling and immediately rebuying to crystallize losses).
                   </p>
-                  
+
                   <h3>Allowable Costs</h3>
                   <p>You can deduct certain costs from your capital gain:</p>
                   <ul>
@@ -81,9 +114,9 @@ const GuidePage: React.FC = () => {
                     <li>Costs of improving the asset</li>
                   </ul>
                 </div>
-                
+
                 <div className="col-lg-4">
-                  <div className="sticky-top" style={{top: '20px'}}>
+                  <div className="sticky-top" style={{ top: '20px' }}>
                     <div className="card bg-light">
                       <div className="card-header">
                         <h5>Quick Links</h5>
@@ -96,7 +129,7 @@ const GuidePage: React.FC = () => {
                         </ul>
                       </div>
                     </div>
-                    
+
                     <div className="card bg-warning bg-opacity-10 mt-3">
                       <div className="card-body">
                         <h6 className="card-title">⚠️ Important</h6>

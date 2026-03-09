@@ -7,26 +7,56 @@ import path from 'path';
 export default defineConfig(({ command, mode }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), '');
-  
+
   return {
     plugins: [react()],
+    ssgOptions: {
+      entry: 'main.tsx',
+      dirStyle: 'nested',
+      includedRoutes(paths: string[], routes: any[]) {
+        // Read the pre-generated index.json to get all valid blog slugs for SSG
+        const fs = require('fs');
+        const indexPath = path.resolve(__dirname, 'public/blog/index.json');
+        const postRoutes: string[] = [];
+
+        if (fs.existsSync(indexPath)) {
+          try {
+            const indexData = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+            indexData.forEach((post: { slug: string }) => {
+              if (post.slug) {
+                postRoutes.push(`/blog/post/${post.slug}`);
+              }
+            });
+          } catch (e) {
+            console.error("Failed to parse blog index for SSG:", e);
+          }
+        }
+        console.log("SSG Paths received:", paths);
+        console.log("SSG Post Routes:", postRoutes);
+
+        // Remove any dynamic routes with colons that might have slipped through
+        const staticPaths = paths.filter(route => !route.includes(':'));
+        // Return original paths plus dynamically discovered blog post routes
+        return [...staticPaths, ...postRoutes];
+      }
+    },
     root: path.resolve(__dirname, 'src'),
     publicDir: path.resolve(__dirname, 'public'),
-    base: './', // Use relative paths for assets
-    
+    base: '/', // Use absolute paths for assets to support nested SSG routes
+
     // Environment variables and polyfills
     define: {
       __APP_ENV__: JSON.stringify(env.APP_ENV),
       __API_URL__: JSON.stringify(env.VITE_API_URL || (
-        mode === 'production' 
-          ? 'https://cgttaxtool.uk/prod' 
+        mode === 'production'
+          ? 'https://cgttaxtool.uk/prod'
           : 'http://localhost:8000'
       )),
       global: 'globalThis',
       // Add Buffer polyfill for gray-matter
       'process.env': {},
     },
-    
+
     build: {
       outDir: path.resolve(__dirname, 'dist'),
       emptyOutDir: true,
@@ -34,11 +64,7 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         input: path.resolve(__dirname, 'src/index.html'),
         output: {
-          // Manual chunks for better caching
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            bootstrap: ['bootstrap'],
-          }
+          // Chunking is now handled by Vite defaults to support SSR build
         },
         plugins: [
           // Add Node.js polyfills for production builds
@@ -49,7 +75,11 @@ export default defineConfig(({ command, mode }) => {
         ]
       }
     },
-    
+
+    ssr: {
+      noExternal: ['react-helmet-async'],
+    },
+
     server: {
       port: 5173,
       host: true,
@@ -62,13 +92,13 @@ export default defineConfig(({ command, mode }) => {
         }
       }
     },
-    
+
     // CSS configuration
     css: {
       modules: {
         localsConvention: 'camelCase',
-        generateScopedName: mode === 'production' 
-          ? '[hash:base64:5]' 
+        generateScopedName: mode === 'production'
+          ? '[hash:base64:5]'
           : '[name]__[local]___[hash:base64:5]'
       },
       preprocessorOptions: {
@@ -79,7 +109,7 @@ export default defineConfig(({ command, mode }) => {
         }
       }
     },
-    
+
     // Resolve configuration
     resolve: {
       alias: {
@@ -95,10 +125,10 @@ export default defineConfig(({ command, mode }) => {
         'buffer': 'buffer',
       }
     },
-    
+
     // Polyfill Node.js modules for browser
     optimizeDeps: {
-      include: ['buffer', 'gray-matter'],
+      include: ['buffer'],
       esbuildOptions: {
         // Node.js global to browser globalThis
         define: {

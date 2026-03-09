@@ -72,7 +72,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
       (sum, acq) => sum + acq.quantity, 0
     );
     const poolAverage = totalAcquisitionCost / totalQuantity;
-    
+
     const disposalProceeds = (example.data.disposal.quantity * example.data.disposal.price) - example.data.disposal.costs;
     const disposalCost = example.data.disposal.quantity * poolAverage;
     const gain = disposalProceeds - disposalCost;
@@ -119,7 +119,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
     },
     {
       title: "Apply Annual Exemption",
-      content: "Offset gains against the annual exempt amount (£6,000 for 2023/24 tax year) and calculate tax liability."
+      content: "Offset gains against the annual exempt amount (£3,000 for 2024/25 tax year) and calculate tax liability."
     }
   ];
 
@@ -149,7 +149,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
             <div className="col-lg-8 mx-auto text-center">
               <h2 className="mb-4">Understanding UK Capital Gains Tax</h2>
               <p className="lead">
-                This comprehensive guide to UK Capital Gains Tax will help you understand the rules, 
+                This comprehensive guide to UK Capital Gains Tax will help you understand the rules,
                 calculations, and reporting requirements for individual investors.
               </p>
             </div>
@@ -168,7 +168,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                     Section 104 Pooling
                   </h5>
                   <p className="card-text">
-                    Shares of the same type are pooled together with an average cost calculation 
+                    Shares of the same type are pooled together with an average cost calculation
                     for disposals not covered by same-day or bed-and-breakfast rules.
                   </p>
                 </div>
@@ -182,7 +182,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                     Same-Day Rule
                   </h5>
                   <p className="card-text">
-                    Acquisitions and disposals on the same day are matched first, using the 
+                    Acquisitions and disposals on the same day are matched first, using the
                     actual cost of shares bought on that day.
                   </p>
                 </div>
@@ -196,7 +196,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                     Bed and Breakfast Rule
                   </h5>
                   <p className="card-text">
-                    Disposals are matched with acquisitions within 30 days after the disposal 
+                    Disposals are matched with acquisitions within 30 days after the disposal
                     date, in chronological order.
                   </p>
                 </div>
@@ -242,9 +242,8 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                   {calculationExamples.map(example => (
                     <button
                       key={example.id}
-                      className={`btn btn-outline-primary w-100 mb-2 ${
-                        activeExample === example.id ? 'active' : ''
-                      }`}
+                      className={`btn btn-outline-primary w-100 mb-2 ${activeExample === example.id ? 'active' : ''
+                        }`}
                       onClick={() => setActiveExample(example.id)}
                     >
                       {example.title}
@@ -271,7 +270,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                       <p className="text-muted mb-3">
                         {activeExample === 'basic' ? 'Single purchase scenario' : 'Multiple purchases scenario'}
                       </p>
-                      
+
                       <h6>Acquisitions:</h6>
                       <div className="table-responsive mb-3">
                         <table className="table table-sm">
@@ -346,8 +345,8 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
             <div className="card-header d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Step {currentStep} of 5</h5>
               <div className="progress" style={{ width: '200px' }}>
-                <div 
-                  className="progress-bar" 
+                <div
+                  className="progress-bar"
                   role="progressbar"
                   style={{ width: `${(currentStep / 5) * 100}%` }}
                   aria-valuenow={currentStep}
@@ -361,16 +360,16 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
             <div className="card-body">
               <h5>{stepContent[currentStep - 1].title}</h5>
               <p>{stepContent[currentStep - 1].content}</p>
-              
+
               <div className="d-flex justify-content-between mt-4">
-                <button 
+                <button
                   className="btn btn-outline-secondary"
                   onClick={prevStep}
                   disabled={currentStep === 1}
                 >
                   Previous Step
                 </button>
-                <button 
+                <button
                   className="btn btn-primary"
                   onClick={nextStep}
                   disabled={currentStep === 5}
@@ -394,7 +393,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                     Bonus Share Allocations
                   </h5>
                   <p className="card-text">
-                    Bonus shares are added to your Section 104 pool at zero cost, reducing 
+                    Bonus shares are added to your Section 104 pool at zero cost, reducing
                     the average cost per share of your holding.
                   </p>
                 </div>
@@ -408,7 +407,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                     Stock Splits
                   </h5>
                   <p className="card-text">
-                    Stock splits increase the number of shares in your pool while maintaining 
+                    Stock splits increase the number of shares in your pool while maintaining
                     the same total cost, effectively reducing cost per share.
                   </p>
                 </div>
@@ -422,7 +421,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                     Foreign Currency Considerations
                   </h5>
                   <p className="card-text">
-                    For foreign shares, convert all amounts to GBP using exchange rate 
+                    For foreign shares, convert all amounts to GBP using exchange rate
                     on the transaction date for both acquisitions and disposals.
                   </p>
                 </div>
@@ -436,7 +435,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                     Dividend Payments
                   </h5>
                   <p className="card-text">
-                    Dividend payments are not part of capital gains calculations but may 
+                    Dividend payments are not part of capital gains calculations but may
                     affect the cost basis for rights issues or scrip dividends.
                   </p>
                 </div>
@@ -471,10 +470,18 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                 </div>
                 <div className="card-body">
                   <p><strong>Annual Exemption:</strong> £3,000</p>
-                  <h6>Tax Rates:</h6>
+                  <div className="alert alert-warning mb-3">
+                    <small><strong>Important:</strong> Tax rates changed on 30 October 2024</small>
+                  </div>
+                  <h6>Tax Rates (Before 30 Oct 2024):</h6>
                   <ul>
                     <li>Basic rate taxpayers: 10%</li>
                     <li>Higher rate taxpayers: 20%</li>
+                  </ul>
+                  <h6 className="mt-3">Tax Rates (From 30 Oct 2024):</h6>
+                  <ul className="mb-0">
+                    <li><strong>Basic rate taxpayers: 18%</strong></li>
+                    <li><strong>Higher rate taxpayers: 24%</strong></li>
                   </ul>
                 </div>
               </div>
@@ -511,7 +518,7 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                 <li>Your total disposals exceed £49,200 (2023/24), or</li>
                 <li>Your taxable gains exceed the annual exemption</li>
               </ul>
-              
+
               <h6 className="mt-4">What to Report:</h6>
               <div className="row">
                 <div className="col-md-6">
@@ -541,10 +548,10 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
               <dl>
                 <dt>Acquisition Cost</dt>
                 <dd>The total cost of acquiring shares, including purchase price and transaction costs.</dd>
-                
+
                 <dt>Disposal Proceeds</dt>
                 <dd>The amount received from selling shares, less transaction costs.</dd>
-                
+
                 <dt>Section 104 Pool</dt>
                 <dd>A method of calculating average cost for shares of the same type.</dd>
               </dl>
@@ -553,10 +560,10 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
               <dl>
                 <dt>Same-Day Rule</dt>
                 <dd>Matching disposals with acquisitions made on the same day.</dd>
-                
+
                 <dt>Bed and Breakfast Rule</dt>
                 <dd>Matching disposals with acquisitions within 30 days after disposal.</dd>
-                
+
                 <dt>Annual Exemption</dt>
                 <dd>The amount of capital gains you can make each year without paying tax.</dd>
               </dl>
@@ -574,9 +581,9 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                   <h6>Official HMRC Resources</h6>
                   <ul className="list-unstyled">
                     <li>
-                      <a 
-                        href="https://www.gov.uk/government/publications/capital-gains-manual" 
-                        target="_blank" 
+                      <a
+                        href="https://www.gov.uk/government/publications/capital-gains-manual"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-decoration-none"
                       >
@@ -585,9 +592,9 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
                       </a>
                     </li>
                     <li>
-                      <a 
-                        href="https://www.gov.uk/capital-gains-tax" 
-                        target="_blank" 
+                      <a
+                        href="https://www.gov.uk/capital-gains-tax"
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-decoration-none"
                       >
@@ -626,8 +633,8 @@ export const CGTGuide: React.FC<CGTGuideProps> = ({ className = '' }) => {
             Important Disclaimer
           </h6>
           <p className="mb-0">
-            This guide is for educational purposes only and does not constitute professional tax advice. 
-            Tax rules can be complex and change over time. Always consult with a qualified tax professional 
+            This guide is for educational purposes only and does not constitute professional tax advice.
+            Tax rules can be complex and change over time. Always consult with a qualified tax professional
             for advice specific to your circumstances.
           </p>
         </section>
