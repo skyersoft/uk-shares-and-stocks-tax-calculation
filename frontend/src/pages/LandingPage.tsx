@@ -466,7 +466,7 @@ const LandingPage: React.FC = () => {
                           <li>Commission, fees, and taxes</li>
                           <li>Corporate actions and adjustments</li>
                         </ul>
-                        <button onClick={handleViewGuide} className="btn btn-outline-primary btn-sm">
+                        <button onClick={handleViewHelp} className="btn btn-outline-primary btn-sm">
                           How to export →
                         </button>
                       </div>
@@ -492,7 +492,7 @@ const LandingPage: React.FC = () => {
                           <li>Currency and FX rates where applicable</li>
                           <li>Optional: Fees, commissions, and withholding taxes</li>
                         </ul>
-                        <button onClick={handleViewGuide} className="btn btn-outline-success btn-sm">
+                        <button onClick={handleViewHelp} className="btn btn-outline-success btn-sm">
                           View CSV format →
                         </button>
                       </div>
