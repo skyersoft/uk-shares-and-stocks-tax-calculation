@@ -906,6 +906,25 @@ def parse_multipart_data_simple(body: str) -> tuple:
     return files, tax_year, analysis_type
 
 
+def _tax_year_end_date(tax_year: str) -> datetime.datetime:
+    """Return the last day of a UK tax year as a datetime (April 5 of end year).
+
+    UK tax years run April 6 to April 5.  For "2024-2025" the last day is
+    April 5, 2025.
+
+    Args:
+        tax_year: String in "YYYY-YYYY" format, e.g. "2024-2025".
+
+    Returns:
+        datetime at 23:59:59 on April 5 of the end year.
+    """
+    try:
+        end_year = int(tax_year.split("-")[1])
+    except (IndexError, ValueError):
+        end_year = datetime.datetime.utcnow().year
+    return datetime.datetime(end_year, 4, 5, 23, 59, 59)
+
+
 def handle_unrealised_gains_request(event: Dict[str, Any]) -> Dict[str, Any]:
     """Handle POST /unrealised-gains — live prices + predictive CGT.
 
@@ -1039,19 +1058,31 @@ def handle_unrealised_gains_request(event: Dict[str, Any]) -> Dict[str, Any]:
                     })
                 }
 
-            # 3. Fetch live prices
-            price_svc = YFinanceMarketPriceService()
-            unrealised_calc = UnrealisedGainsCalculator()
-            positions = unrealised_calc.calculate_unrealised_positions(
-                holdings, price_svc, all_transactions
+            # 3. Determine reference date for prices
+            # For a completed tax year use the last day (April 5) so positions
+            # are valued as-of end-of-year rather than today's live prices.
+            tax_year_end = _tax_year_end_date(tax_year)
+            now_utc = datetime.datetime.utcnow()
+            reference_date = (
+                tax_year_end if tax_year_end.date() < now_utc.date() else now_utc
             )
 
-            # 4. Predictive tax
+            # 4. Fetch prices (historical or live depending on reference_date)
+            price_svc = YFinanceMarketPriceService(
+                as_of_date=reference_date if reference_date.date() < now_utc.date() else None
+            )
+            unrealised_calc = UnrealisedGainsCalculator()
+            positions = unrealised_calc.calculate_unrealised_positions(
+                holdings, price_svc, all_transactions, today=reference_date
+            )
+
+            # 5. Predictive tax
             summary = unrealised_calc.calculate_predictive_tax(
                 positions,
                 all_transactions,
                 tax_year,
                 already_realised_gain_gbp=already_realised_gain_gbp,
+                today=reference_date,
             )
 
             # 5. Serialise
