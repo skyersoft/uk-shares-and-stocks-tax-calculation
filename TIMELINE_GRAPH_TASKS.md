@@ -86,7 +86,7 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
       currency: str | None
 
       # Running portfolio state at this event
-      unrealised_value_gbp: float       # Σ (held_qty × last_known_price × fx) per security
+      unrealised_value_gbp: float       # Σ (held_qty × yahoo_price[symbol][event_date] × fx) per security
       unrealised_gain_loss_gbp: float   # unrealised_value − total_cost_basis
       total_cost_basis_gbp: float       # cumulative cost of all held positions
 
@@ -106,7 +106,7 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
 - **Responsibilities**:
   - Accept `List[Transaction]`
   - Sort by date then event_type priority (BUY → SELL → DIVIDEND → INTEREST → other)
-  - Maintain `last_known_price: Dict[str, float]` per security (updated on BUY/SELL)
+  - Pre-fetch `yahoo_price: Dict[str, Dict[date, float]]` for all symbols × all event dates in one batch (via `yfinance`) — convert to GBP at event FX rate
   - Maintain `SharePoolManager` per security for HMRC cost basis tracking
   - Running values: `total_cost_basis_gbp`, `unrealised_value_gbp`, `unrealised_gain_loss_gbp`
   - Per-year accumulators: `realised_gain_loss_gbp`, `income_gbp` (reset at YEAR_END)
@@ -114,14 +114,14 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
   - At `CURRENT_DATE` (today, only for last/ongoing year): same snapshot
   - Return `List[TimelineEvent]`
 - **Key logic per event type**:
-  - **BUY**: `last_known_price[symbol] = price_gbp`; add to `total_cost_basis_gbp`; recompute `unrealised_value_gbp` = Σ (qty × last_known_price) for all held securities
-  - **SELL**: run HMRC matching via `SharePoolManager`; reduce `total_cost_basis_gbp` by allocated cost; add disposal result to `realised_gain_loss_gbp`; `last_known_price[symbol] = price_gbp`; recompute `unrealised_value_gbp`
+  - **BUY**: add to `total_cost_basis_gbp`; recompute `unrealised_value_gbp` = Σ (qty × yahoo_price[symbol][event_date] × fx) for all held securities
+  - **SELL**: run HMRC matching via `SharePoolManager`; reduce `total_cost_basis_gbp` by allocated cost; add disposal result to `realised_gain_loss_gbp`; recompute `unrealised_value_gbp`
   - **DIVIDEND/INTEREST**: `income_gbp += amount_gbp`
   - **YEAR_END**: snapshot all 7 running values → emit event; reset `realised_gain_loss_gbp`, `realised_tax_gbp`, `income_gbp` to 0
 - **Tests**: `tests/unit/test_timeline_calculator.py`
   - `test_single_buy_sets_unrealised_value`
-  - `test_subsequent_buy_reprices_all_held_shares` ← 10@£5 then 5@£6 → unrealised_value = 15×£6 = £90
-  - `test_unrealised_gain_loss_is_value_minus_cost_basis` ← £90 − £80 = £10
+  - `test_subsequent_buy_uses_yahoo_price_not_transaction_price` ← mock yahoo returns £6 after 2nd buy → unrealised_value = 15×£6 = £90
+  - `test_unrealised_gain_loss_is_yahoo_value_minus_cost_basis` ← £90 − £80 = £10
   - `test_sell_reduces_cost_basis_and_unrealised_value`
   - `test_sell_after_buy_produces_hmrc_gain`
   - `test_sell_with_commission_reduces_gain`
@@ -139,6 +139,7 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
 #### Task 1.3 — Add `/timeline` route to `lambda_handler.py`
 - **File**: `deployment/lambda_handler.py`
 - **Route**: `POST /timeline`
+- **Note**: This is the **single API endpoint** for the unified results page — it replaces separate calls to `/calculate` and `/unrealised-gains`. The response includes everything the UI needs.
 - **Request**: multipart/form-data — file + optional tax_year
 - **Response**:
   ```json
@@ -146,6 +147,8 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
     "transaction_count": 20,
     "event_count": 23,
     "tax_years_covered": ["2024-2025"],
+    "tax_year": "2024-2025",
+
     "events": [
       {
         "event_index": 0,
@@ -166,67 +169,253 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
         "predictive_sell_all_cgt_gbp": null
       }
     ],
+
     "summary": {
       "final_unrealised_value_gbp": 34566.5,
       "final_unrealised_gain_loss_gbp": -12095.99,
       "final_total_cost_basis_gbp": 46662.49,
       "final_realised_gain_loss_gbp": 1293.40,
       "final_realised_tax_gbp": 0.0,
-      "final_income_gbp": 0.0
+      "final_income_gbp": 0.0,
+      "predictive_cgt_gbp": 0.0
+    },
+
+    "disposals": [
+      {
+        "disposal_date": "2024-09-15",
+        "symbol": "AAPL",
+        "quantity": 10,
+        "proceeds": 1550.00,
+        "cost_basis": 1185.00,
+        "gain_or_loss": 365.00,
+        "matching_rule": "section_104"
+      }
+    ],
+
+    "holdings": [
+      {
+        "symbol": "MSFT",
+        "name": "Microsoft Corp",
+        "quantity": 25,
+        "average_cost_gbp": 280.50,
+        "total_cost_gbp": 7012.50,
+        "current_value_gbp": 8200.00,
+        "unrealized_gain_loss": 1187.50
+      }
+    ],
+
+    "dividends": [
+      {
+        "payment_date": "2024-06-15",
+        "symbol": "MSFT",
+        "gross_amount_gbp": 45.00,
+        "withholding_tax_gbp": 6.75,
+        "net_amount_gbp": 38.25
+      }
+    ],
+
+    "section_104_pools": {
+      "MSFT": { "quantity": 25, "total_cost": 7012.50 }
     }
   }
   ```
 - **Tests**: `tests/integration/test_timeline_endpoint.py`
+  - `test_response_includes_events_summary_disposals_holdings_dividends_pools`
+  - `test_summary_realised_matches_disposals_total`
+  - `test_summary_predictive_cgt_matches_last_year_end_event`
 - **Status**: [ ] Not started
 
 ---
 
-### Phase 2 — Frontend: `PortfolioTimelineChart` Component
+### Phase 2 — Frontend: Unified Results Page
+
+> **Architecture change**: The unified `ResultsPage` replaces the current split between the realised-tax view and the unrealised-gains view. A single `/timeline` API call powers everything. The existing `/calculate` call and the separate `UnrealisedGainsResults` branch in `ResultsPage` are retired.
 
 #### Task 2.1 — Add TypeScript types
 - **File**: `frontend/src/types/timeline.ts` (new)
-- **Content**: mirror `TimelineEvent` and full response shape from backend
+- **Content**:
+  ```typescript
+  export interface TimelineEvent {
+    event_index: number;
+    event_date: string;
+    tax_year: string;
+    label: string;
+    event_type: 'BUY' | 'SELL' | 'DIVIDEND' | 'INTEREST' | 'SPLIT' | 'YEAR_END' | 'CURRENT_DATE';
+    symbol: string | null;
+    quantity: number | null;
+    price_gbp: number | null;
+    currency: string | null;
+    unrealised_value_gbp: number;
+    unrealised_gain_loss_gbp: number;
+    total_cost_basis_gbp: number;
+    realised_gain_loss_gbp: number;
+    realised_tax_gbp: number;
+    income_gbp: number;
+    predictive_sell_all_cgt_gbp: number | null;
+  }
+
+  export interface TimelineSummary {
+    final_unrealised_value_gbp: number;
+    final_unrealised_gain_loss_gbp: number;
+    final_total_cost_basis_gbp: number;
+    final_realised_gain_loss_gbp: number;
+    final_realised_tax_gbp: number;
+    final_income_gbp: number;
+    predictive_cgt_gbp: number;
+  }
+
+  export interface TimelineDisposal {
+    disposal_date: string;
+    symbol: string;
+    quantity: number;
+    proceeds: number;
+    cost_basis: number;
+    gain_or_loss: number;
+    matching_rule: string;
+  }
+
+  export interface TimelineHolding {
+    symbol: string;
+    name: string;
+    quantity: number;
+    average_cost_gbp: number;
+    total_cost_gbp: number;
+    current_value_gbp: number;
+    unrealized_gain_loss: number;
+  }
+
+  export interface TimelineDividend {
+    payment_date: string;
+    symbol: string;
+    gross_amount_gbp: number;
+    withholding_tax_gbp: number;
+    net_amount_gbp: number;
+  }
+
+  export interface TimelineResponse {
+    transaction_count: number;
+    event_count: number;
+    tax_years_covered: string[];
+    tax_year: string;
+    events: TimelineEvent[];
+    summary: TimelineSummary;
+    disposals: TimelineDisposal[];
+    holdings: TimelineHolding[];
+    dividends: TimelineDividend[];
+    section_104_pools: Record<string, { quantity: number; total_cost: number }>;
+  }
+  ```
 - **Status**: [ ] Not started
 
-#### Task 2.2 — Add `/timeline` API function to `api.ts`
+#### Task 2.2 — Replace `submitCalculation` with `submitTimeline` in `api.ts`
 - **File**: `frontend/src/services/api.ts`
-- **Function**: `submitTimeline({ file, taxYear }) → TimelineResponse`
+- **Change**: Add `submitTimeline({ file, taxYear }): Promise<TimelineResponse>` — `POST /prod/timeline` (prod) or `/timeline` (local). Keep `submitCalculation` as a deprecated alias pointing to `submitTimeline` during the transition (deleted in Task 2.7).
 - **Status**: [ ] Not started
 
-#### Task 2.3 — Implement `PortfolioTimelineChart` component
+#### Task 2.3 — New `TimelineSummaryMetrics` component
+- **File**: `frontend/src/components/results/TimelineSummaryMetrics.tsx` (new)
+- **Purpose**: Replaces `ResultsMetricsSummary` with timeline-driven 4-card KPI row
+- **4 cards** (all values from `TimelineSummary`):
+
+  | Card | Value field | Border colour |
+  |------|-------------|---------------|
+  | Realised Gain / Loss | `final_realised_gain_loss_gbp` | green (positive) / red (negative) |
+  | Capital Gains Tax Due | `final_realised_tax_gbp` | orange |
+  | Portfolio Value (Unrealised) | `final_unrealised_value_gbp` | blue |
+  | Predictive CGT if sold today | `predictive_cgt_gbp` | purple |
+
+- **Tests**: `frontend/src/components/results/TimelineSummaryMetrics.test.tsx`
+  - Renders 4 cards
+  - Realised Gain/Loss card has green border when positive, red when negative
+  - Predictive CGT shows £0.00 when zero (not blank)
+- **Status**: [ ] Not started
+
+#### Task 2.4 — New `PortfolioTimelineChart` component
 - **File**: `frontend/src/components/results/PortfolioTimelineChart.tsx` (new)
 - **Library**: Chart.js `Line` via `react-chartjs-2`
-- **5 datasets**:
+- **5 datasets** (built from `events[]`):
   1. Unrealised Value — blue solid
-  2. Unrealised Gain/Loss — teal solid (positive above zero, negative below)
-  3. Realised Gain/Loss — green solid (positive) / red solid (negative)
-  4. Realised Tax — orange solid
-  5. Income (dividends + interest) — purple dashed
-- **X-axis**: event labels rotated 45°, font size small
-- **YEAR_END / CURRENT_DATE markers**: vertical dashed annotation lines (`afterDraw` hook — no extra plugin needed)
-- **Tooltip**: all 5 values + event type + date + symbol on hover
-- **Legend**: top, toggleable per dataset
-- **Empty state**: "No timeline data available" placeholder
+  2. Unrealised Gain/Loss — teal solid
+  3. Realised Gain/Loss — green/red solid (resets at YEAR_END)
+  4. Realised Tax — orange solid (resets at YEAR_END)
+  5. Income — purple dashed (resets at YEAR_END)
+- **X-axis**: `event_date` values, rotated 45°, small font
+- **YEAR_END / CURRENT_DATE markers**: vertical dashed lines via `afterDraw` plugin hook (no extra npm package)
+- **Tooltip**: `label`, `event_type`, `event_date` + all 5 running values on hover
+- **Legend**: top, each dataset toggleable independently
+- **Empty state**: "No timeline data — upload a file to see your portfolio history"
+- **Tests**: `frontend/src/components/results/PortfolioTimelineChart.test.tsx`
+  - Renders without crash given mock `events[]`
+  - Exactly 5 datasets in chart config
+  - Empty state shown when `events` is `[]`
+  - YEAR_END events present in X labels
 - **Status**: [ ] Not started
 
-#### Task 2.4 — Unit tests for `PortfolioTimelineChart`
-- **File**: `frontend/src/components/results/PortfolioTimelineChart.test.tsx` (new)
-- **Tests**:
-  - Renders without crashing given mock data
-  - Renders exactly 5 datasets
-  - YEAR_END events present in data
-  - Empty state shown when events array is empty
-  - Labels truncated at 30 chars
+#### Task 2.5 — New `UnrealisedTaxPredictionCard` component
+- **File**: `frontend/src/components/results/UnrealisedTaxPredictionCard.tsx` (new)
+- **Purpose**: Inline card replacing the separate unrealised-gains page
+- **Data source**: `TimelineSummary` + `TimelineHolding[]`
+- **Content**:
+  - Portfolio value today: `final_unrealised_value_gbp`
+  - Unrealised gain/loss: `final_unrealised_gain_loss_gbp`
+  - Predictive CGT (sell-all scenario): `predictive_cgt_gbp`
+  - Holdings table (sortable by `unrealized_gain_loss` desc)
+  - HMRC AEA info badge: "£3,000 Annual Exempt Amount applies"
+- **Tests**: `frontend/src/components/results/UnrealisedTaxPredictionCard.test.tsx`
+  - Holdings table renders correct row count
+  - AEA badge is visible
+  - Predictive CGT formatted as GBP currency
 - **Status**: [ ] Not started
 
-#### Task 2.5 — Integrate into `ResultsTabs`
+#### Task 2.6 — Refactor `ResultsTabs` to consume timeline data shapes
 - **File**: `frontend/src/components/results/ResultsTabs.tsx`
-- **Change**: Add "Timeline" tab; render `PortfolioTimelineChart` inside; tab shown only when timeline data available
+- **Change**: Replace `NormalizedResults`/`TaxCalculation` props with a single `data: TimelineResponse` prop. Map:
+  - Disposals tab ← `data.disposals`
+  - Holdings tab ← `data.holdings`
+  - Dividends tab ← `data.dividends`
+  - Section 104 Pools tab ← `data.section_104_pools`
+- The chart lives **above** the tabs (in `ResultsPage`), not inside a tab
 - **Status**: [ ] Not started
 
-#### Task 2.6 — Wire up timeline fetch in `ResultsPage`
+#### Task 2.7 — Refactor `ResultsPage.tsx` to unified layout
 - **File**: `frontend/src/pages/ResultsPage.tsx`
-- **Change**: After upload success, call `submitTimeline()` in parallel with `submitCalculation()`; pass result to `ResultsTabs`; handle loading/error states independently
+- **Single data source**: `state.timelineResult: TimelineResponse | null` (add to `CalculationContext`)
+- **Remove**: `state.result`, `state.raw`, `normalizedResults` memo, `unrealisedGainsData` branch, `submitCalculation()` call, `UnrealisedGainsResults` import
+- **New layout** (top to bottom):
+  ```
+  ┌─────────────────────────────────────────────────┐
+  │ Header row: Tax Year · New Calculation · Print   │
+  ├─────────────────────────────────────────────────┤
+  │ TimelineSummaryMetrics (4 KPI cards)             │
+  ├─────────────────────────────────────────────────┤
+  │ PortfolioTimelineChart (full-width, ~400px tall) │
+  ├───────────────────────┬─────────────────────────┤
+  │ DetailedTaxBreakdown  │ UnrealisedTaxPrediction  │
+  │ (realised / HMRC)     │ Card (predictive / sell) │
+  ├───────────────────────┴─────────────────────────┤
+  │ ResultsTabs (Disposals / Holdings / Dividends /  │
+  │              Section 104 Pools)                  │
+  ├─────────────────────────────────────────────────┤
+  │ AdditionalIncomeInputs · CallToAction            │
+  └─────────────────────────────────────────────────┘
+  ```
+- **CalculationContext** changes:
+  - Add `timelineResult: TimelineResponse | null` to state
+  - Add `SET_TIMELINE_RESULT` action
+  - `submitTimeline()` dispatches `SET_TIMELINE_RESULT` on success
+- **Wizard**: remove `analysisType` step; all file uploads go to `/timeline`
+- **Status**: [ ] Not started
+
+#### Task 2.8 — Unit tests for unified `ResultsPage`
+- **File**: `frontend/src/pages/ResultsPage.test.tsx`
+- **Tests**:
+  - Loading state renders `LoadingSpinner` while `submitTimeline` in-flight
+  - After mock `TimelineResponse`: renders 4 KPI cards
+  - After mock `TimelineResponse`: renders `PortfolioTimelineChart`
+  - After mock `TimelineResponse`: renders `UnrealisedTaxPredictionCard`
+  - After mock `TimelineResponse`: `ResultsTabs` shows correct disposal count badge
+  - Error state renders "Calculation Error" alert with retry button
+  - Idle state renders "Start Tax Calculation" CTA
 - **Status**: [ ] Not started
 
 ---
@@ -255,25 +444,30 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
 
 | # | Topic | Resolution |
 |---|-------|------------|
-| 1 | Unrealised value | **Two lines**: Unrealised Value (qty × last transaction price) AND Unrealised Gain/Loss (value − cost basis). No external price API needed. |
+| 1 | Unrealised value | **Two lines**: Unrealised Value (qty × Yahoo Finance historical closing price on event date) AND Unrealised Gain/Loss (value − cost basis). Uses `yfinance` library for price fetch. |
 | 2 | Realised value | HMRC-compliant disposals: same-day rule, 30-day B&B, Section 104 pooling. Commission losses reduce gain. |
 | 3 | Realised tax | CGT % on realised gain (after £3k AEA). Resets each tax year. |
 | 4 | Per-year reset | Yes — realised gain/loss, realised tax, income all reset at April 5 each year. |
 | 5 | Unrealised tax frequency | Only at YEAR_END markers + current date for last year. NOT per transaction. |
 | 6 | Dividends/interest | Separate **Income** line (5th line on chart). Not mixed into CGT lines. |
 | 7 | CGT rate | 18% basic rate (post Oct 2024) as default |
-| 8 | Tab vs page | Timeline tab in existing `ResultsTabs` |
+| 8 | Unified results page | Single `ResultsPage` shows realised tax, unrealised prediction, and timeline chart together — no separate views or modes |
+| 9 | Single API endpoint | `/timeline` is the only call made from the React frontend. It returns `events` + `summary` + `disposals` + `holdings` + `dividends` + `section_104_pools`. The legacy `/calculate` endpoint is retained server-side for backward compatibility but no longer called by the React frontend. |
 
 ---
 
 ## 📅 Implementation Order
 
-1. **Task 1.1** — data model (unblocks everything)
-2. **Task 1.2** — `TimelineCalculator` + full unit tests
-3. **Task 2.1** — TypeScript types (can run in parallel with 1.2)
-4. **Task 1.3** — `/timeline` Lambda route
-5. **Task 2.2** — API client function
-6. **Task 2.3 + 2.4** — React component + unit tests
-7. **Task 2.5 + 2.6** — UI integration
-8. **Task 3.1 → 3.3** — QA and deployment
+1. **Task 1.1** — `TimelineEvent` data model
+2. **Task 1.2** — `TimelineCalculator` service + 15 unit tests ← longest task
+3. **Task 1.3** — `/timeline` Lambda route with extended response (disposals, holdings, dividends, pools)
+4. **Task 2.1** — TypeScript types (can start in parallel with 1.2)
+5. **Task 2.2** — `submitTimeline()` API function
+6. **Task 2.3** — `TimelineSummaryMetrics` component + tests
+7. **Task 2.4** — `PortfolioTimelineChart` component + tests
+8. **Task 2.5** — `UnrealisedTaxPredictionCard` component + tests
+9. **Task 2.6** — `ResultsTabs` refactor to timeline data shapes
+10. **Task 2.7** — `ResultsPage` unified layout + `CalculationContext` changes
+11. **Task 2.8** — `ResultsPage` unit tests
+12. **Task 3.1 → 3.3** — Integration tests, E2E, deployment
 
