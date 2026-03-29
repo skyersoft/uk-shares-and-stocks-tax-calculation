@@ -252,28 +252,41 @@ class IBKRConverter(BaseBrokerConverter):
         # Check 'Code' column (standard Flex Query)
         code = row.get('Code', '').strip()
         if code:
-            if 'O' in code: return TransactionType.BUY  # Opening
-            if 'C' in code: return TransactionType.SELL # Closing
-            if 'A' in code: return TransactionType.BUY  # Assignment (usually buy)
-            if 'Ex' in code: return TransactionType.SELL # Exercise (usually sell)
+            if 'O' in code:
+                return TransactionType.BUY  # Opening
+            if 'C' in code:
+                return TransactionType.SELL  # Closing
+            if 'A' in code:
+                return TransactionType.BUY  # Assignment (usually buy)
+            if 'Ex' in code:
+                return TransactionType.SELL  # Exercise (usually sell)
 
         # Check 'Buy/Sell' column (Sharesight format)
         buy_sell = row.get('Buy/Sell', '').upper()
-        if buy_sell == 'BUY': return TransactionType.BUY
-        if buy_sell == 'SELL': return TransactionType.SELL
-        if buy_sell == 'DIV': return TransactionType.DIVIDEND
-        if buy_sell == 'INT': return TransactionType.INTEREST
+        if buy_sell == 'BUY':
+            return TransactionType.BUY
+        if buy_sell == 'SELL':
+            return TransactionType.SELL
+        if buy_sell == 'DIV':
+            return TransactionType.DIVIDEND
+        if buy_sell == 'INT':
+            return TransactionType.INTEREST
 
         # Check 'TransactionType' column
         tx_type_str = row.get('TransactionType', '').upper()
-        if 'DIV' in tx_type_str: return TransactionType.DIVIDEND
-        if 'INT' in tx_type_str: return TransactionType.INTEREST
-        if 'WITHHOLD' in tx_type_str or 'TAX' in tx_type_str: return TransactionType.TAX_WITHHOLDING
+        if 'DIV' in tx_type_str:
+            return TransactionType.DIVIDEND
+        if 'INT' in tx_type_str:
+            return TransactionType.INTEREST
+        if 'WITHHOLD' in tx_type_str or 'TAX' in tx_type_str:
+            return TransactionType.TAX_WITHHOLDING
 
         # Fallback based on quantity
         qty = Decimal(row.get('Quantity', '0').replace(',', ''))
-        if qty > 0: return TransactionType.BUY
-        if qty < 0: return TransactionType.SELL
+        if qty > 0:
+            return TransactionType.BUY
+        if qty < 0:
+            return TransactionType.SELL
 
         return None
 

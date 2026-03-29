@@ -28,7 +28,7 @@ class CapitalGainsTaxCalculator:
         file_parser: FileParserInterface = None,
         transaction_matcher: TransactionMatcherInterface = None,
         disposal_calculator: DisposalCalculatorInterface = None,
-        tax_year_calculator: TaxYearCalculatorInterface = None, # This will now be EnhancedTaxYearCalculator
+        tax_year_calculator: TaxYearCalculatorInterface = None,  # This will now be EnhancedTaxYearCalculator
         report_generator: ReportGeneratorInterface = None,
         dividend_processor: DividendProcessor = None,
         currency_processor: CurrencyExchangeProcessor = None,
@@ -66,7 +66,7 @@ class CapitalGainsTaxCalculator:
             transaction_matcher=self.transaction_matcher
         )
 
-        self.report_generator = report_generator or CSVReportGenerator() # This will need to be updated to handle ComprehensiveTaxSummary
+        self.report_generator = report_generator or CSVReportGenerator()  # This will need to be updated to handle ComprehensiveTaxSummary
         self.base_currency = base_currency
 
     def calculate(
@@ -76,7 +76,7 @@ class CapitalGainsTaxCalculator:
         output_path: str,
         report_format: str = "csv",
         file_type: str = "qfx"
-    ) -> ComprehensiveTaxSummary: # Changed return type
+    ) -> ComprehensiveTaxSummary:  # Changed return type
         """
         Calculate comprehensive tax summary for a tax year from a transaction file.
 
@@ -134,7 +134,7 @@ class CapitalGainsTaxCalculator:
         # to accept ComprehensiveTaxSummary instead of TaxYearSummary.
         # For now, we'll assume it can handle it or will be updated later.
         report_generator.generate_report(
-            tax_year_summary=comprehensive_summary, # Changed to comprehensive_summary
+            tax_year_summary=comprehensive_summary,  # Changed to comprehensive_summary
             output_path=output_path
         )
 

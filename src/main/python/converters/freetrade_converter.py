@@ -6,6 +6,7 @@ import csv
 from ..interfaces.broker_converter import BaseBrokerConverter
 from ..models.standard_transaction import StandardTransaction, TransactionType
 
+
 class FreetradeConverter(BaseBrokerConverter):
     """
     Converter for Freetrade CSV exports.
@@ -121,7 +122,7 @@ class FreetradeConverter(BaseBrokerConverter):
             price=price,
             transaction_currency=currency,
             name=row.get('Name', ''),
-            gross_amount=total, # Can be None, StandardTransaction will calculate
+            gross_amount=total,  # Can be None, StandardTransaction will calculate
             commission=fee,
             broker="Freetrade"
         )

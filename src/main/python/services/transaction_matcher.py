@@ -153,12 +153,12 @@ class UKTransactionMatcher(TransactionMatcherInterface):
                             transaction_id=f"POOL_MATCH_{sell_tx.transaction_id}",
                             transaction_type=TransactionType.BUY,
                             security=sell_tx.security,
-                            date=sell_tx.date, # Date doesn't matter much for S104 match
+                            date=sell_tx.date,  # Date doesn't matter much for S104 match
                             quantity=match_qty,
                             price_per_unit=matched_cost / match_qty if match_qty > 0 else 0,
-                            commission=matched_expenses, # We lump expenses here? Or split?
-                            taxes=0.0, # Lumping all expenses into commission for simplicity or split if needed
-                            currency=sell_tx.currency # Assuming same currency for now
+                            commission=matched_expenses,  # We lump expenses here? Or split?
+                            taxes=0.0,  # Lumping all expenses into commission for simplicity or split if needed
+                            currency=sell_tx.currency  # Assuming same currency for now
                         )
                         # Actually, we should try to preserve the currency of the pool if possible,
                         # but if mixed currencies, we might need base currency.

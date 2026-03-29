@@ -94,7 +94,7 @@ class PerformanceCalculator:
 
         # Check if transactions are in GBP (no currency effect)
         if (security_transactions and
-            security_transactions[0].currency.code == "GBP"):
+                security_transactions[0].currency.code == "GBP"):
             return 0.0
 
         # Calculate weighted average purchase rate

@@ -6,6 +6,7 @@ import csv
 from ..interfaces.broker_converter import BaseBrokerConverter
 from ..models.standard_transaction import StandardTransaction, TransactionType
 
+
 class FidelityConverter(BaseBrokerConverter):
     """
     Converter for Fidelity UK CSV exports.

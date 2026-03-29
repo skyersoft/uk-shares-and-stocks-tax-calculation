@@ -11,6 +11,7 @@ from .hargreaves_converter import HargreavesConverter
 from .freetrade_converter import FreetradeConverter
 from .fidelity_converter import FidelityConverter
 
+
 def register_default_converters():
     """Register all default converters with the global factory."""
     factory = get_factory()
@@ -34,6 +35,7 @@ def register_default_converters():
         factory.register(FidelityConverter())
     except ValueError:
         pass  # Already registered
+
 
 __all__ = [
     'ConverterFactory',

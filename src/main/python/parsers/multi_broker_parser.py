@@ -130,7 +130,7 @@ class MultiBrokerParser(FileParserInterface):
             quantity=quantity,
             price_per_unit=price_per_unit,
             commission=float(st.commission),
-            taxes=float(st.other_fees), # Map other fees to taxes for now
+            taxes=float(st.other_fees),  # Map other fees to taxes for now
             currency=currency,
             withholding_tax=float(st.withholding_tax)
         )
@@ -146,14 +146,14 @@ class MultiBrokerParser(FileParserInterface):
             StandardTransactionType.FEE: TransactionType.FEE,
             StandardTransactionType.STOCK_SPLIT: TransactionType.SPLIT,
             StandardTransactionType.MERGER: TransactionType.MERGER,
-            StandardTransactionType.SPIN_OFF: TransactionType.MERGER, # Closest match
+            StandardTransactionType.SPIN_OFF: TransactionType.MERGER,  # Closest match
             StandardTransactionType.TRANSFER_IN: TransactionType.TRANSFER_IN,
             StandardTransactionType.TRANSFER_OUT: TransactionType.TRANSFER_OUT,
             # StandardTransactionType.FX_CONVERSION: TransactionType.CURRENCY_EXCHANGE, # Not in StandardTransactionType yet
             # StandardTransactionType.DEPOSIT: TransactionType.CASH_ADJUSTMENT, # Not in StandardTransactionType yet
             # StandardTransactionType.WITHDRAWAL: TransactionType.CASH_ADJUSTMENT, # Not in StandardTransactionType yet
         }
-        return mapping.get(st_type, TransactionType.BUY) # Default to BUY if unknown
+        return mapping.get(st_type, TransactionType.BUY)  # Default to BUY if unknown
 
     def _map_asset_class(self, st_class: StandardAssetClass) -> AssetClass:
         """Map standard asset class to domain asset class."""
@@ -163,9 +163,9 @@ class MultiBrokerParser(FileParserInterface):
             StandardAssetClass.BOND: AssetClass.BOND,
             StandardAssetClass.OPTION: AssetClass.OPTION,
             StandardAssetClass.FUTURE: AssetClass.FUTURE,
-            StandardAssetClass.FUND: AssetClass.ETF, # Closest match
+            StandardAssetClass.FUND: AssetClass.ETF,  # Closest match
             StandardAssetClass.FOREX: AssetClass.CASH,
             # StandardAssetClass.CASH: AssetClass.CASH, # Not in StandardAssetClass
-            StandardAssetClass.CRYPTO: AssetClass.STOCK, # Treat crypto as stock for now
+            StandardAssetClass.CRYPTO: AssetClass.STOCK,  # Treat crypto as stock for now
         }
         return mapping.get(st_class, AssetClass.STOCK)

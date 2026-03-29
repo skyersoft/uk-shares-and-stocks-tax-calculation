@@ -25,8 +25,6 @@ class SharePoolManager(SharePoolManagerInterface):
         Args:
             transaction: The transaction to process
         """
-        security_id = transaction.security.isin
-
         if transaction.transaction_type == TransactionType.BUY:
             self._process_buy(transaction)
         elif transaction.transaction_type == TransactionType.SELL:

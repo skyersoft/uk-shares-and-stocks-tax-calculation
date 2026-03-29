@@ -17,6 +17,7 @@ from ..models.standard_transaction import (
 
 logger = logging.getLogger(__name__)
 
+
 class Trading212Converter(BaseBrokerConverter):
     """
     Converter for Trading 212 CSV files.
@@ -158,7 +159,7 @@ class Trading212Converter(BaseBrokerConverter):
             conversion_fee_str = row.get('Currency conversion fee', '').strip()
             conversion_fee = Decimal(conversion_fee_str) if conversion_fee_str else Decimal('0')
 
-            charge_amount_str = row.get('Charge amount', '').strip() # Usually other fees
+            charge_amount_str = row.get('Charge amount', '').strip()  # Usually other fees
             other_fees = Decimal(charge_amount_str) if charge_amount_str else Decimal('0')
 
         except Exception as e:
@@ -178,12 +179,12 @@ class Trading212Converter(BaseBrokerConverter):
             # Gross = Total + Withholding Tax
             # Price might be per share dividend, or 0
             if quantity == 0 and price > 0 and total_amount > 0:
-                 # Infer quantity if missing but price and total exist?
-                 # No, total is amount. Price is per share.
-                 # quantity = Total / Price?
-                 # Usually for dividends we just care about the amount.
-                 # StandardTransaction requires quantity. We can set it to 0 or 1.
-                 pass
+                # Infer quantity if missing but price and total exist?
+                # No, total is amount. Price is per share.
+                # quantity = Total / Price?
+                # Usually for dividends we just care about the amount.
+                # StandardTransaction requires quantity. We can set it to 0 or 1.
+                pass
 
             # Calculate Gross Amount
             gross_amount = total_amount + wht
@@ -201,8 +202,8 @@ class Trading212Converter(BaseBrokerConverter):
         isin = row.get('ISIN', '').strip()
 
         if not symbol and tx_type == TransactionType.INTEREST:
-             symbol = "CASH" # Interest on cash
-             name = "Interest on Cash"
+            symbol = "CASH"  # Interest on cash
+            name = "Interest on Cash"
 
         return StandardTransaction(
             date=date,
@@ -225,7 +226,7 @@ class Trading212Converter(BaseBrokerConverter):
 
             # FX
             fx_rate_to_base=fx_rate,
-            base_currency="GBP", # Assuming T212 UK account
+            base_currency="GBP",  # Assuming T212 UK account
 
             # Explicit amounts if needed
             gross_amount=gross_amount if tx_type == TransactionType.DIVIDEND else None
@@ -244,11 +245,11 @@ class Trading212Converter(BaseBrokerConverter):
         elif 'interest' in action:
             return TransactionType.INTEREST
         elif 'deposit' in action:
-            return None # Ignore cash deposits for now
+            return None  # Ignore cash deposits for now
         elif 'withdrawal' in action:
-            return None # Ignore cash withdrawals for now
+            return None  # Ignore cash withdrawals for now
         elif 'split' in action:
             return TransactionType.STOCK_SPLIT
 
-        return TransactionType.BUY # Default/Fallback? Or maybe raise error?
+        return TransactionType.BUY  # Default/Fallback? Or maybe raise error?
         # Better to log and return a safe default or specific UNKNOWN type

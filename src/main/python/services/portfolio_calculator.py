@@ -123,7 +123,7 @@ class PortfolioCalculator:
         latest_transaction = max(sorted_transactions, key=lambda t: t.date)
         current_value_gbp = pool_quantity * current_price
         if (latest_transaction.currency and
-            latest_transaction.currency.rate_to_base != 1.0):
+                latest_transaction.currency.rate_to_base != 1.0):
             current_value_gbp *= latest_transaction.currency.rate_to_base
 
         # Calculate average cost per share

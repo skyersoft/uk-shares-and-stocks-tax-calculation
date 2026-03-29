@@ -21,7 +21,8 @@ from ..config.tax_config import (
 from .disposal_calculator import UKDisposalCalculator as DisposalCalculator
 from .dividend_processor import DividendProcessor
 from .currency_processor import CurrencyExchangeProcessor
-from .transaction_matcher import UKTransactionMatcher # Import TransactionMatcher
+from .transaction_matcher import UKTransactionMatcher  # Import TransactionMatcher
+
 
 def _is_in_tax_year(date: datetime, tax_year: str) -> bool:
     """Check if a date falls within the specified UK tax year."""
@@ -43,12 +44,12 @@ class EnhancedTaxYearCalculator:
         disposal_calculator: DisposalCalculator,
         dividend_processor: DividendProcessor,
         currency_processor: CurrencyExchangeProcessor,
-        transaction_matcher: UKTransactionMatcher # Add transaction_matcher
+        transaction_matcher: UKTransactionMatcher  # Add transaction_matcher
     ):
         self.disposal_calculator = disposal_calculator
         self.dividend_processor = dividend_processor
         self.currency_processor = currency_processor
-        self.transaction_matcher = transaction_matcher # Store transaction_matcher
+        self.transaction_matcher = transaction_matcher  # Store transaction_matcher
         self.logger = logging.getLogger(__name__)
 
     def calculate_comprehensive_tax_summary(
@@ -209,7 +210,7 @@ class EnhancedTaxYearCalculator:
 
         # Capital gains allowance
         if comprehensive_summary.capital_gains:
-            cgt_gain = comprehensive_summary.capital_gains.total_gains # Corrected to total_gains
+            cgt_gain = comprehensive_summary.capital_gains.total_gains  # Corrected to total_gains
             comprehensive_summary.capital_gains_allowance_used = min(cgt_gain, CGT_ALLOWANCE)
 
         # Dividend allowance
@@ -228,8 +229,6 @@ class EnhancedTaxYearCalculator:
     ) -> TaxYearSummary:
         """Create capital gains summary from disposals."""
         total_proceeds = sum(d.proceeds for d in disposals)
-        total_cost = sum(d.cost_basis for d in disposals)
-        total_expenses = sum(d.expenses for d in disposals)
 
         # Calculate total gains and losses
         total_gains = 0.0
@@ -340,7 +339,7 @@ class EnhancedTaxYearCalculator:
 
         # Apply Annual Exemption (AEA)
         # Beneficial ordering: use AEA against highest rate (Post-Oct) first
-        aea_remaining = 3000.0 # 2024-25 allowance
+        aea_remaining = 3000.0  # 2024-25 allowance
 
         # 1. Offset Post-Oct gains (18%)
         post_oct_taxable = max(0, post_oct_gains - aea_remaining)

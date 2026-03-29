@@ -702,6 +702,7 @@ class DividendIncome:
         """Gross dividend before withholding tax in GBP."""
         return self.amount_gbp
 
+
 @dataclass
 class DividendSummary:
     """Summary of dividend income for a tax year."""
@@ -1066,12 +1067,12 @@ class ComprehensiveTaxSummary:
 
         # Dividend income above allowance
         if (self.dividend_income and
-            self.dividend_income.taxable_dividend_income > 0):
+                self.dividend_income.taxable_dividend_income > 0):
             return True
 
         # Currency gains above de minimis
         if (self.currency_gains and
-            self.currency_gains.net_gain_loss > 1000):  # £1,000 de minimis
+                self.currency_gains.net_gain_loss > 1000):  # £1,000 de minimis
             return True
 
         return False

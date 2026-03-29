@@ -17,6 +17,7 @@ from ..models.standard_transaction import (
 
 logger = logging.getLogger(__name__)
 
+
 class HargreavesConverter(BaseBrokerConverter):
     """
     Converter for Hargreaves Lansdown CSV files.
@@ -119,14 +120,12 @@ class HargreavesConverter(BaseBrokerConverter):
         # 4. Handle Price/Value Currency Mismatch (Pence vs Pounds)
         # HL Value is usually in GBP. Price might be in Pence.
         # Check if Price * Qty is approx Value * 100
-        is_pence = False
         if quantity != 0 and price != 0:
             calculated_value = abs(quantity * price)
             abs_value = abs(value)
 
             # If calculated value is ~100x the stated value, price is in pence
             if abs(calculated_value - (abs_value * 100)) < abs(calculated_value - abs_value):
-                is_pence = True
                 price = price / 100
 
         # 5. Determine Signs
@@ -200,7 +199,7 @@ class HargreavesConverter(BaseBrokerConverter):
         elif 'dividend' in raw:
             return TransactionType.DIVIDEND
         elif 'equalisation' in raw:
-            return TransactionType.DIVIDEND # Treat as dividend for now
+            return TransactionType.DIVIDEND  # Treat as dividend for now
         elif 'rights' in raw:
             return TransactionType.RIGHTS_ISSUE
         elif 'merger' in raw:
