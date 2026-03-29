@@ -34,7 +34,8 @@ class DividendProcessor:
     ) -> DividendIncome:
         """Convert a dividend transaction to dividend income."""
         # Extract dividend-specific data
-        # For dividend transactions, price_per_unit contains the total amount
+        # Convention: dividend transactions are stored with quantity=1 and
+        # price_per_unit=total_amount (matching QFX parser and multi_broker_parser output)
         amount_foreign = abs(transaction.price_per_unit)
         amount_gbp = amount_foreign * transaction.currency.rate_to_base
         withholding_tax_foreign = transaction.taxes

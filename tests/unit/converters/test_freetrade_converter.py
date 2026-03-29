@@ -121,3 +121,76 @@ class TestFreetradeConverter:
         
         assert tx.transaction_type == TransactionType.DIVIDEND
         assert tx.quantity == Decimal('0')
+
+    def test_process_row_buy_with_nonzero_fees(self, converter):
+        """Regression test: Fees column must be read even when 'Fee' column is absent.
+        
+        Bug: row.get('Fee', '0') returns '0' which is truthy, so 'or' short-circuits
+        and row.get('Fees', ...) is never evaluated, resulting in commission=0.
+        Fix: row.get('Fee') returns None (falsy) when column absent, allowing fallback.
+        """
+        row = {
+            'Date': '2024-01-15',
+            'Type': 'BUY',
+            'Symbol': 'AAPL',
+            'Name': 'Apple Inc',
+            'Quantity': '10',
+            'Price': '150.00',
+            'Currency': 'USD',
+            'Fees': '1.50'   # Only 'Fees' column present, no 'Fee' column
+        }
+
+        tx = converter._process_row(row)
+
+        assert tx is not None
+        assert tx.commission == Decimal('1.50'), (
+            "Commission must be read from 'Fees' column when 'Fee' column is absent"
+        )
+
+    def test_process_row_sell_commission_deducted(self, converter):
+        """Sell transaction with fee: commission must be captured for allowable cost deduction."""
+        row = {
+            'Date': '2024-11-15',
+            'Type': 'SELL',
+            'Symbol': 'AAPL',
+            'Name': 'Apple Inc',
+            'Quantity': '5',
+            'Price': '175.25',
+            'Currency': 'USD',
+            'Fees': '1.50'
+        }
+
+        tx = converter._process_row(row)
+
+        assert tx is not None
+        assert tx.commission == Decimal('1.50')
+        assert tx.quantity == Decimal('-5')  # Sell: negative
+
+    def test_process_row_dividend_gross_amount_is_quantity_times_price(self, converter):
+        """Regression test: dividend gross_amount must be quantity * price_per_share.
+
+        Bug: DividendProcessor uses price_per_unit as total amount (QFX convention).
+        Freetrade CSV stores per-share price, so gross_amount must be pre-calculated
+        as quantity * price so the mapper can use it correctly.
+        """
+        row = {
+            'Date': '2025-04-09',
+            'Type': 'DIVIDEND',
+            'Symbol': 'AAPL',
+            'Name': 'Apple Inc',
+            'Quantity': '10',     # shares held
+            'Price': '0.24',      # dividend per share
+            'Currency': 'USD',
+            'Fees': '0.00'
+        }
+
+        tx = converter._process_row(row)
+
+        assert tx is not None
+        assert tx.transaction_type == TransactionType.DIVIDEND
+        assert tx.quantity == Decimal('10')
+        assert tx.price == Decimal('0.24')
+        # gross_amount must be 10 * 0.24 = 2.40
+        assert tx.gross_amount == Decimal('2.40'), (
+            "Dividend gross_amount must be quantity * price_per_share = 10 * 0.24 = 2.40"
+        )

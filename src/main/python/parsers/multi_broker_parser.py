@@ -8,6 +8,7 @@ to the existing FileParserInterface expected by the CapitalGainsTaxCalculator.
 import logging
 from typing import List
 from datetime import datetime
+from uuid import uuid4
 
 from ..interfaces.calculator_interfaces import FileParserInterface
 from ..models.domain_models import (
@@ -110,13 +111,25 @@ class MultiBrokerParser(FileParserInterface):
         
         # Create Transaction
         # Note: StandardTransaction uses Decimal, Domain uses float
+        #
+        # For DIVIDEND transactions, normalise to the convention used by QFX parser
+        # and expected by DividendProcessor: quantity=1, price_per_unit=total_amount.
+        # Freetrade CSV stores per-share dividend in Price and share count in Quantity,
+        # so gross_amount (= abs(quantity) * price) holds the correct total.
+        if tx_type == TransactionType.DIVIDEND:
+            quantity = 1
+            price_per_unit = float(st.gross_amount) if st.gross_amount else float(abs(st.quantity) * st.price)
+        else:
+            quantity = float(st.quantity)
+            price_per_unit = float(st.price)
+
         return Transaction(
-            transaction_id=st.transaction_id or "",
+            transaction_id=st.transaction_id or str(uuid4()),
             transaction_type=tx_type,
             security=security,
             date=st.date,
-            quantity=float(st.quantity),
-            price_per_unit=float(st.price),
+            quantity=quantity,
+            price_per_unit=price_per_unit,
             commission=float(st.commission),
             taxes=float(st.other_fees), # Map other fees to taxes for now
             currency=currency,

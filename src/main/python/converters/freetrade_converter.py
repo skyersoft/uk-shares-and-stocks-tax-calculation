@@ -105,7 +105,7 @@ class FreetradeConverter(BaseBrokerConverter):
         total_str = row.get('Total')
         total = Decimal(total_str) if total_str else None
         
-        fee = Decimal(row.get('Fee', '0') or row.get('Fees', '0') or '0')
+        fee = Decimal(row.get('Fee') or row.get('Fees') or '0')
         currency = row.get('Currency', 'GBP')
         
         # Adjust quantity sign for Sells
