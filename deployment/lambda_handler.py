@@ -8,7 +8,6 @@ import boto3
 import uuid
 import datetime
 import re
-from io import StringIO
 
 # Import our application components
 import sys
@@ -24,9 +23,8 @@ CONVERTERS_AVAILABLE = False
 try:
     from main.python.converters.converter_factory import get_factory
     from main.python.converters import register_default_converters
-    from main.python.parsers.multi_broker_parser import MultiBrokerParser
     from main.python.interfaces.broker_converter import BrokerConversionError
-    
+
     # Register all available converters
     register_default_converters()
     CONVERTERS_AVAILABLE = True
@@ -36,7 +34,6 @@ except ImportError as e:
 # Import calculator (heavy dependencies like pandas)
 try:
     from main.python.capital_gains_calculator import create_enhanced_calculator
-    from main.python.services.portfolio_report_generator import PortfolioReportGenerator
     from main.python.services.portfolio_calculator import PortfolioCalculator
     from main.python.services.market_price_service import YFinanceMarketPriceService
     from main.python.services.unrealised_gains_calculator import UnrealisedGainsCalculator
@@ -91,7 +88,7 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
     print(f"Headers: {event.get('headers', {})}")
     body = event.get('body', '')
     print(f"Body length: {len(body) if body else 0}")
-    
+
     # CORS preflight
     if method == 'OPTIONS':
         return {
@@ -103,7 +100,7 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
             },
             'body': ''
         }
-    
+
     # Serve static HTML pages
     if method == 'GET':
         if path == '/' or path == '/index.html':
@@ -142,7 +139,7 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
     # Handle file upload and processing
     elif method == 'POST' and (path == '/calculate' or path == '/'):
         return handle_calculation_request(event)
-    
+
     # Handle broker detection preview
     elif method == 'POST' and path == '/detect-broker':
         return handle_broker_detection_request(event)
@@ -150,7 +147,7 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
     # Handle unrealised gains / predictive tax calculation
     elif method == 'POST' and path == '/unrealised-gains':
         return handle_unrealised_gains_request(event)
-    
+
     # 404 for unknown paths
     return {
         'statusCode': 404,
@@ -170,20 +167,20 @@ def handle_feedback_request(event: Dict[str, Any]) -> Dict[str, Any]:
             body = base64.b64decode(event['body']).decode('utf-8')
         else:
             body = event['body']
-            
+
         if not body:
-             return {
-                'statusCode': 400,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': json.dumps({'error': 'Empty request body'})
-            }
+            return {
+               'statusCode': 400,
+               'headers': {
+                   'Content-Type': 'application/json',
+                   'Access-Control-Allow-Origin': '*'
+               },
+               'body': json.dumps({'error': 'Empty request body'})
+                }
 
         data = json.loads(body)
         message = data.get('message', '').strip()
-        contact = data.get('contact', '').strip() # Optional contact info
+        contact = data.get('contact', '').strip()  # Optional contact info
 
         # Validation
         if not message:
@@ -195,37 +192,37 @@ def handle_feedback_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 },
                 'body': json.dumps({'error': 'Message is required'})
             }
-        
+
         if len(message) > 1000:
-             return {
-                'statusCode': 400,
-                'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
-                },
-                'body': json.dumps({'error': 'Message too long (max 1000 characters)'})
-            }
-            
+            return {
+               'statusCode': 400,
+               'headers': {
+                   'Content-Type': 'application/json',
+                   'Access-Control-Allow-Origin': '*'
+               },
+               'body': json.dumps({'error': 'Message too long (max 1000 characters)'})
+                }
+
         # Basic sanitization (prevent XSS if we ever display this HTML/Raw)
-        # We allow basic punishment/alphanumeric. 
-        # Actually for text file storage, strict sanitization isn't strictly necessary for security 
+        # We allow basic punishment/alphanumeric.
+        # Actually for text file storage, strict sanitization isn't strictly necessary for security
         # (it won't execute), but good practice for reading logs.
         # We'll replace non-printable characters.
         cleaned_message = "".join(ch for ch in message if ch.isprintable() or ch in '\n\r\t')
-        
+
         # Determine bucket from environment or hardcode fallback (not ideal for strict prod but acceptable here)
         # In Terraform, we pass bucket name usually? Or we can deduce it.
         # The frontend bucket is known: ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo
         # We can write to the same bucket in a private folder.
         bucket_name = os.environ.get('S3_BUCKET_NAME', 'ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo')
-        
+
         timestamp = datetime.datetime.utcnow().isoformat()
         request_id = str(uuid.uuid4())
         today = datetime.datetime.utcnow().strftime('%Y-%m-%d')
         key = f"feedback/{today}/{request_id}.txt"
-        
+
         file_content = f"Date: {timestamp}\nID: {request_id}\nContact: {contact}\n\nMessage:\n{cleaned_message}"
-        
+
         s3 = boto3.client('s3')
         s3.put_object(
             Bucket=bucket_name,
@@ -233,7 +230,7 @@ def handle_feedback_request(event: Dict[str, Any]) -> Dict[str, Any]:
             Body=file_content,
             ContentType='text/plain'
         )
-        
+
         return {
             'statusCode': 200,
             'headers': {
@@ -258,33 +255,33 @@ def handle_feedback_request(event: Dict[str, Any]) -> Dict[str, Any]:
 def log_error_file_to_s3(file_content: str, filename: str, error_type: str, error_message: str, extra_metadata: dict = None) -> str:
     """
     Log problematic files to S3 for debugging parsing failures.
-    
+
     Args:
         file_content: The content of the file that caused the error
         filename: Original filename
         error_type: Type of error (e.g., 'broker_detection', 'csv_validation', 'conversion')
         error_message: Detailed error message
         extra_metadata: Additional context (e.g., detected columns, broker hints)
-    
+
     Returns:
         The S3 key where the error was logged, or empty string on failure
     """
     try:
         bucket_name = os.environ.get('S3_BUCKET_NAME', 'ibkr-tax-useast1-complete-websitebucket-mz2iwsaztkjo')
-        
+
         timestamp = datetime.datetime.utcnow()
         request_id = str(uuid.uuid4())[:8]
         today = timestamp.strftime('%Y-%m-%d')
-        
+
         # Sanitize filename for S3 key
         safe_filename = re.sub(r'[^a-zA-Z0-9._-]', '_', filename or 'unknown')
-        
+
         # Prepare file content (limit to first 500 lines to avoid huge files)
         lines = file_content.split('\n') if file_content else []
         truncated_content = '\n'.join(lines[:500])
         if len(lines) > 500:
             truncated_content += f"\n\n... [truncated {len(lines) - 500} more lines]"
-        
+
         # Create metadata JSON
         metadata = {
             'timestamp': timestamp.isoformat(),
@@ -297,9 +294,9 @@ def log_error_file_to_s3(file_content: str, filename: str, error_type: str, erro
             'first_line': lines[0] if lines else None,
             **(extra_metadata or {})
         }
-        
+
         s3 = boto3.client('s3')
-        
+
         # Save the file content
         file_key = f"errors/{today}/{request_id}_{safe_filename}"
         s3.put_object(
@@ -308,7 +305,7 @@ def log_error_file_to_s3(file_content: str, filename: str, error_type: str, erro
             Body=truncated_content,
             ContentType='text/plain'
         )
-        
+
         # Save metadata as JSON
         metadata_key = f"errors/{today}/{request_id}_{safe_filename}.metadata.json"
         s3.put_object(
@@ -317,10 +314,10 @@ def log_error_file_to_s3(file_content: str, filename: str, error_type: str, erro
             Body=json.dumps(metadata, indent=2),
             ContentType='application/json'
         )
-        
+
         print(f"Logged error file to S3: {file_key}")
         return file_key
-        
+
     except Exception as e:
         print(f"Failed to log error file to S3: {e}")
         return ""
@@ -329,7 +326,7 @@ def log_error_file_to_s3(file_content: str, filename: str, error_type: str, erro
 def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
     """
     Detect broker from file and return metadata.
-    
+
     Returns:
         Dictionary with broker detection results and file metadata
     """
@@ -339,34 +336,34 @@ def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
                 'detected': False,
                 'error': 'Broker detection unavailable (missing dependencies)'
             }
-            
+
         factory = get_factory()
-        
+
         # Detect broker
         detection = factory.detect_broker(file_path, min_confidence=0.5)
-        
+
         if not detection:
             return {
                 'detected': False,
                 'error': 'Could not detect broker from file. Please ensure the file is in a supported format.',
                 'supported_brokers': factory.list_brokers()
             }
-        
+
         broker_name = detection['broker']
         confidence = detection['confidence']
         converter = detection['converter']
-        
+
         # Validate file structure
         validation = converter.validate_file_structure(file_path)
-        
+
         # Try to parse a preview of transactions
         transaction_preview = []
         date_range = None
-        
+
         try:
             transactions = converter.convert(file_path, base_currency="GBP")
             transaction_count = len(transactions)
-            
+
             # Get date range
             if transactions:
                 dates = [tx.date for tx in transactions if tx.date]
@@ -375,7 +372,7 @@ def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
                         'start': min(dates).isoformat(),
                         'end': max(dates).isoformat()
                     }
-                
+
                 # Get preview of first few transactions
                 for tx in transactions[:5]:
                     transaction_preview.append({
@@ -389,7 +386,7 @@ def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
         except Exception as e:
             print(f"Warning: Could not parse transaction preview: {e}")
             transaction_count = validation.get('row_count', 0)
-        
+
         return {
             'detected': True,
             'broker': broker_name,
@@ -413,7 +410,7 @@ def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
                 for alt in detection.get('alternatives', [])[:3]
             ]
         }
-        
+
     except Exception as e:
         return {
             'detected': False,
@@ -423,7 +420,7 @@ def detect_broker_from_file(file_path: str) -> Dict[str, Any]:
 
 def handle_broker_detection_request(event: Dict[str, Any]) -> Dict[str, Any]:
     """Handle broker detection preview request."""
-    
+
     try:
         # Parse request body
         if event.get('isBase64Encoded', False):
@@ -491,7 +488,7 @@ def handle_broker_detection_request(event: Dict[str, Any]) -> Dict[str, Any]:
         try:
             # Detect broker
             detection_result = detect_broker_from_file(temp_file_path)
-            
+
             return {
                 'statusCode': 200,
                 'headers': {
@@ -504,12 +501,12 @@ def handle_broker_detection_request(event: Dict[str, Any]) -> Dict[str, Any]:
                     'file_type': file_type
                 })
             }
-            
+
         finally:
             # Clean up temporary file
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
-    
+
     except Exception as e:
         return {
             'statusCode': 500,
@@ -567,7 +564,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 files = [{'content': file_content, 'filename': filename}]
                 tax_year = data.get('tax_year', '2024-2025')
                 analysis_type = data.get('analysis_type', 'both')
-            except:
+            except Exception:
                 return {
                     'statusCode': 400,
                     'headers': {
@@ -579,13 +576,13 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
 
         # Process files
         temp_file_paths = []
-        file_type = "csv" # Default
-        
+        file_type = "csv"  # Default
+
         try:
             for file_data in files:
                 file_content = file_data['content']
                 filename = file_data['filename']
-                
+
                 # Determine file type from filename (use the first file's type if multiple)
                 if filename:
                     if filename.lower().endswith(('.qfx', '.ofx')):
@@ -604,12 +601,12 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
             if file_type == 'csv' and temp_file_paths:
                 print(f"Detecting broker for CSV file: {files[0]['filename']}")
                 detection_result = detect_broker_from_file(temp_file_paths[0])
-                
+
                 if not detection_result.get('detected'):
                     # Broker detection failed - log to S3 for debugging
                     error_msg = detection_result.get('error', 'Unknown error')
                     supported_brokers = detection_result.get('supported_brokers', [])
-                    
+
                     # Log the problematic file to S3
                     if files:
                         log_error_file_to_s3(
@@ -619,7 +616,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                             error_message=error_msg,
                             extra_metadata={'supported_brokers': supported_brokers}
                         )
-                    
+
                     return {
                         'statusCode': 400,
                         'headers': {
@@ -632,34 +629,34 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                             'supported_brokers': supported_brokers
                         })
                     }
-                
+
                 broker_metadata = {
                     'broker': detection_result['broker'],
                     'confidence': detection_result['confidence'],
                     'transaction_count': detection_result['metadata']['transaction_count'],
                     'date_range': detection_result['metadata']['date_range']
                 }
-                
+
                 print(f"Detected broker: {broker_metadata['broker']} (confidence: {broker_metadata['confidence']})")
-            
+
             # Process the files with correct parser
             calculator = create_enhanced_calculator(file_type)
             print(f"Using {file_type} parser for {len(temp_file_paths)} files")
-            
+
             # Pass list of files if multiple, or single file if just one
             files_to_process = temp_file_paths if len(temp_file_paths) > 1 else temp_file_paths[0]
-            
+
             results = calculator.calculate_comprehensive_analysis(
                 files_to_process, tax_year, analysis_type
             )
-            
+
             # Serialize results to JSON
             json_results = serialize_results(results, calculator)
-            
+
             # Add broker metadata to response if available
             if broker_metadata:
                 json_results['broker_metadata'] = broker_metadata
-            
+
             return {
                 'statusCode': 200,
                 'headers': {
@@ -668,7 +665,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 },
                 'body': json.dumps(json_results)
             }
-        
+
         except BrokerConversionError as e:
             # Handle broker conversion errors - log to S3
             if files:
@@ -679,7 +676,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                     error_message=str(e),
                     extra_metadata={'broker': e.broker if hasattr(e, 'broker') else 'Unknown'}
                 )
-            
+
             return {
                 'statusCode': 400,
                 'headers': {
@@ -692,7 +689,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                     'broker': e.broker if hasattr(e, 'broker') else 'Unknown'
                 })
             }
-        
+
         except CSVValidationError as e:
             # Handle CSV validation errors - log to S3
             if files:
@@ -706,7 +703,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                         'required_columns': REQUIRED_CSV_COLUMNS
                     }
                 )
-            
+
             return {
                 'statusCode': 400,
                 'headers': {
@@ -720,7 +717,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                     'required_columns': REQUIRED_CSV_COLUMNS
                 })
             }
-            
+
         finally:
             # Clean up temporary files
             for path in temp_file_paths:
@@ -729,7 +726,7 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
                         os.unlink(path)
                     except Exception as e:
                         print(f"Error deleting temp file {path}: {e}")
-    
+
     except Exception as e:
         return {
             'statusCode': 400,
@@ -746,23 +743,23 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
 
 def handle_direct_invocation(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     """Handle direct Lambda invocation (for testing or API calls)."""
-    
+
     file_content = event.get('file_content', '')
     tax_year = event.get('tax_year', '2024-2025')
     analysis_type = event.get('analysis_type', 'both')
-    
+
     # Create temporary file
     with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as temp_file:
         temp_file.write(file_content)
         temp_file_path = temp_file.name
-    
+
     try:
         # Process the file
         calculator = create_enhanced_calculator("csv")
         results = calculator.calculate_comprehensive_analysis(
             temp_file_path, tax_year, analysis_type
         )
-        
+
         # Return JSON results
         return {
             'statusCode': 200,
@@ -771,7 +768,7 @@ def handle_direct_invocation(event: Dict[str, Any], context: Any) -> Dict[str, A
                 'message': 'Calculation completed successfully'
             }
         }
-        
+
     finally:
         # Clean up temporary file
         if os.path.exists(temp_file_path):
@@ -817,7 +814,7 @@ def parse_multipart_data_proper(body: bytes, content_type: str) -> tuple:
                         match = re.search(pattern, content_disp)
                         if match:
                             filename = match.group(1)
-                
+
                 print(f"Extracted filename: '{filename}' from file part")
                 files.append({
                     'content': file_content,
@@ -860,7 +857,7 @@ def parse_multipart_data_simple(body: str) -> tuple:
                 })
                 current_file_content = ""
                 current_filename = ""
-            
+
             in_file = True
             current_field = 'file'
             # Extract filename from Content-Disposition
@@ -898,7 +895,7 @@ def parse_multipart_data_simple(body: str) -> tuple:
         elif current_field == 'analysis_type' and line.strip() and not line.startswith('Content-'):
             analysis_type = line.strip()
             current_field = None
-            
+
     # Add the last file if exists
     if current_filename or current_file_content:
         files.append({
@@ -1116,7 +1113,7 @@ def handle_unrealised_gains_request(event: Dict[str, Any]) -> Dict[str, Any]:
 def serialize_results(results: Dict[str, Any], calculator=None) -> Dict[str, Any]:
 
     """Serialize results for JSON response, handling complex types."""
-    
+
     class CustomJSONEncoder(json.JSONEncoder):
         def default(self, obj):
             from decimal import Decimal
@@ -1147,7 +1144,7 @@ def serialize_results(results: Dict[str, Any], calculator=None) -> Dict[str, Any
                         'security_name': disposal.security.name if hasattr(disposal, 'security') else '',
                         'security_country': getattr(disposal, 'country', None),
                         'quantity': float(disposal.quantity),
-                        
+
                         # Cost breakdown
                         'cost_original_amount': float(getattr(disposal, 'cost_original_amount', 0)),
                         'cost_original_currency': getattr(disposal, 'cost_original_currency', 'GBP'),
@@ -1155,29 +1152,29 @@ def serialize_results(results: Dict[str, Any], calculator=None) -> Dict[str, Any
                         'cost_gbp': float(disposal.cost_basis),
                         'cost_commission': float(getattr(disposal, 'cost_commission', 0)),
                         'acquisition_date': disposal.acquisition_date.isoformat() if hasattr(disposal, 'acquisition_date') and disposal.acquisition_date and hasattr(disposal.acquisition_date, 'isoformat') else None,
-                        
+
                         # Proceeds breakdown
                         'proceeds_original_amount': float(getattr(disposal, 'proceeds_original_amount', 0)),
                         'proceeds_original_currency': getattr(disposal, 'proceeds_original_currency', 'GBP'),
                         'proceeds_fx_rate': float(getattr(disposal, 'proceeds_fx_rate', 1.0)),
                         'proceeds_gbp': float(disposal.proceeds),
                         'proceeds_commission': float(getattr(disposal, 'proceeds_commission', 0)),
-                        
+
                         # Tax tracking
                         'withholding_tax': float(getattr(disposal, 'withholding_tax', 0)),
                         'fx_gain_loss': float(getattr(disposal, 'fx_gain_loss', 0)),
                         'cgt_gain_loss': float(getattr(disposal, 'cgt_gain_loss', disposal.gain_or_loss)),
                         'total_gain_loss': float(disposal.gain_or_loss),
                         'matching_rule': getattr(disposal, 'matching_rule', 'section104'),
-                        
+
                         # Calculated properties
                         'allowable_cost': float(getattr(disposal, 'allowable_cost', disposal.cost_basis)),
                         'net_proceeds': float(disposal.proceeds - getattr(disposal, 'proceeds_commission', 0))
                     }
                     disposal_events.append(event)
-                
+
                 results['disposal_events'] = disposal_events
-    
+
     # Extract currency pool balances from calculator if available
     if calculator and hasattr(calculator, 'currency_processor'):
         try:
@@ -1194,7 +1191,7 @@ def serialize_results(results: Dict[str, Any], calculator=None) -> Dict[str, Any
                             'fx_rate': float(status.get('average_rate', 1.0))
                         }
                         currency_balances.append(balance)
-                    
+
                     if currency_balances:
                         results['currency_balances'] = currency_balances
         except Exception as e:
