@@ -39,7 +39,7 @@ variable "certificate_arn" {
 variable "lambda_runtime" {
   description = "Lambda runtime version"
   type        = string
-  default     = "python3.10"
+  default     = "python3.13"
 }
 
 variable "lambda_timeout" {

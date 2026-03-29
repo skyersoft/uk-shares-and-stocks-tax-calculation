@@ -23,6 +23,8 @@ import { DetailedTaxBreakdown } from '../components/results/DetailedTaxBreakdown
 import { ResultsTabs } from '../components/results/ResultsTabs';
 import { calculateComprehensiveTax } from '../utils/comprehensiveTaxCalculation';
 import SEOHead from '../components/seo/SEOHead';
+import { UnrealisedGainsResults } from '../components/results/UnrealisedGainsResults';
+import { UnrealisedGainsResult } from '../types/calculation';
 
 interface AdditionalIncomeData {
   otherIncome: number;
@@ -134,15 +136,33 @@ const ResultsPage: React.FC = () => {
 
   const taxYearDisplay = normalizedResults?.taxYear ?? 'N/A';
 
+  // Detect unrealised gains response shape
+  const unrealisedGainsData: UnrealisedGainsResult | null = useMemo(() => {
+    if (
+      state.raw &&
+      state.raw.predictive_cgt &&
+      Array.isArray(state.raw.positions)
+    ) {
+      return state.raw as UnrealisedGainsResult;
+    }
+    return null;
+  }, [state.raw]);
+
   if (state.status === 'submitting') {
     return (
       <div className="container-fluid py-4">
         <div className="row justify-content-center">
           <div className="col-12 col-md-8 text-center">
             <LoadingSpinner size="lg" className="mb-3" />
-            <h3 className="text-primary">Processing Your Tax Calculation</h3>
+            <h3 className="text-primary">
+              {state.wizardData?.analysisType === 'unrealised_gains'
+                ? 'Fetching Live Market Prices'
+                : 'Processing Your Tax Calculation'}
+            </h3>
             <p className="text-muted">
-              Please wait while we analyse your portfolio and calculate your tax obligations...
+              {state.wizardData?.analysisType === 'unrealised_gains'
+                ? 'Fetching live prices and running predictive CGT simulation — this may take a moment…'
+                : 'Please wait while we analyse your portfolio and calculate your tax obligations...'}
             </p>
           </div>
         </div>
@@ -205,6 +225,73 @@ const ResultsPage: React.FC = () => {
   }
 
   if (!normalizedResults || !portfolioAnalysis || !taxCalculations) {
+    // Show unrealised gains view if the raw response is from /unrealised-gains
+    if (unrealisedGainsData) {
+      return (
+        <div
+          style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}
+          className="py-4"
+        >
+          <div className="container-xxl">
+            <div className="row gx-4">
+              <aside className="col-xl-2 d-none d-xl-block">
+                <div className="ad-column start-ad-slot" aria-hidden="true" />
+              </aside>
+              <div className="col-12 col-xl-8">
+          <SEOHead
+            title="Unrealised Gains & Predictive Tax - UK Stock Tax Calculator"
+            description="See your unrealised gains and estimated UK capital gains tax if you sold all positions today."
+            robots="noindex, nofollow"
+          />
+          <div className="row mb-4">
+            <div className="col-12">
+              <div className="d-flex justify-content-between align-items-center bg-white rounded shadow-sm p-4 flex-wrap gap-3">
+                <div>
+                  <h1 className="h2 mb-1 text-primary">
+                    <i className="fas fa-chart-area me-3"></i>
+                    Unrealised Gains Report
+                  </h1>
+                  <p className="text-muted mb-0">
+                    Live market prices · Predictive UK Capital Gains Tax
+                  </p>
+                </div>
+                <div className="text-end">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => navigate('/calculator')}
+                    className="me-2"
+                  >
+                    <i className="fas fa-calculator me-2"></i>
+                    New Calculation
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => window.print()}
+                  >
+                    <i className="fas fa-print me-2"></i>
+                    Print
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col-12">
+              <UnrealisedGainsResults data={unrealisedGainsData} />
+            </div>
+          </div>
+              </div>{/* col-12 col-xl-8 */}
+              <aside className="col-xl-2 d-none d-xl-block">
+                <div className="ad-column end-ad-slot" aria-hidden="true" />
+              </aside>
+            </div>{/* row gx-4 */}
+          </div>{/* container-xxl */}
+        </div>
+      );
+    }
+
     return (
       <div className="container-fluid py-4">
         <div className="row justify-content-center">
@@ -227,9 +314,15 @@ const ResultsPage: React.FC = () => {
 
   return (
     <div
-      className="container-fluid py-4"
       style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}
+      className="py-4"
     >
+      <div className="container-xxl">
+        <div className="row gx-4">
+          <aside className="col-xl-2 d-none d-xl-block">
+            <div className="ad-column start-ad-slot" aria-hidden="true" />
+          </aside>
+          <div className="col-12 col-xl-8">
       <SEOHead
         title="Calculation Results - UK Stock Tax Calculator"
         description="View your detailed UK capital gains tax calculation results, including Section 104 pools, dividend tax, and portfolio analysis."
@@ -455,6 +548,12 @@ const ResultsPage: React.FC = () => {
           </div>
         </div>
       </div>
+          </div>{/* col-12 col-xl-8 */}
+          <aside className="col-xl-2 d-none d-xl-block">
+            <div className="ad-column end-ad-slot" aria-hidden="true" />
+          </aside>
+        </div>{/* row gx-4 */}
+      </div>{/* container-xxl */}
     </div>
   );
 };

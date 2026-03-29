@@ -124,7 +124,7 @@ export interface WizardData {
   // Step 1
   incomeSources: IncomeSourceSelection;
   taxYear: string;
-  analysisType: 'both' | 'tax' | 'portfolio';
+  analysisType: 'both' | 'tax' | 'portfolio' | 'unrealised_gains';
 
   // Step 2
   brokerFiles: BrokerFile[];

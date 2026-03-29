@@ -37,6 +37,9 @@ except ImportError as e:
 try:
     from main.python.capital_gains_calculator import create_enhanced_calculator
     from main.python.services.portfolio_report_generator import PortfolioReportGenerator
+    from main.python.services.portfolio_calculator import PortfolioCalculator
+    from main.python.services.market_price_service import YFinanceMarketPriceService
+    from main.python.services.unrealised_gains_calculator import UnrealisedGainsCalculator
     from main.python.parsers.csv_parser import CSVValidationError, REQUIRED_CSV_COLUMNS
     CALCULATOR_AVAILABLE = True
 except ImportError as e:
@@ -143,6 +146,10 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
     # Handle broker detection preview
     elif method == 'POST' and path == '/detect-broker':
         return handle_broker_detection_request(event)
+
+    # Handle unrealised gains / predictive tax calculation
+    elif method == 'POST' and path == '/unrealised-gains':
+        return handle_unrealised_gains_request(event)
     
     # 404 for unknown paths
     return {
@@ -902,7 +909,212 @@ def parse_multipart_data_simple(body: str) -> tuple:
     return files, tax_year, analysis_type
 
 
+def handle_unrealised_gains_request(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle POST /unrealised-gains — live prices + predictive CGT.
+
+    Request (multipart/form-data):
+        file          – CSV or QFX transaction file (same as /calculate)
+        tax_year      – Optional, e.g. "2025-2026" (defaults to "2025-2026")
+        already_realised_gain_gbp – Optional float, net gain already realised
+                                    this tax year (used for combined estimate)
+
+    Response (JSON):
+        {
+          "tax_year": ...,
+          "hypothetical_sale_date": ...,
+          "portfolio": { "total_current_value_gbp": ..., ... },
+          "predictive_cgt": { "net_gain_gbp": ..., "taxable_gain_gbp": ...,
+                              "estimated_tax_basic_rate_gbp": ..., ... },
+          "combined_with_realised": { ... },
+          "warnings": { "affected_by_bb_rule": bool,
+                        "bb_rule_affected_symbols": [...] },
+          "positions": [ { "symbol": ..., "quantity": ...,
+                           "current_price_gbp": ..., "unrealised_gain_loss_gbp": ...,
+                           "has_recent_buys": bool, ... }, ... ]
+        }
+    """
+    if not CALCULATOR_AVAILABLE:
+        return {
+            'statusCode': 503,
+            'headers': {'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Calculation service unavailable'})
+        }
+
+    try:
+        # Parse request
+        if event.get('isBase64Encoded', False):
+            body = base64.b64decode(event['body'])
+        else:
+            body = (event['body'].encode('utf-8')
+                    if isinstance(event['body'], str) else event['body'])
+
+        content_type = (event.get('headers', {}).get('content-type', '')
+                        or event.get('headers', {}).get('Content-Type', ''))
+
+        if 'multipart/form-data' not in content_type:
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'Expected multipart/form-data'})
+            }
+
+        files, tax_year, analysis_type = parse_multipart_data_proper(body, content_type)
+
+        # Extract extra fields from multipart (already_realised_gain_gbp)
+        already_realised_gain_gbp = 0.0
+        try:
+            # Re-parse to extract the extra field (parse_multipart_data_proper
+            # only returns files + tax_year + analysis_type)
+            from multipart import parse_options_header, MultipartParser
+            _, options = parse_options_header(content_type)
+            boundary = options.get('boundary', b'')
+            parser = MultipartParser(boundary if isinstance(boundary, bytes)
+                                     else boundary.encode())
+            for part in parser.parse(body):
+                if part.name == 'already_realised_gain_gbp':
+                    already_realised_gain_gbp = float(part.value or 0)
+        except Exception:
+            pass  # Field optional — default 0
+
+        if not files:
+            return {
+                'statusCode': 400,
+                'headers': {'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'error': 'No file uploaded'})
+            }
+
+        file_data = files[0]
+        filename = file_data.get('filename', '')
+        file_content = file_data.get('content', '')
+        file_type = 'qfx' if filename.lower().endswith(('.qfx', '.ofx')) else 'csv'
+
+        temp_file_paths = []
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode='w', suffix=f'.{file_type}', delete=False
+            ) as tmp:
+                tmp.write(file_content)
+                temp_file_paths.append(tmp.name)
+
+            # 1. Parse transactions
+            calculator = create_enhanced_calculator(file_type)
+            all_transactions = calculator.parser.parse(temp_file_paths[0])
+
+            # 1b. Auto-compute this tax year's realised gain/loss from the file.
+            # The manual already_realised_gain_gbp form field is for gains from
+            # *other* accounts; the file's own sells are computed here automatically.
+            try:
+                tax_summary = calculator.tax_year_calculator.calculate_comprehensive_tax_summary(
+                    all_transactions, tax_year
+                )
+                if tax_summary.capital_gains:
+                    realised_from_file = tax_summary.capital_gains.net_gain
+                    already_realised_gain_gbp += realised_from_file
+                    print(
+                        f"Auto-computed realised gain from file for {tax_year}: "
+                        f"£{realised_from_file:.2f}"
+                    )
+            except Exception as exc:
+                print(f"Warning: Could not auto-compute realised gains: {exc}")
+
+            # 2. Compute current holdings
+            portfolio_calc = PortfolioCalculator()
+            holdings = portfolio_calc.calculate_current_holdings(all_transactions)
+
+            if not holdings:
+                return {
+                    'statusCode': 200,
+                    'headers': {'Content-Type': 'application/json',
+                                'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({
+                        'message': 'No current holdings found',
+                        'tax_year': tax_year,
+                        'positions': [],
+                        'portfolio': {
+                            'total_current_value_gbp': 0,
+                            'total_cost_basis_gbp': 0,
+                            'total_unrealised_gain_loss_gbp': 0,
+                            'number_of_positions': 0,
+                        }
+                    })
+                }
+
+            # 3. Fetch live prices
+            price_svc = YFinanceMarketPriceService()
+            unrealised_calc = UnrealisedGainsCalculator()
+            positions = unrealised_calc.calculate_unrealised_positions(
+                holdings, price_svc, all_transactions
+            )
+
+            # 4. Predictive tax
+            summary = unrealised_calc.calculate_predictive_tax(
+                positions,
+                all_transactions,
+                tax_year,
+                already_realised_gain_gbp=already_realised_gain_gbp,
+            )
+
+            # 5. Serialise
+            positions_out = [
+                {
+                    'symbol': p.holding.security.symbol,
+                    'name': p.holding.security.name,
+                    'quantity': p.holding.quantity,
+                    'market': p.holding.market,
+                    'price_currency': p.price_currency,
+                    'current_price_native': round(p.current_price_native, 4),
+                    'current_price_gbp': round(p.current_price_gbp, 4),
+                    'fx_rate_to_gbp': round(p.fx_rate_to_gbp, 6),
+                    'current_value_gbp': round(p.current_value_gbp, 2),
+                    'cost_basis_gbp': round(p.cost_basis_gbp, 2),
+                    'unrealised_gain_loss_gbp': round(p.unrealised_gain_loss_gbp, 2),
+                    'gain_loss_pct': round(p.gain_loss_pct, 2),
+                    'has_recent_buys': p.has_recent_buys,
+                    'days_since_last_buy': p.days_since_last_buy,
+                    'price_source': p.price_source,
+                    'price_fetched_at': (p.price_fetched_at.isoformat()
+                                         if p.price_fetched_at else None),
+                }
+                for p in positions
+            ]
+
+            response_body = {
+                **summary.get_summary_dict(),
+                'positions': positions_out,
+                'broker_file': filename,
+            }
+
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json',
+                            'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps(response_body)
+            }
+
+        finally:
+            for path in temp_file_paths:
+                if os.path.exists(path):
+                    try:
+                        os.unlink(path)
+                    except Exception:
+                        pass
+
+    except Exception as exc:
+        print(f"Error in /unrealised-gains: {exc}")
+        return {
+            'statusCode': 500,
+            'headers': {'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': str(exc),
+                                'message': 'Error computing unrealised gains'})
+        }
+
+
 def serialize_results(results: Dict[str, Any], calculator=None) -> Dict[str, Any]:
+
     """Serialize results for JSON response, handling complex types."""
     
     class CustomJSONEncoder(json.JSONEncoder):

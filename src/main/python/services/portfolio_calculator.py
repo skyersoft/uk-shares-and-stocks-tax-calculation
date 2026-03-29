@@ -51,10 +51,16 @@ class PortfolioCalculator:
             if transaction.transaction_type in [
                 TransactionType.BUY, TransactionType.SELL
             ]:
-                isin = transaction.security.isin
-                if isin not in grouped:
-                    grouped[isin] = []
-                grouped[isin].append(transaction)
+                # Prefer ISIN for grouping; fall back to symbol when ISIN is
+                # absent (e.g. CSV imports from brokers that omit ISINs)
+                key = (
+                    transaction.security.isin
+                    if transaction.security.isin
+                    else transaction.security.symbol
+                )
+                if key not in grouped:
+                    grouped[key] = []
+                grouped[key].append(transaction)
         
         return grouped
     

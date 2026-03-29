@@ -168,3 +168,66 @@ export interface NormalizedResults {
   taxReport: any;
   portfolioReport: any;
 }
+
+// ---------------------------------------------------------------------------
+// Unrealised Gains / Predictive CGT
+// ---------------------------------------------------------------------------
+
+export interface UnrealisedPosition {
+  symbol: string;
+  name: string;
+  quantity: number;
+  market: string;
+  price_currency: string;
+  current_price_native: number;
+  current_price_gbp: number;
+  fx_rate_to_gbp: number;
+  current_value_gbp: number;
+  cost_basis_gbp: number;
+  unrealised_gain_loss_gbp: number;
+  gain_loss_pct: number;
+  has_recent_buys: boolean;
+  days_since_last_buy: number | null;
+  price_source: string;
+  price_fetched_at: string | null;
+}
+
+export interface UnrealisedGainsPortfolio {
+  total_current_value_gbp: number;
+  total_cost_basis_gbp: number;
+  total_unrealised_gain_loss_gbp: number;
+  number_of_positions: number;
+}
+
+export interface PredictiveCgt {
+  total_gains_gbp: number;
+  total_losses_gbp: number;
+  net_gain_gbp: number;
+  annual_exemption_available_gbp: number;
+  taxable_gain_gbp: number;
+  estimated_tax_basic_rate_gbp: number;
+  estimated_tax_higher_rate_gbp: number;
+}
+
+export interface CombinedWithRealised {
+  already_realised_gain_gbp: number;
+  combined_net_gain_gbp: number;
+  combined_taxable_gain_gbp: number;
+  estimated_tax_basic_rate_gbp: number;
+  estimated_tax_higher_rate_gbp: number;
+}
+
+export interface UnrealisedGainsResult {
+  tax_year: string;
+  hypothetical_sale_date: string | null;
+  portfolio: UnrealisedGainsPortfolio;
+  predictive_cgt: PredictiveCgt;
+  combined_with_realised: CombinedWithRealised;
+  warnings: {
+    affected_by_bb_rule: boolean;
+    bb_rule_affected_symbols: string[];
+  };
+  price_fetched_at: string | null;
+  positions: UnrealisedPosition[];
+  broker_file: string;
+}

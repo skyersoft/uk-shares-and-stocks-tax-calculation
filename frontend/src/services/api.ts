@@ -150,3 +150,34 @@ export async function submitCalculation({
   const raw = await resp.json();
   return { raw };
 }
+
+export async function submitUnrealisedGains({
+  file,
+  taxYear,
+  alreadyRealisedGainGbp = 0,
+}: {
+  file: File;
+  taxYear: string;
+  alreadyRealisedGainGbp?: number;
+}): Promise<{ raw: any }> {
+  const base = import.meta.env.DEV ? '/api' : (window.location.origin + '/prod');
+  const form = new FormData();
+  form.append('file', file);
+  form.append('tax_year', taxYear);
+  if (alreadyRealisedGainGbp !== 0) {
+    form.append('already_realised_gain_gbp', String(alreadyRealisedGainGbp));
+  }
+  const resp = await fetch(base + '/unrealised-gains', { method: 'POST', body: form });
+  if (!resp.ok) {
+    let msg = 'HTTP ' + resp.status;
+    try {
+      const j = await resp.json();
+      if (j.error) msg = j.error;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(msg);
+  }
+  const raw = await resp.json();
+  return { raw };
+}

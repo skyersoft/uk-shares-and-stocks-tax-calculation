@@ -1316,3 +1316,133 @@ class PortfolioSummary:
             'allowance_utilization': allowance_utilization,
             'tax_saved_by_allowances': cgt_tax_saved + dividend_tax_saved
         }
+
+
+@dataclass
+class UnrealisedPosition:
+    """A currently-held asset enriched with live market price data.
+
+    Includes metadata about UK CGT 30-day B&B exposure so callers
+    know whether the predictive cost basis differs from the pool average.
+    """
+    holding: 'Holding'
+    # Live price data
+    current_price_native: float = 0.0   # In the asset's trading currency
+    current_price_gbp: float = 0.0      # Converted to GBP
+    current_value_gbp: float = 0.0      # quantity * current_price_gbp
+    cost_basis_gbp: float = 0.0         # Section 104 pool cost in GBP
+    unrealised_gain_loss_gbp: float = 0.0
+    gain_loss_pct: float = 0.0
+    # FX metadata
+    price_currency: str = "GBP"
+    fx_rate_to_gbp: float = 1.0
+    price_fetched_at: Optional[datetime] = None
+    price_source: str = "last_transaction"  # "yfinance" | "mock" | "last_transaction"
+    # B&B rule exposure metadata
+    has_recent_buys: bool = False       # True if any buy in last 30 days
+    days_since_last_buy: Optional[int] = None
+
+    @property
+    def is_gain(self) -> bool:
+        """Whether this position is currently at a gain."""
+        return self.unrealised_gain_loss_gbp > 0
+
+    @property
+    def is_loss(self) -> bool:
+        """Whether this position is currently at a loss."""
+        return self.unrealised_gain_loss_gbp < 0
+
+
+@dataclass
+class PredictiveTaxSummary:
+    """Predictive UK CGT summary assuming all held positions are sold today.
+
+    The cost basis used here is the *correctly matched* cost basis after
+    applying same-day and 30-day B&B rules via UKTransactionMatcher — not
+    a naive average of the Section 104 pool.
+    """
+    tax_year: str
+    positions: List['UnrealisedPosition'] = field(default_factory=list)
+    hypothetical_sale_date: Optional[datetime] = None
+
+    # Portfolio totals
+    total_current_value_gbp: float = 0.0
+    total_cost_basis_gbp: float = 0.0
+    total_unrealised_gain_loss_gbp: float = 0.0
+
+    # Predictive CGT breakdown (unrealised only)
+    predictive_total_gains_gbp: float = 0.0
+    predictive_total_losses_gbp: float = 0.0
+    predictive_net_gain_gbp: float = 0.0
+    annual_exemption_available: float = 3000.0
+    predictive_taxable_gain_gbp: float = 0.0
+    # Estimated CGT at current UK rates (post Oct 2024: 18%/24%)
+    estimated_tax_basic_rate_gbp: float = 0.0    # 18%
+    estimated_tax_higher_rate_gbp: float = 0.0   # 24%
+
+    # Combined predictive + already-realised gains for the tax year
+    already_realised_gain_gbp: float = 0.0
+    combined_net_gain_gbp: float = 0.0
+    combined_taxable_gain_gbp: float = 0.0
+    combined_estimated_tax_basic_rate_gbp: float = 0.0
+    combined_estimated_tax_higher_rate_gbp: float = 0.0
+
+    # B&B rule warnings
+    affected_by_bb_rule: bool = False
+    bb_rule_affected_symbols: List[str] = field(default_factory=list)
+
+    price_fetched_at: Optional[datetime] = None
+
+    @property
+    def number_of_positions(self) -> int:
+        """Number of unrealised positions."""
+        return len(self.positions)
+
+    @property
+    def positions_with_gains(self) -> List['UnrealisedPosition']:
+        """Positions currently at a gain."""
+        return [p for p in self.positions if p.is_gain]
+
+    @property
+    def positions_with_losses(self) -> List['UnrealisedPosition']:
+        """Positions currently at a loss."""
+        return [p for p in self.positions if p.is_loss]
+
+    def get_summary_dict(self) -> Dict[str, Any]:
+        """Return a structured summary suitable for JSON serialisation."""
+        return {
+            'tax_year': self.tax_year,
+            'hypothetical_sale_date': (
+                self.hypothetical_sale_date.isoformat()
+                if self.hypothetical_sale_date else None
+            ),
+            'portfolio': {
+                'total_current_value_gbp': self.total_current_value_gbp,
+                'total_cost_basis_gbp': self.total_cost_basis_gbp,
+                'total_unrealised_gain_loss_gbp': self.total_unrealised_gain_loss_gbp,
+                'number_of_positions': self.number_of_positions,
+            },
+            'predictive_cgt': {
+                'total_gains_gbp': self.predictive_total_gains_gbp,
+                'total_losses_gbp': self.predictive_total_losses_gbp,
+                'net_gain_gbp': self.predictive_net_gain_gbp,
+                'annual_exemption_available_gbp': self.annual_exemption_available,
+                'taxable_gain_gbp': self.predictive_taxable_gain_gbp,
+                'estimated_tax_basic_rate_gbp': self.estimated_tax_basic_rate_gbp,
+                'estimated_tax_higher_rate_gbp': self.estimated_tax_higher_rate_gbp,
+            },
+            'combined_with_realised': {
+                'already_realised_gain_gbp': self.already_realised_gain_gbp,
+                'combined_net_gain_gbp': self.combined_net_gain_gbp,
+                'combined_taxable_gain_gbp': self.combined_taxable_gain_gbp,
+                'estimated_tax_basic_rate_gbp': self.combined_estimated_tax_basic_rate_gbp,
+                'estimated_tax_higher_rate_gbp': self.combined_estimated_tax_higher_rate_gbp,
+            },
+            'warnings': {
+                'affected_by_bb_rule': self.affected_by_bb_rule,
+                'bb_rule_affected_symbols': self.bb_rule_affected_symbols,
+            },
+            'price_fetched_at': (
+                self.price_fetched_at.isoformat() if self.price_fetched_at else None
+            ),
+        }
