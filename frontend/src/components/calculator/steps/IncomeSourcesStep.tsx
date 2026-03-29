@@ -6,8 +6,8 @@ interface IncomeSourcesStepProps {
   onChange: (incomeSources: IncomeSourceSelection) => void;
   taxYear: string;
   onTaxYearChange: (taxYear: string) => void;
-  analysisType: 'both' | 'tax' | 'portfolio';
-  onAnalysisTypeChange: (type: 'both' | 'tax' | 'portfolio') => void;
+  analysisType: 'both' | 'tax' | 'portfolio' | 'unrealised_gains';
+  onAnalysisTypeChange: (type: 'both' | 'tax' | 'portfolio' | 'unrealised_gains') => void;
 }
 
 const INCOME_SOURCE_OPTIONS = [
@@ -96,107 +96,85 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
 
   return (
     <div className="income-sources-step">
-      {/* Tax Year and Analysis Type Selection */}
-      <div className="row mb-4">
-        <div className="col-md-6 mb-3">
-          <label htmlFor="taxYear" className="form-label fw-bold">
-            <i className="fas fa-calendar-alt me-2 text-primary"></i>
-            Tax Year
+      {/* Tax Year and Analysis Type Selection — compact inline row */}
+      <div className="row g-2 mb-3">
+        <div className="col-sm-6">
+          <label htmlFor="taxYear" className="form-label fw-semibold small mb-1">
+            <i className="fas fa-calendar-alt me-1 text-primary"></i>Tax Year
           </label>
           <select
             id="taxYear"
-            className="form-select"
+            className="form-select form-select-sm"
             value={taxYear}
             onChange={(e) => onTaxYearChange(e.target.value)}
           >
             {TAX_YEARS.map((year) => (
-              <option key={year.value} value={year.value}>
-                {year.label}
-              </option>
+              <option key={year.value} value={year.value}>{year.label}</option>
             ))}
           </select>
-          <div className="form-text">
-            Select the tax year for your calculation
-          </div>
         </div>
 
-        <div className="col-md-6 mb-3">
-          <label htmlFor="analysisType" className="form-label fw-bold">
-            <i className="fas fa-clipboard-list me-2 text-primary"></i>
-            Analysis Type
+        <div className="col-sm-6">
+          <label htmlFor="analysisType" className="form-label fw-semibold small mb-1">
+            <i className="fas fa-clipboard-list me-1 text-primary"></i>Analysis Type
           </label>
           <select
             id="analysisType"
-            className="form-select"
+            className="form-select form-select-sm"
             value={analysisType}
-            onChange={(e) => onAnalysisTypeChange(e.target.value as 'both' | 'tax' | 'portfolio')}
+            onChange={(e) => onAnalysisTypeChange(e.target.value as 'both' | 'tax' | 'portfolio' | 'unrealised_gains')}
           >
-            <option value="both">Tax & Portfolio Analysis</option>
+            <option value="both">Tax &amp; Portfolio Analysis</option>
             <option value="tax">Tax Analysis Only</option>
             <option value="portfolio">Portfolio Analysis Only</option>
+            <option value="unrealised_gains">Unrealised Gains &amp; Predictive Tax</option>
           </select>
-          <div className="form-text">
-            Choose what type of analysis you need
-          </div>
+          {analysisType === 'unrealised_gains' && (
+            <div className="form-text" style={{ fontSize: '0.72rem' }}>
+              Fetches live prices &amp; estimates CGT if you sold today
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="mb-4">
-        <h5 className="mb-3">
-          <i className="fas fa-hand-pointer me-2 text-primary"></i>
-          Select Your Income Sources
-        </h5>
-        <p className="text-muted">
-          Choose all that apply. You'll provide details for each selected source in the next step.
-          {selectedCount > 0 && (
-            <span className="badge bg-primary ms-2">
-              {selectedCount} selected
-            </span>
-          )}
-        </p>
+      {/* Income Sources header */}
+      <div className="d-flex align-items-center justify-content-between mb-2">
+        <span className="fw-semibold small">
+          <i className="fas fa-hand-pointer me-1 text-primary"></i>
+          Income Sources
+          <span className="text-muted fw-normal ms-1">— select all that apply</span>
+        </span>
+        {selectedCount > 0 && (
+          <span className="badge bg-primary">{selectedCount} selected</span>
+        )}
       </div>
 
-      {/* Income Source Selection Grid */}
-      <div className="row g-3">
+      {/* Compact income source toggle list — 2 columns */}
+      <div className="row g-1">
         {INCOME_SOURCE_OPTIONS.map((option) => {
           const isSelected = incomeSources[option.key];
-
           return (
-            <div key={option.key} className="col-12 col-md-6 col-lg-4">
+            <div key={option.key} className="col-12 col-md-6">
               <div
-                className={`card h-100 cursor-pointer ${isSelected ? `border-${option.color} border-2` : 'border'
-                  }`}
+                className={`d-flex align-items-center rounded px-2 py-1 border ${isSelected ? `border-${option.color} bg-${option.color} bg-opacity-10` : 'border-light bg-light'}`}
                 onClick={() => handleSourceToggle(option.key)}
-                style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                style={{ cursor: 'pointer', transition: 'all 0.15s ease', minHeight: '38px' }}
               >
-                <div className="card-body">
-                  <div className="d-flex align-items-start">
-                    <div className="flex-shrink-0">
-                      <div
-                        className={`rounded-circle d-flex align-items-center justify-content-center ${isSelected ? `bg-${option.color} text-white` : 'bg-light text-muted'
-                          }`}
-                        style={{ width: '45px', height: '45px' }}
-                      >
-                        <i className={`fas ${option.icon}`}></i>
-                      </div>
-                    </div>
-                    <div className="flex-grow-1 ms-3">
-                      <div className="d-flex justify-content-between align-items-start">
-                        <h6 className="mb-1 fw-bold">{option.label}</h6>
-                        <div className="form-check">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleSourceToggle(option.key)}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                      </div>
-                      <p className="text-muted small mb-0">{option.description}</p>
-                    </div>
-                  </div>
+                <div
+                  className={`rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 me-2 ${isSelected ? `bg-${option.color} text-white` : 'bg-white text-muted border'}`}
+                  style={{ width: '28px', height: '28px', fontSize: '0.75rem' }}
+                >
+                  <i className={`fas ${option.icon}`}></i>
                 </div>
+                <span className="small fw-semibold flex-grow-1" style={{ fontSize: '0.82rem' }}>{option.label}</span>
+                <input
+                  className="form-check-input ms-2 flex-shrink-0"
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => handleSourceToggle(option.key)}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ marginTop: 0 }}
+                />
               </div>
             </div>
           );
@@ -204,16 +182,16 @@ export const IncomeSourcesStep: React.FC<IncomeSourcesStepProps> = ({
       </div>
 
       {selectedCount === 0 && (
-        <div className="alert alert-warning mt-4" role="alert">
-          <i className="fas fa-exclamation-triangle me-2"></i>
+        <div className="alert alert-warning py-2 mt-2 mb-0 small" role="alert">
+          <i className="fas fa-exclamation-triangle me-1"></i>
           Please select at least one income source to continue
         </div>
       )}
 
       {incomeSources.investmentPortfolio && (
-        <div className="alert alert-info mt-4" role="alert">
-          <i className="fas fa-info-circle me-2"></i>
-          <strong>Investment Portfolio:</strong> You'll be able to upload multiple broker files in the next step
+        <div className="alert alert-info py-2 mt-2 mb-0 small" role="alert">
+          <i className="fas fa-info-circle me-1"></i>
+          <strong>Investment Portfolio selected:</strong> Upload broker files in the next step
         </div>
       )}
     </div>

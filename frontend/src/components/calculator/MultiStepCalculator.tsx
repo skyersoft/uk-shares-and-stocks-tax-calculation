@@ -194,7 +194,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
   return (
     <div className="multi-step-calculator">
       <div className="card shadow-sm border-0">
-        <div className="card-body p-4">
+        <div className="card-body p-3">
           <ProgressIndicator
             currentStep={currentStep}
             totalSteps={4}
@@ -234,7 +234,7 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
 
           <div className="wizard-content">{renderStepContent()}</div>
 
-          <div className="d-flex justify-content-between mt-4 pt-3 border-top">
+          <div className="d-flex justify-content-between mt-3 pt-2 border-top">
             <div>
               {currentStep > 1 && (
                 <Button

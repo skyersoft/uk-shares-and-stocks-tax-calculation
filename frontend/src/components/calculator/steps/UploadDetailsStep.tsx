@@ -69,13 +69,13 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
     <div className="upload-details-step">
       {/* Investment Files Upload Section */}
       {hasInvestments && (
-        <div className="mb-5">
-          <div className="d-flex align-items-center mb-3">
-            <i className="fas fa-file-upload text-primary me-3" style={{ fontSize: '2rem' }}></i>
+        <div className="mb-3">
+          <div className="d-flex align-items-center mb-2">
+            <i className="fas fa-file-upload text-primary me-2" style={{ fontSize: '1.25rem' }}></i>
             <div>
-              <h4 className="mb-1">Upload Investment Files</h4>
-              <p className="text-muted mb-0">
-                Upload transaction files from your broker(s). Supported formats vary by broker.
+              <h6 className="mb-0">Upload Investment Files</h6>
+              <p className="text-muted mb-0 small">
+                Upload transaction files from your broker(s).
               </p>
             </div>
           </div>
@@ -86,17 +86,16 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
             maxFiles={10}
           />
 
-          <div className="alert alert-info mt-3" role="alert">
-            <i className="fas fa-info-circle me-2"></i>
-            <strong>Tip:</strong> You can upload files from multiple brokers. Each file will be processed separately,
-            and you can label each account for clarity in your records.
+          <div className="alert alert-info py-2 mt-2 small" role="alert">
+            <i className="fas fa-info-circle me-1"></i>
+            <strong>Tip:</strong> Upload files from multiple brokers and label each account for clarity.
           </div>
         </div>
       )}
 
       {/* Employment Income Section */}
       {hasEmployment && (
-        <div className="mb-5">
+        <div className="mb-3">
           <EmploymentIncome
             data={employmentData}
             onChange={(employmentIncome) => onChange({ ...data, employmentIncome })}
@@ -106,7 +105,7 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
 
       {/* Rental Income Section */}
       {hasRental && (
-        <div className="mb-5">
+        <div className="mb-3">
           <RentalIncome
             data={rentalData}
             onChange={(rentalIncome) => onChange({ ...data, rentalIncome })}
@@ -116,7 +115,7 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
 
       {/* Savings Interest Section */}
       {hasSavings && (
-        <div className="mb-5">
+        <div className="mb-3">
           <SavingsInterest
             data={savingsData}
             onChange={(savingsInterest) => onChange({ ...data, savingsInterest })}
@@ -126,7 +125,7 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
 
       {/* Other Dividends Section */}
       {hasOtherDividends && (
-        <div className="mb-5">
+        <div className="mb-3">
           <OtherDividends
             data={otherDividendsData}
             onChange={(otherDividends) => onChange({ ...data, otherDividends })}
@@ -136,7 +135,7 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
 
       {/* Other Capital Gains Section */}
       {hasOtherGains && (
-        <div className="mb-5">
+        <div className="mb-3">
           <OtherCapitalGains
             data={otherGainsData}
             onChange={(otherCapitalGains) => onChange({ ...data, otherCapitalGains })}
@@ -144,8 +143,8 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
         </div>
       )}
 
-      {/* Comprehensive Help Section */}
-      <div className="card border-0 mt-5 shadow-sm">
+      {/* Help Section */}
+      <div className="card border-0 mt-3 shadow-sm">
         <div className="card-body">
           <h5 className="card-title mb-3">
             <i className="fas fa-book me-2 text-primary"></i>

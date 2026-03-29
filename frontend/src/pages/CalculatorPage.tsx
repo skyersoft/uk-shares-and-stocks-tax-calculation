@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCalculation } from '../context/CalculationContext';
-import { submitCalculation, CSVValidationError } from '../services/api';
+import { submitCalculation, submitUnrealisedGains, CSVValidationError } from '../services/api';
 import { MultiStepCalculator } from '../components/calculator/MultiStepCalculator';
 import { normalizeCalculationResults } from '../utils/resultsNormalizer';
 import {
@@ -49,29 +49,50 @@ const CalculatorPage: React.FC = () => {
 
       console.log('[CalculatorPage] Submitting calculation...');
       const startTime = Date.now();
-      const results = await submitCalculation({
+
+      let results: { raw: any };
+
+      if (data.analysisType === 'unrealised_gains') {
+        // Use separate endpoint that fetches live prices
+        results = await submitUnrealisedGains({
+          file: files[0],
+          taxYear: data.taxYear,
+        });
+
+        const processingTime = Date.now() - startTime;
+        trackCalculationSuccess(data.taxYear, 0, processingTime, 0);
+
+        dispatch({
+          type: 'SUBMIT_SUCCESS',
+          payload: { raw: results.raw, normalized: null, wizardData: data }
+        });
+        navigate('/results');
+        return;
+      }
+
+      const results2 = await submitCalculation({
         files,
         taxYear: data.taxYear,
         analysisType: data.analysisType || 'both'
       });
 
-      console.log('[CalculatorPage] Calculation results received:', results);
-      const normalized = normalizeCalculationResults(results.raw);
+      console.log('[CalculatorPage] Calculation results received:', results2);
+      const normalized = normalizeCalculationResults(results2.raw);
       console.log('[CalculatorPage] Results normalized:', normalized);
 
       // Track calculation success
-      const processingTime = Date.now() - startTime;
+      const processingTime2 = Date.now() - startTime;
       trackCalculationSuccess(
         data.taxYear,
-        results.raw.transaction_count || 0,
-        processingTime,
-        results.raw.disposal_events?.length || 0
+        results2.raw.transaction_count || 0,
+        processingTime2,
+        results2.raw.disposal_events?.length || 0
       );
 
       dispatch({
         type: 'SUBMIT_SUCCESS',
         payload: {
-          raw: results.raw,
+          raw: results2.raw,
           normalized,
           wizardData: data
         }
@@ -116,22 +137,16 @@ const CalculatorPage: React.FC = () => {
           <div className="container">
             <div className="row justify-content-center">
               <div className="col-lg-10 text-center">
-                <div className="calculator-hero-content fade-in-up">
-                  <h1 className="mb-2">
+                <div className="calculator-hero-content">
+                  <h1 className="mb-1">
                     UK Tax Calculator
                   </h1>
-                  <p className="lead mb-2">
-                    Calculate your Capital Gains Tax and income tax for informational purposes.
-                    This tool follows HMRC guidelines but results are for reference only.
+                  <p className="lead mb-0">
+                    Capital Gains Tax &amp; income analysis following HMRC guidelines.
+                    <span className="ms-2 badge bg-warning text-dark" style={{ fontSize: '0.7rem', verticalAlign: 'middle' }}>
+                      <i className="bi bi-exclamation-triangle-fill me-1"></i>For informational purposes only
+                    </span>
                   </p>
-                  <div className="disclaimer-banner">
-                    <div className="alert alert-warning border-0 mb-3 py-2">
-                      <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                      <strong>Important:</strong> This calculator is for informational purposes only.
-                      You are solely responsible for verifying calculations and submitting accurate information to HMRC.
-                      Use at your own risk.
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -139,7 +154,7 @@ const CalculatorPage: React.FC = () => {
         </section>
 
         {/* Multi-Step Calculator */}
-        <section className="calculator-section py-3">
+        <section className="calculator-section py-2">
           <div className="container">
             <div className="row justify-content-center">
               <div className="col-lg-10">

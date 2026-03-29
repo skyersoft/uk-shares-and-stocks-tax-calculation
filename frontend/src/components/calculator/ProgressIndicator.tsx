@@ -12,7 +12,7 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
   steps
 }) => {
   return (
-    <div className="progress-indicator mb-4">
+    <div className="progress-indicator mb-3">
       <div className="d-none d-md-flex justify-content-between align-items-start position-relative">
         {/* Progress line */}
         <div
@@ -48,7 +48,7 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
               style={{ flex: 1, position: 'relative', zIndex: 2 }}
             >
               <div
-                className={`rounded-circle d-flex align-items-center justify-content-center mb-2 ${
+                className={`rounded-circle d-flex align-items-center justify-content-center mb-1 ${
                   isActive
                     ? 'bg-primary text-white'
                     : isCompleted
@@ -56,9 +56,10 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
                       : 'bg-light border border-secondary text-muted'
                 }`}
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '32px',
+                  height: '32px',
                   fontWeight: 'bold',
+                  fontSize: '0.85rem',
                   transition: 'all 0.3s ease'
                 }}
               >
@@ -68,11 +69,12 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
                   <span>{stepNumber}</span>
                 )}
               </div>
-              <div className="text-center" style={{ maxWidth: '150px' }}>
+              <div className="text-center" style={{ maxWidth: '120px' }}>
                 <div
-                  className={`small fw-bold ${
+                  className={`fw-bold ${
                     isActive ? 'text-primary' : isCompleted ? 'text-success' : 'text-muted'
                   }`}
+                  style={{ fontSize: '0.78rem' }}
                 >
                   {step.title}
                 </div>
