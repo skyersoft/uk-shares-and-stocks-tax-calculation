@@ -12,7 +12,7 @@ Design Principles:
 """
 
 import logging
-from typing import List, Dict, Any, Optional, Type
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 from ..interfaces.broker_converter import (
@@ -27,85 +27,85 @@ logger = logging.getLogger(__name__)
 class ConverterFactory:
     """
     Factory for creating and managing broker converters.
-    
+
     This class implements the Factory pattern with automatic broker detection.
     It maintains a registry of available converters and can automatically
     detect which converter to use based on file structure.
-    
+
     Design Pattern: Factory + Registry Pattern
     - Centralized converter creation
     - Auto-detection of broker from file
     - Extensible via converter registration
-    
+
     Usage:
         factory = ConverterFactory()
         factory.register(IBKRConverter())
         factory.register(Trading212Converter())
-        
+
         # Auto-detect and convert
         transactions = factory.convert_file("transactions.csv")
-        
+
         # Or specify broker
         transactions = factory.convert_file("transactions.csv", broker="IBKR")
     """
-    
+
     def __init__(self):
         """Initialize the factory with empty converter registry."""
         self._converters: Dict[str, BrokerConverterInterface] = {}
         self._converter_list: List[BrokerConverterInterface] = []
-    
+
     def register(self, converter: BrokerConverterInterface) -> None:
         """
         Register a broker converter.
-        
+
         Args:
             converter: Instance of a broker converter
-            
+
         Raises:
             ValueError: If converter with same name already registered
         """
         broker_name = converter.broker_name
-        
+
         if broker_name in self._converters:
             raise ValueError(
                 f"Converter for '{broker_name}' is already registered. "
                 f"Use unregister() first if you want to replace it."
             )
-        
+
         self._converters[broker_name] = converter
         self._converter_list.append(converter)
-        
+
         logger.info(f"Registered converter for {broker_name}")
-    
+
     def unregister(self, broker_name: str) -> None:
         """
         Unregister a broker converter.
-        
+
         Args:
             broker_name: Name of the broker to unregister
-            
+
         Raises:
             KeyError: If broker not found
         """
         if broker_name not in self._converters:
             raise KeyError(f"No converter registered for '{broker_name}'")
-        
+
         converter = self._converters[broker_name]
         del self._converters[broker_name]
         self._converter_list.remove(converter)
-        
+
         logger.info(f"Unregistered converter for {broker_name}")
-    
+
     def get_converter(self, broker_name: str) -> BrokerConverterInterface:
         """
         Get a specific converter by broker name.
-        
+
         Args:
             broker_name: Name of the broker
-            
+
         Returns:
             The converter instance
-            
+
         Raises:
             KeyError: If broker not found
         """
@@ -115,18 +115,18 @@ class ConverterFactory:
                 f"No converter registered for '{broker_name}'. "
                 f"Available brokers: {available}"
             )
-        
+
         return self._converters[broker_name]
-    
+
     def list_brokers(self) -> List[str]:
         """
         Get list of all registered broker names.
-        
+
         Returns:
             List of broker names
         """
         return list(self._converters.keys())
-    
+
     def detect_broker(
         self,
         file_path: str,
@@ -134,14 +134,14 @@ class ConverterFactory:
     ) -> Optional[Dict[str, Any]]:
         """
         Automatically detect which broker a file is from.
-        
+
         This method tries all registered converters and returns the one
         with the highest confidence score above the minimum threshold.
-        
+
         Args:
             file_path: Path to the CSV file
             min_confidence: Minimum confidence score (0.0 to 1.0)
-            
+
         Returns:
             Dictionary with detection results:
             {
@@ -155,7 +155,7 @@ class ConverterFactory:
         if not Path(file_path).exists():
             logger.error(f"File not found: {file_path}")
             return None
-        
+
         # Get confidence scores from all converters
         scores = []
         for converter in self._converter_list:
@@ -171,37 +171,37 @@ class ConverterFactory:
                 logger.warning(
                     f"Error detecting {converter.broker_name}: {str(e)}"
                 )
-        
+
         if not scores:
             logger.warning(
                 f"No converter could handle {file_path} "
                 f"(min confidence: {min_confidence})"
             )
             return None
-        
+
         # Sort by confidence (highest first)
         scores.sort(key=lambda x: x['confidence'], reverse=True)
-        
+
         best_match = scores[0]
         alternatives = scores[1:] if len(scores) > 1 else []
-        
+
         logger.info(
             f"Detected {best_match['broker']} "
             f"(confidence: {best_match['confidence']:.2f})"
         )
-        
+
         if alternatives:
-            alt_names = [f"{a['broker']} ({a['confidence']:.2f})" 
+            alt_names = [f"{a['broker']} ({a['confidence']:.2f})"
                          for a in alternatives[:3]]
             logger.info(f"Alternatives: {', '.join(alt_names)}")
-        
+
         return {
             'broker': best_match['broker'],
             'converter': best_match['converter'],
             'confidence': best_match['confidence'],
             'alternatives': alternatives
         }
-    
+
     def convert_file(
         self,
         file_path: str,
@@ -212,21 +212,21 @@ class ConverterFactory:
     ) -> List[StandardTransaction]:
         """
         Convert a broker CSV file to StandardTransaction objects.
-        
+
         This is the main entry point for file conversion. It can either:
         1. Use a specified broker converter
         2. Auto-detect the broker and use appropriate converter
-        
+
         Args:
             file_path: Path to the CSV file
             broker: Optional broker name (auto-detect if None)
             base_currency: Base currency for tax reporting (default: GBP)
             min_confidence: Minimum confidence for auto-detection (default: 0.8)
             **kwargs: Additional parameters passed to converter
-            
+
         Returns:
             List of StandardTransaction objects
-            
+
         Raises:
             FileNotFoundError: If file doesn't exist
             BrokerConversionError: If conversion fails
@@ -235,7 +235,7 @@ class ConverterFactory:
         # Check file exists
         if not Path(file_path).exists():
             raise FileNotFoundError(f"File not found: {file_path}")
-        
+
         # Get converter
         if broker:
             # Use specified broker
@@ -247,7 +247,7 @@ class ConverterFactory:
         else:
             # Auto-detect broker
             detection = self.detect_broker(file_path, min_confidence)
-            
+
             if not detection:
                 raise BrokerConversionError(
                     broker="Unknown",
@@ -258,15 +258,15 @@ class ConverterFactory:
                         f"Try specifying the broker explicitly."
                     )
                 )
-            
+
             converter = detection['converter']
             confidence = detection['confidence']
-            
+
             logger.info(
                 f"Auto-detected {detection['broker']} "
                 f"(confidence: {confidence:.2f})"
             )
-            
+
             # Warn if confidence is not very high
             if confidence < 0.9:
                 logger.warning(
@@ -274,7 +274,7 @@ class ConverterFactory:
                     f"Results may not be accurate. "
                     f"Consider specifying broker explicitly."
                 )
-        
+
         # Convert file
         try:
             transactions = converter.convert(
@@ -282,21 +282,21 @@ class ConverterFactory:
                 base_currency=base_currency,
                 **kwargs
             )
-            
+
             logger.info(
                 f"Successfully converted {len(transactions)} transactions "
                 f"from {converter.broker_name}"
             )
-            
+
             return transactions
-            
+
         except Exception as e:
             raise BrokerConversionError(
                 broker=converter.broker_name,
                 file_path=file_path,
                 message=f"Conversion failed: {str(e)}"
             )
-    
+
     def validate_file(
         self,
         file_path: str,
@@ -304,13 +304,13 @@ class ConverterFactory:
     ) -> Dict[str, Any]:
         """
         Validate a file without converting it.
-        
+
         Useful for pre-flight checks before conversion.
-        
+
         Args:
             file_path: Path to the CSV file
             broker: Optional broker name (auto-detect if None)
-            
+
         Returns:
             Validation results dictionary
         """
@@ -327,13 +327,13 @@ class ConverterFactory:
                     'confidence': 0.0
                 }
             converter = detection['converter']
-        
+
         return converter.validate_file_structure(file_path)
-    
+
     def get_supported_brokers_info(self) -> List[Dict[str, Any]]:
         """
         Get information about all supported brokers.
-        
+
         Returns:
             List of dictionaries with broker information:
             [
@@ -355,7 +355,7 @@ class ConverterFactory:
                 'optional_columns': converter.get_optional_columns()
             })
         return info
-    
+
     def __repr__(self) -> str:
         """String representation for debugging."""
         brokers = ', '.join(self._converters.keys())
@@ -369,10 +369,10 @@ _factory_instance: Optional[ConverterFactory] = None
 def get_factory() -> ConverterFactory:
     """
     Get the global ConverterFactory singleton instance.
-    
+
     This provides a convenient way to access the factory without
     passing it around everywhere.
-    
+
     Returns:
         The global ConverterFactory instance
     """
@@ -385,7 +385,7 @@ def get_factory() -> ConverterFactory:
 def reset_factory() -> None:
     """
     Reset the global factory instance.
-    
+
     Useful for testing to ensure clean state.
     """
     global _factory_instance

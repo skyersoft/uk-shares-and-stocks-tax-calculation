@@ -12,7 +12,7 @@ rather than simply comparing current value to pool average cost.
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Tuple
 
 from ..models.domain_models import (
     Holding,

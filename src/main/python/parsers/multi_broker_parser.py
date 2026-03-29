@@ -7,7 +7,6 @@ to the existing FileParserInterface expected by the CapitalGainsTaxCalculator.
 
 import logging
 from typing import List
-from datetime import datetime
 from uuid import uuid4
 
 from ..interfaces.calculator_interfaces import FileParserInterface
@@ -20,7 +19,7 @@ from ..models.domain_models import (
 )
 from ..converters.converter_factory import ConverterFactory, get_factory
 from ..models.standard_transaction import (
-    StandardTransaction, 
+    StandardTransaction,
     TransactionType as StandardTransactionType,
     AssetClass as StandardAssetClass
 )
@@ -31,48 +30,48 @@ logger = logging.getLogger(__name__)
 class MultiBrokerParser(FileParserInterface):
     """
     Adapter that uses ConverterFactory to parse files.
-    
+
     This allows the existing CapitalGainsTaxCalculator to use the new
     multi-broker conversion system transparently.
     """
-    
+
     def __init__(self, factory: ConverterFactory = None, base_currency: str = "GBP"):
         """
         Initialize the parser.
-        
+
         Args:
             factory: ConverterFactory instance (defaults to global singleton)
             base_currency: Base currency for calculations
         """
         self.factory = factory or get_factory()
         self.base_currency = base_currency
-    
+
     def supports_file_type(self, file_type: str) -> bool:
         """
         Check if this parser supports the given file type.
-        
+
         The new system supports CSV files from various brokers.
         """
         return file_type.lower() == "csv"
-    
+
     def parse(self, file_path: str) -> List[Transaction]:
         """
         Parse a file using the detected broker converter.
-        
+
         Args:
             file_path: Path to the file
-            
+
         Returns:
             List of domain model Transaction objects
         """
         logger.info(f"MultiBrokerParser parsing: {file_path}")
-        
+
         # 1. Convert using the new system
         standard_transactions = self.factory.convert_file(
             file_path=file_path,
             base_currency=self.base_currency
         )
-        
+
         # 2. Map to domain models
         domain_transactions = []
         for st in standard_transactions:
@@ -81,18 +80,18 @@ class MultiBrokerParser(FileParserInterface):
                 domain_transactions.append(dt)
             except Exception as e:
                 logger.error(f"Failed to map transaction {st}: {e}")
-        
+
         return domain_transactions
-    
+
     def _map_to_domain_transaction(self, st: StandardTransaction) -> Transaction:
         """Map StandardTransaction to domain Transaction."""
-        
+
         # Map Transaction Type
         tx_type = self._map_transaction_type(st.transaction_type)
-        
+
         # Map Asset Class
         asset_class = self._map_asset_class(st.asset_class)
-        
+
         # Create Security
         security = Security(
             symbol=st.symbol,
@@ -102,13 +101,13 @@ class MultiBrokerParser(FileParserInterface):
             # Use ISIN as ID if available, otherwise generate new or use symbol
             security_type="ISIN" if st.isin else "TICKER"
         )
-        
+
         # Create Currency
         currency = Currency(
             code=st.transaction_currency,
             rate_to_base=float(st.fx_rate_to_base) if st.fx_rate_to_base else 1.0
         )
-        
+
         # Create Transaction
         # Note: StandardTransaction uses Decimal, Domain uses float
         #
@@ -135,7 +134,7 @@ class MultiBrokerParser(FileParserInterface):
             currency=currency,
             withholding_tax=float(st.withholding_tax)
         )
-    
+
     def _map_transaction_type(self, st_type: StandardTransactionType) -> TransactionType:
         """Map standard transaction type to domain type."""
         mapping = {
@@ -155,7 +154,7 @@ class MultiBrokerParser(FileParserInterface):
             # StandardTransactionType.WITHDRAWAL: TransactionType.CASH_ADJUSTMENT, # Not in StandardTransactionType yet
         }
         return mapping.get(st_type, TransactionType.BUY) # Default to BUY if unknown
-    
+
     def _map_asset_class(self, st_class: StandardAssetClass) -> AssetClass:
         """Map standard asset class to domain asset class."""
         mapping = {

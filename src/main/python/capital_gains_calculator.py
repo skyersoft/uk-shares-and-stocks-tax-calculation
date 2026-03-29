@@ -4,7 +4,7 @@ import sys
 import logging
 import typer
 import time
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from rich.console import Console
 from rich.logging import RichHandler
 
@@ -79,10 +79,10 @@ def calculate(
     # Set logging level
     if verbose:
         logger.setLevel(logging.DEBUG)
-    
+
     console.print(f"[bold green]Calculating capital gains for {tax_year}...[/]")
     console.print(f"Calculating capital gains for {tax_year} from {input_file} (file type: {file_type})")
-    
+
     try:
         # Create appropriate parser based on file type
         if file_type.lower() == "csv":
@@ -91,13 +91,13 @@ def calculate(
         else:
             from .parsers.qfx_parser import QfxParser
             parser = QfxParser(base_currency=BASE_CURRENCY)
-        
+
         calculator = CapitalGainsTaxCalculator(file_parser=parser)
 
         # Add txt extension if no extension in output_file
         if not os.path.splitext(output_file)[1]:
             output_file = f"{output_file}.{format}"
-        
+
         # Calculate capital gains
         summary = calculator.calculate(
             file_path=input_file,
@@ -106,7 +106,7 @@ def calculate(
             report_format=format,
             file_type=file_type
         )
-        
+
         # Print summary
         console.print("\n[bold green]Tax Year Summary:[/]")
         console.print(f"Tax Year: {summary.tax_year}")
@@ -116,12 +116,12 @@ def calculate(
         console.print(f"Net Gain/Loss: £{summary.net_gain:.2f}")
         console.print(f"Annual Exemption Used: £{summary.annual_exemption_used:.2f}")
         console.print(f"Taxable Gain: £{summary.taxable_gain:.2f}")
-        
+
         # Print report location
         extension = ".json" if format.lower() == "json" else ".csv"
         report_path = output_file + extension
         console.print(f"\n[bold green]Report saved to:[/] {report_path}")
-        
+
     except Exception as e:
         logger.exception("Error during calculation")
         console.print(f"[bold red]Error:[/] {str(e)}")
@@ -159,7 +159,7 @@ class EnhancedCapitalGainsCalculator:
         analysis_type: str = "both"  # "tax", "portfolio", "both"
     ) -> Dict[str, Any]:
         """Perform comprehensive tax and portfolio analysis.
-        
+
         Args:
             file_path: Path to a single file or list of file paths
             tax_year: Tax year to analyze
@@ -182,7 +182,7 @@ class EnhancedCapitalGainsCalculator:
             transactions = self.parser.parse(path)
             self.logger.info(f"Parsed {len(transactions)} transactions from {path}")
             all_transactions.extend(transactions)
-        
+
         self.logger.info(f"Total parsed {len(all_transactions)} transactions from {len(file_paths)} file(s)")
 
         results = {

@@ -1,6 +1,5 @@
 """Configuration for the UK Capital Gains Tax Calculator."""
 from dataclasses import dataclass
-from typing import Dict
 
 
 @dataclass
@@ -9,7 +8,7 @@ class TaxYear:
     start_year: int
     end_year: int
     annual_exemption: float
-    
+
     @property
     def name(self) -> str:
         """Return the name of the tax year (e.g., '2024-2025')."""

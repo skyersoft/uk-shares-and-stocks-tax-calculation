@@ -16,49 +16,49 @@ class CSVValidationError(Exception):
 
 
 REQUIRED_CSV_COLUMNS = [
-    'Symbol', 'DateTime', 'Quantity', 'T. Price', 
+    'Symbol', 'DateTime', 'Quantity', 'T. Price',
     'Comm/Fee', 'Basis', 'Realized P/L', 'Code'
 ]
 
 
 class CsvParser(FileParserInterface):
     """Parser for CSV (Comma-Separated Values) files from trading platforms.
-    
+
     This parser is specifically designed to handle CSV files exported from
     trading platforms like Interactive Brokers (Sharesight format).
     """
-    
+
     def __init__(self, base_currency: str = "GBP"):
         """Initialize the CSV parser.
-        
+
         Args:
             base_currency: The base currency for calculations (default: GBP)
         """
         self.base_currency = base_currency
         self.logger = logging.getLogger(__name__)
-    
+
     def supports_file_type(self, file_type: str) -> bool:
         """Check if this parser supports the given file type."""
         return file_type.lower() == "csv"
-    
+
     def parse(self, file_path: str) -> List[Transaction]:
         """Parse a CSV file and extract transactions.
-        
+
         Args:
             file_path: Path to the CSV file
-            
+
         Returns:
             List of Transaction objects
         """
         self.logger.info(f"Parsing CSV file: {file_path}")
-        
+
         transactions = []
-        
+
         try:
             # Read the CSV file
             with open(file_path, 'r', encoding='utf-8') as file:
                 reader = csv.DictReader(file)
-                
+
                 # Check if file has headers
                 if not reader.fieldnames:
                     self.logger.error("CSV file contains no headers")
@@ -69,22 +69,22 @@ class CsvParser(FileParserInterface):
                     transaction = self._create_transaction_from_row(row)
                     if transaction: # Only add if transaction creation was successful
                         transactions.append(transaction)
-            
+
             return transactions
-            
+
         except CSVValidationError:
             # Re-raise validation errors
             raise
         except Exception as e:
             self.logger.error(f"Error parsing CSV file: {e}")
             return transactions
-    
+
     def _validate_row_data(self, row: Dict[str, Any]) -> bool:
         """Validate that row has non-null critical data.
-        
+
         Args:
             row: A dictionary representing a row from the CSV
-            
+
         Returns:
             True if row has valid data, False otherwise
         """
@@ -93,24 +93,24 @@ class CsvParser(FileParserInterface):
         if not quantity_str or quantity_str.strip() == '' or quantity_str == '0':
             self.logger.warning(f"Invalid quantity in row: {row}")
             return False
-        
+
         price_str = (row.get('TradePrice') or
                      row.get('UnitPrice') or
                      row.get('Price', ''))
         if not price_str or price_str.strip() == '' or price_str == '0':
             self.logger.warning(f"Invalid price in row: {row}")
             return False
-        
+
         # FX Rate is optional, defaults to 1.0 in _create_transaction_from_row
-        
+
         return True
-    
+
     def _create_transaction_from_row(self, row: Dict[str, Any]) -> Optional[Transaction]:
         """Create a Transaction object from a CSV row.
-        
+
         Args:
             row: A dictionary representing a row from the CSV
-            
+
         Returns:
             A Transaction object or None if creation fails
         """
@@ -118,31 +118,31 @@ class CsvParser(FileParserInterface):
             # Validate row data first
             if not self._validate_row_data(row):
                 return None
-            
+
             # Determine transaction type
             transaction_type = self._map_transaction_type(row)
-            
+
             # Create security
             security = self._create_security_from_row(row)
-            
+
             # Parse date (handle alternative field names)
             date_str = row.get('TradeDate') or row.get('Date', '')
             date = self._parse_date(date_str)
             if not date: # If date parsing failed, skip this row
                 self.logger.warning(f"Skipping row due to invalid date: {row}")
                 return None
-            
+
             # Parse quantity (ensure it's positive for buys, negative for sells)
             quantity_str = row.get('Quantity', '0')
             if not quantity_str:
                 self.logger.warning(f"Skipping row due to missing quantity: {row}")
                 return None
             quantity = float(quantity_str)
-            
+
             # Sharesight CSV has quantity as positive for both buy/sell, adjust for internal model
             if transaction_type == TransactionType.SELL and quantity > 0:
                 quantity = -quantity
-            
+
             # Parse price and fees (handle alternative field names)
             price_per_unit_str = (row.get('TradePrice') or
                                  row.get('UnitPrice') or
@@ -151,22 +151,22 @@ class CsvParser(FileParserInterface):
                 self.logger.warning(f"Skipping row due to missing price: {row}")
                 return None
             price_per_unit = float(price_per_unit_str)
-            
+
             commission = abs(float(row.get('IBCommission') or row.get('Commission') or row.get('Fee') or row.get('Fees', '0')))
             taxes = abs(float(row.get('Taxes', '0')))
-            
+
             # Extract additional fields (these are not critical for basic transaction creation)
             close_price = float(row.get('ClosePrice', '0'))
             mtm_pnl = float(row.get('MtmPnl', '0'))
             fifo_pnl_realized = float(row.get('FifoPnlRealized', '0'))
-            
+
             # Create currency (handle alternative field names)
             currency_code = row.get('CurrencyPrimary') or row.get('Currency') or row.get('Settlement Currency', self.base_currency)
             fx_rate_str = row.get('FXRateToBase') or row.get('CurrencyRate', '1.0')
-            
+
             fx_rate = float(fx_rate_str)
             currency = Currency(code=currency_code, rate_to_base=fx_rate)
-            
+
             # Create transaction
             return Transaction(
                 transaction_id=row.get('TradeID', ''),
@@ -179,11 +179,11 @@ class CsvParser(FileParserInterface):
                 taxes=taxes,
                 currency=currency
             )
-            
+
         except (ValueError, TypeError) as e:
             self.logger.error(f"Error creating transaction from row: {row}. Error: {e}")
             return None
-    
+
     def _map_transaction_type(self, row: Dict[str, Any]) -> TransactionType:
         """Map Sharesight transaction data to internal transaction types."""
         asset_class = row.get('AssetClass', '')
@@ -217,37 +217,37 @@ class CsvParser(FileParserInterface):
             return TransactionType.CASH_ADJUSTMENT
         elif 'FEE' in transaction_type_str:
             return TransactionType.FEE
-        
+
         self.logger.warning(f"Unknown transaction type in row: {row}, defaulting to BUY")
         return TransactionType.BUY
-    
+
     def _create_security_from_row(self, row: Dict[str, Any]) -> Security:
         """Create a Security object from a CSV row.
-        
+
         Args:
             row: A dictionary representing a row from the CSV
-            
+
         Returns:
             A Security object
         """
         symbol = row.get('Symbol', '')
         name = row.get('Name', '') or row.get('Description', '')
-        
+
         # Get asset class information if available
         asset_class_str = row.get('AssetClass', '')
         sub_category = row.get('SubCategory', '')
         listing_exchange = row.get('ListingExchange', '')
         trading_exchange = row.get('Exchange', '')
-        
+
         # Determine security ID and type
         security_id = row.get('SecurityID', '')
         security_id_type = row.get('SecurityIDType', '')
-        
+
         # If SecurityID is empty but ISIN is present, use ISIN
         if not security_id and row.get('ISIN'):
             security_id = row.get('ISIN')
             security_id_type = 'ISIN'
-        
+
         # Create security based on ID type
         if security_id_type == 'ISIN':
             security = Security.create_with_isin(
@@ -268,7 +268,7 @@ class CsvParser(FileParserInterface):
                 symbol=symbol,
                 name=name
             )
-        
+
         # Set asset class if available and the security has the attribute
         if asset_class_str:
             try:
@@ -282,30 +282,30 @@ class CsvParser(FileParserInterface):
                     'OPT': AssetClass.OPTION,
                     'FUT': AssetClass.FUTURE
                 }
-                
+
                 if asset_class_str in asset_class_map:
                     security.asset_class = asset_class_map[asset_class_str]
             except (AttributeError, ValueError) as e:
                 self.logger.warning(f"Could not set asset class: {e}")
-        
+
         # Set exchange information if available and the security has the attributes
         if listing_exchange:
             security.listing_exchange = listing_exchange
-        
+
         if trading_exchange:
             security.trading_exchange = trading_exchange
-        
+
         if sub_category:
             security.sub_category = sub_category
-        
+
         return security
-    
+
     def _parse_date(self, date_str: str) -> datetime:
         """Parse a date string from the CSV file.
-        
+
         Args:
             date_str: Date string in YYYY-MM-DD format
-            
+
         Returns:
             A datetime object
         """

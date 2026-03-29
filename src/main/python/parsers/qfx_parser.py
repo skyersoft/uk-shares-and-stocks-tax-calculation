@@ -12,43 +12,43 @@ from ..models.domain_models import Transaction, TransactionType, Security, Curre
 
 class QfxParser(FileParserInterface):
     """Parser for QFX (Quicken Exchange Format) files."""
-    
+
     def __init__(self, base_currency: str = "GBP"):
         """Initialize the QFX parser.
-        
+
         Args:
             base_currency: The base currency for calculations (default: GBP)
         """
         self.base_currency = base_currency
         self.logger = logging.getLogger(__name__)
-    
+
     def supports_file_type(self, file_type: str) -> bool:
         """Check if this parser supports the given file type."""
         return file_type.lower() == "qfx"
-    
+
     def parse(self, file_path: str) -> List[Transaction]:
         """Parse a QFX file and extract transactions.
-        
+
         Args:
             file_path: Path to the QFX file
-            
+
         Returns:
             List of Transaction objects
         """
         self.logger.info(f"Parsing QFX file: {file_path}")
-        
+
         transactions = []
-        
+
         try:
             # Try manual XML parsing first for better handling of security IDs
             transactions = self._parse_manually(file_path)
-            
+
             # If manual parsing fails, try OFXParser as fallback
             if not transactions:
                 with open(file_path, 'rb') as file:
                     try:
                         ofx = OfxParser.parse(file)
-                        
+
                         # Process investment transactions
                         for account in ofx.accounts:
                             if hasattr(account, 'statement'):
@@ -58,7 +58,7 @@ class QfxParser(FileParserInterface):
                                         txn = self._convert_ofx_transaction(tx)
                                         if txn:
                                             transactions.append(txn)
-                        
+
                         # Process transactions from investment accounts
                         if hasattr(ofx, 'investmentAccounts'):
                             for account in ofx.investmentAccounts:
@@ -74,13 +74,13 @@ class QfxParser(FileParserInterface):
                         self.logger.warning(
                             'OFXParser failed: {}'.format(e))
                         # If OFXParser failed, we already have manual results
-            
+
             return transactions
-            
+
         except Exception as e:
             self.logger.error(f"Error parsing QFX file: {e}")
             return transactions
-            
+
     def _convert_inv_tx(self, tx):
         """Shorthand for _convert_investment_transaction.
         Used to avoid line length issues."""
@@ -96,21 +96,21 @@ class QfxParser(FileParserInterface):
             )
             if not is_stock:
                 return None
-            
+
             is_buy = ofx_tx.type == 'buystock'
             tx_type = (
                 TransactionType.BUY if is_buy else TransactionType.SELL
             )
-            
+
             # Handle security identifiers with type prefixes
             isin = ''
             symbol = ''
             secid = None
-            
+
             # First try SECID element
             if hasattr(ofx_tx, 'secid'):
                 secid = ofx_tx.secid
-            
+
             # Try accessing uniqueid/type through SECID
             if secid is not None:
                 unique_id = getattr(secid, 'uniqueid', '')
@@ -121,31 +121,31 @@ class QfxParser(FileParserInterface):
                 else:
                     isin = unique_id
                     symbol = getattr(ofx_tx, 'ticker', '')
-            
+
             security = Security(
                 isin=isin,
                 symbol=symbol
             )
-            
+
             # Handle currency
             currency_code = getattr(ofx_tx, 'currency', self.base_currency)
             currency_rate = 1.0  # Default to 1:1 if no rate provided
-            
+
             if hasattr(ofx_tx, 'currate'):
                 currency_rate = float(ofx_tx.currate)
-            
+
             currency = Currency(code=currency_code, rate_to_base=currency_rate)
-            
+
             # Handle quantity
             quantity = float(getattr(ofx_tx, 'units', 0))
             if tx_type == TransactionType.SELL:
                 quantity = -abs(quantity)  # Mark sell quantities negative
-            
+
             # Handle price and fees
             price_per_unit = float(getattr(ofx_tx, 'unitprice', 0))
             commission = float(getattr(ofx_tx, 'commission', 0))
             taxes = float(getattr(ofx_tx, 'taxes', 0))
-            
+
             # Calculate price if missing
             if price_per_unit == 0 and quantity != 0:
                 total = getattr(ofx_tx, 'total', None)
@@ -161,7 +161,7 @@ class QfxParser(FileParserInterface):
                         tx_id = getattr(ofx_tx, 'id', '')
                         msg = 'Price calc error for tx {}: {}'
                         self.logger.error(msg.format(tx_id, e))
-            
+
             return Transaction(
                 transaction_id=getattr(ofx_tx, 'id', ''),
                 transaction_type=tx_type,
@@ -187,10 +187,10 @@ class QfxParser(FileParserInterface):
                     tx_type = TransactionType.BUY
                 elif inv_tx.type.lower() == 'sell':
                     tx_type = TransactionType.SELL
-            
+
             if not tx_type:
                 return None
-                
+
             # Handle security identifiers with type prefixes
             isin = ''
             symbol = ''
@@ -205,29 +205,29 @@ class QfxParser(FileParserInterface):
                 else:
                     isin = id_value
                     symbol = getattr(inv_tx, 'ticker', '')
-            
+
             security = Security(
                 isin=isin,
                 symbol=symbol
             )
-            
+
             currency_code = getattr(inv_tx, 'currency', self.base_currency)
             currency_rate = 1.0
-            
+
             if hasattr(inv_tx, 'currency_rate'):
                 currency_rate = float(inv_tx.currency_rate)
-                
+
             currency = Currency(code=currency_code, rate_to_base=currency_rate)
-            
+
             quantity = float(getattr(inv_tx, 'units', 0))
             if tx_type == TransactionType.SELL:
                 quantity = -abs(quantity)  # Mark sell quantities negative
-            
+
             # Get price per unit, commission and taxes
             price_per_unit = float(getattr(inv_tx, 'unit_price', 0))
             commission = float(getattr(inv_tx, 'commission', 0))
             taxes = float(getattr(inv_tx, 'taxes', 0))
-            
+
             # Try to calculate price_per_unit from total if it's zero
             if price_per_unit == 0 and quantity != 0:
                 total = getattr(inv_tx, 'total', None)
@@ -244,7 +244,7 @@ class QfxParser(FileParserInterface):
                         tx_id = getattr(inv_tx, 'id', '')
                         self.logger.error(
                             'Error calc price for tx {}: {}'.format(tx_id, e))
-                
+
             return Transaction(
                 transaction_id=getattr(inv_tx, 'id', ''),
                 transaction_type=tx_type,
@@ -259,11 +259,11 @@ class QfxParser(FileParserInterface):
         except Exception as e:
             self.logger.error(f"Error converting investment transaction: {e}")
             return None
-    
+
     def _parse_manually(self, file_path: str) -> List[Transaction]:
         """Manually parse the QFX file using XML parsing.
-        
-        This is a fallback method when the OFXParser doesn't handle investment 
+
+        This is a fallback method when the OFXParser doesn't handle investment
         transactions properly.
         """
         transactions = []
@@ -271,14 +271,14 @@ class QfxParser(FileParserInterface):
             # QFX files are not strictly XML, so clean up the file first
             with open(file_path, 'r', encoding='latin-1') as file:
                 content = file.read()
-            
+
             # Find the OFX content (remove header)
             ofx_start = content.find('<OFX>')
             if ofx_start == -1:
                 return transactions
-                
+
             ofx_content = content[ofx_start:]
-            
+
             # Parse as XML
             root = ET.fromstring(ofx_content)
 
@@ -299,13 +299,13 @@ class QfxParser(FileParserInterface):
                 tx = self._parse_buy_transaction(buy_node, security_map)
                 if tx:
                     transactions.append(tx)
-            
+
             # Find sell stock transactions
             for sell_node in root.findall('.//SELLSTOCK'):
                 tx = self._parse_sell_transaction(sell_node, security_map)
                 if tx:
                     transactions.append(tx)
-            
+
             # Find dividend transactions and their withholding tax
             for income_node in root.findall('.//INCOME'):
                 # Get the dividend transaction
@@ -329,13 +329,13 @@ class QfxParser(FileParserInterface):
                             tax_amount = abs(float(tax_node.findtext('TRNAMT', '0')))
                             tx.taxes = tax_amount
                     transactions.append(tx)
-                    
+
             return transactions
-            
+
         except Exception as e:
             self.logger.error(f"Error in manual QFX parsing: {e}")
             return transactions
-    
+
     def _parse_buy_transaction(self, node, security_map) -> Optional[Transaction]:
         """Parse a buy stock transaction node."""
         try:
@@ -417,7 +417,7 @@ class QfxParser(FileParserInterface):
                 code=currency_code,
                 rate_to_base=currency_rate
             )
-            
+
             # NEW: Extract withholding tax and country
             withholding_tax = self._extract_withholding_tax(node)
             country = self._extract_security_country(uniqueid)
@@ -607,7 +607,7 @@ class QfxParser(FileParserInterface):
                 code=currency_code,
                 rate_to_base=currency_rate
             )
-            
+
             # NEW: Extract withholding tax and country
             withholding_tax = self._extract_withholding_tax(node)
             country = self._extract_security_country(uniqueid)
@@ -628,14 +628,14 @@ class QfxParser(FileParserInterface):
         except Exception as e:
             self.logger.error(f"Error parsing sell transaction: {e}")
             return None
-    
+
     def _extract_withholding_tax(self, node) -> float:
         """
         Extract withholding tax from INVBUY/INVSELL/TAXES node.
-        
+
         Args:
             node: XML node containing transaction data
-            
+
         Returns:
             Withholding tax amount (0.0 if not found)
         """
@@ -644,46 +644,46 @@ class QfxParser(FileParserInterface):
             taxes_node = node.find('.//INVTRAN/TAXES')
             if taxes_node is not None and taxes_node.text:
                 return abs(float(taxes_node.text))
-            
+
             # Some brokers put it in STMTTRN for dividend withholding
             taxes_node = node.find('.//STMTTRN/TAXES')
             if taxes_node is not None and taxes_node.text:
                 return abs(float(taxes_node.text))
-            
+
             return 0.0
         except Exception as e:
             self.logger.warning(f"Error extracting withholding tax: {e}")
             return 0.0
-    
+
     def _extract_security_country(self, security_id: str) -> Optional[str]:
         """
         Derive country from ISIN (first 2 characters) or security ID.
-        
+
         Args:
             security_id: Security identifier (ISIN, CUSIP, etc.)
-            
+
         Returns:
             Country code (GB, US, etc.) or None if cannot determine
         """
         try:
             if not security_id:
                 return None
-            
+
             # ISIN format: 2-letter country code + 9 alphanumeric + check digit
             if len(security_id) >= 2 and security_id[:2].isalpha():
                 country = security_id[:2].upper()
                 # Verify it's a valid ISIN country code
                 valid_countries = [
-                    'GB', 'US', 'IE', 'FR', 'DE', 'NL', 'CH', 
+                    'GB', 'US', 'IE', 'FR', 'DE', 'NL', 'CH',
                     'CA', 'AU', 'JP', 'IT', 'ES', 'SE', 'DK'
                 ]
                 if country in valid_countries:
                     return country
-            
+
             # CUSIP is US-specific
             if security_id.startswith('CUSIP:'):
                 return 'US'
-            
+
             return None
         except Exception as e:
             self.logger.warning(f"Error extracting country: {e}")

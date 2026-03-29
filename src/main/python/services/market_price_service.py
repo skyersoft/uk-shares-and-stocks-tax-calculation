@@ -7,7 +7,6 @@ gains calculator to value current holdings.
 """
 import logging
 from abc import ABC, abstractmethod
-from datetime import datetime
 from typing import Optional, Dict
 
 logger = logging.getLogger(__name__)
@@ -27,7 +26,6 @@ class MarketPriceServiceInterface(ABC):
         Returns:
             Current price as a float, or None if the price cannot be fetched.
         """
-        pass
 
     @abstractmethod
     def get_fx_rate_to_gbp(self, currency_code: str) -> float:
@@ -39,7 +37,6 @@ class MarketPriceServiceInterface(ABC):
         Returns:
             FX rate to GBP. Returns 1.0 for GBP (no conversion needed).
         """
-        pass
 
 
 class YFinanceMarketPriceService(MarketPriceServiceInterface):
