@@ -67,7 +67,7 @@ class CsvParser(FileParserInterface):
                 for row in reader:
                     # Create transaction
                     transaction = self._create_transaction_from_row(row)
-                    if transaction: # Only add if transaction creation was successful
+                    if transaction:  # Only add if transaction creation was successful
                         transactions.append(transaction)
 
             return transactions
@@ -128,7 +128,7 @@ class CsvParser(FileParserInterface):
             # Parse date (handle alternative field names)
             date_str = row.get('TradeDate') or row.get('Date', '')
             date = self._parse_date(date_str)
-            if not date: # If date parsing failed, skip this row
+            if not date:  # If date parsing failed, skip this row
                 self.logger.warning(f"Skipping row due to invalid date: {row}")
                 return None
 
@@ -145,8 +145,8 @@ class CsvParser(FileParserInterface):
 
             # Parse price and fees (handle alternative field names)
             price_per_unit_str = (row.get('TradePrice') or
-                                 row.get('UnitPrice') or
-                                 row.get('Price', '0'))
+                                  row.get('UnitPrice') or
+                                  row.get('Price', '0'))
             if not price_per_unit_str or price_per_unit_str == '0':
                 self.logger.warning(f"Skipping row due to missing price: {row}")
                 return None
@@ -154,11 +154,6 @@ class CsvParser(FileParserInterface):
 
             commission = abs(float(row.get('IBCommission') or row.get('Commission') or row.get('Fee') or row.get('Fees', '0')))
             taxes = abs(float(row.get('Taxes', '0')))
-
-            # Extract additional fields (these are not critical for basic transaction creation)
-            close_price = float(row.get('ClosePrice', '0'))
-            mtm_pnl = float(row.get('MtmPnl', '0'))
-            fifo_pnl_realized = float(row.get('FifoPnlRealized', '0'))
 
             # Create currency (handle alternative field names)
             currency_code = row.get('CurrencyPrimary') or row.get('Currency') or row.get('Settlement Currency', self.base_currency)
@@ -189,7 +184,7 @@ class CsvParser(FileParserInterface):
         asset_class = row.get('AssetClass', '')
         buy_sell = row.get('Buy/Sell', '')
         transaction_type_str = row.get('TransactionType', '')
-        type_str = row.get('Type', '') # Support "Type" column for generic CSV
+        type_str = row.get('Type', '')  # Support "Type" column for generic CSV
 
         if asset_class == 'CASH':
             return TransactionType.CURRENCY_EXCHANGE
@@ -322,4 +317,4 @@ class CsvParser(FileParserInterface):
                     return datetime.strptime(date_str, '%d/%m/%Y')
                 except ValueError:
                     self.logger.error(f"Error parsing date: {date_str}")
-                    return None # Return None on parsing failure
+                    return None  # Return None on parsing failure

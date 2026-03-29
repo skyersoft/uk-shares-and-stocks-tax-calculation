@@ -77,7 +77,6 @@ class CurrencyExchangeProcessor:
             return gains_losses
 
         from_currency_code = currencies[0]
-        to_currency_code = currencies[1]
 
         # Initialize currency pool for the foreign currency
         if from_currency_code not in self.currency_pools:

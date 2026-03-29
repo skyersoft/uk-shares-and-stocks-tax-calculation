@@ -207,7 +207,7 @@ class BrokerConversionError(Exception):
 
         full_message = f"[{broker}] {message}"
         if self.errors:
-            full_message += f"\nErrors:\n" + "\n".join(f"  - {e}" for e in self.errors)
+            full_message += "\nErrors:\n" + "\n".join(f"  - {e}" for e in self.errors)
 
         super().__init__(full_message)
 
