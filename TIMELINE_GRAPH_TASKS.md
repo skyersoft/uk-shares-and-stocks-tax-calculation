@@ -140,7 +140,8 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
 - **File**: `deployment/lambda_handler.py`
 - **Route**: `POST /timeline`
 - **Note**: This is the **single API endpoint** for the unified results page — it replaces separate calls to `/calculate` and `/unrealised-gains`. The response includes everything the UI needs.
-- **Request**: multipart/form-data — file + optional tax_year
+- **Request**: multipart/form-data — **file only** (no `tax_year` parameter — backend derives it from the data)
+- **`tax_year` in response**: the most recent tax year found in the uploaded file (e.g. `"2024-2025"`)
 - **Response**:
   ```json
   {
@@ -309,7 +310,7 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
 
 #### Task 2.2 — Replace `submitCalculation` with `submitTimeline` in `api.ts`
 - **File**: `frontend/src/services/api.ts`
-- **Change**: Add `submitTimeline({ file, taxYear }): Promise<TimelineResponse>` — `POST /prod/timeline` (prod) or `/timeline` (local). Keep `submitCalculation` as a deprecated alias pointing to `submitTimeline` during the transition (deleted in Task 2.7).
+- **Change**: Add `submitTimeline({ file }): Promise<TimelineResponse>` — `POST /prod/timeline` (prod) or `/timeline` (local). **No `taxYear` parameter** — the backend derives it from the file. Keep `submitCalculation` as a deprecated alias pointing to `submitTimeline` during the transition (deleted in Task 2.7).
 - **Status**: [ ] Not started
 
 #### Task 2.3 — New `TimelineSummaryMetrics` component
@@ -403,7 +404,12 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
   - Add `timelineResult: TimelineResponse | null` to state
   - Add `SET_TIMELINE_RESULT` action
   - `submitTimeline()` dispatches `SET_TIMELINE_RESULT` on success
-- **Wizard**: remove `analysisType` step; all file uploads go to `/timeline`
+- **Wizard changes**:
+  - Remove `taxYear` field from `WizardData` (file: `frontend/src/types/calculator.ts`)
+  - Remove `<select id="taxYear">` from `IncomeSourcesStep` (file: `frontend/src/components/calculator/steps/IncomeSourcesStep.tsx`)
+  - Remove `taxYear` default + validation from `MultiStepCalculator` (file: `frontend/src/components/calculator/MultiStepCalculator.tsx`)
+  - Remove `analysisType` step; all file uploads go to `/timeline`
+  - `tax_year` is read from the `TimelineResponse` returned by the backend
 - **Status**: [ ] Not started
 
 #### Task 2.8 — Unit tests for unified `ResultsPage`
@@ -453,6 +459,7 @@ Frontend: PortfolioTimelineChart component (Chart.js Line)
 | 7 | CGT rate | 18% basic rate (post Oct 2024) as default |
 | 8 | Unified results page | Single `ResultsPage` shows realised tax, unrealised prediction, and timeline chart together — no separate views or modes |
 | 9 | Single API endpoint | `/timeline` is the only call made from the React frontend. It returns `events` + `summary` + `disposals` + `holdings` + `dividends` + `section_104_pools`. The legacy `/calculate` endpoint is retained server-side for backward compatibility but no longer called by the React frontend. |
+| 10 | Tax year selection | **Removed from wizard.** The backend determines all tax years from the uploaded data. `summary` and KPI cards reflect the **most recent (last) tax year** found in the file. The timeline chart displays **all years**. `tax_year` is no longer sent in the request — it is derived server-side and returned in the response. `WizardData.taxYear` field and the `<select id="taxYear">` in `IncomeSourcesStep` are deleted. |
 
 ---
 
