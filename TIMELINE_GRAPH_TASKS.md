@@ -10,7 +10,7 @@ evolve across transaction events and tax-year boundaries.
 
 | Point | Decision |
 |-------|----------|
-| **Unrealised Value** | Total portfolio value at event time using the **last known transaction price** for each security as a market proxy. E.g. after buying 10 AAPL @£5 then 5 @£6, unrealised value = 15 × £6 = £90. |
+| **Unrealised Value** | Total portfolio value at event time using the **Yahoo Finance historical closing price** for each security on the event date (converted to GBP via FX rate). |
 | **Unrealised Gain/Loss** | Unrealised Value minus total cost basis of held positions. E.g. £90 − (10×£5 + 5×£6) = £10. |
 | **Realised Gain/Loss** | HMRC-compliant disposal gain/loss: same-day rule, 30-day B&B rule, Section 104 pooling. Losses from commissions reduce the gain. Resets each tax year. Dividends/interest are **not** included here. |
 | **Realised Tax** | CGT on realised gain/loss at event time: `max(0, gain − £3,000 AEA) × 18%` (basic rate, post Oct 2024). Resets each tax year. |
@@ -18,13 +18,13 @@ evolve across transaction events and tax-year boundaries.
 | **Year-end snapshot** | A `YEAR_END` marker event is inserted at April 5 each year showing: realised tax so far + **predictive "sell-all" unrealised CGT** for that year. For the last (current) year, current-date snapshot is also shown. |
 | **Unrealised tax per event** | Only calculated at `YEAR_END` / current-date snapshots — **not** at every transaction (too expensive). |
 | **Multi-events same date** | Ordered: BUY → SELL → DIVIDEND → INTEREST → other; tie-break by symbol alphabetically. |
-| **Unrealised price source** | Uses yahoo finance to get the  |
+| **Unrealised price source** | Uses yahoo finance to get the real value at the event time |
 
 ## 📊 Chart Lines (5 lines)
 
 | # | Line | Colour | Resets per year? | Description |
 |---|------|--------|-----------------|-------------|
-| 1 | Unrealised Value | Blue | No | Total value of held positions at last known price |
+| 1 | Unrealised Value | Blue | No | Total value of held positions at Yahoo Finance historical price on event date |
 | 2 | Unrealised Gain/Loss | Teal | No | Line 1 minus cumulative cost basis of held positions |
 | 3 | Realised Gain/Loss | Green/Red | Yes | Cumulative HMRC disposal net gain/loss this tax year |
 | 4 | Realised Tax | Orange | Yes | CGT estimate on line 3 after £3k AEA |
@@ -40,10 +40,11 @@ Tooltip shows: realised tax, unrealised gain (predictive sell-all CGT).
 Backend: POST /timeline
   ↓ parse transactions (QFX/CSV via existing parsers)
   ↓ sort chronologically, apply tie-break ordering
-  ↓ walk events, maintaining per-security last-known-price registry
+  ↓ fetch Yahoo Finance historical prices for each security × event date (batch, cached)
+  ↓ walk events, using yahoo_price[symbol][date] for unrealised value
   ↓ for each event:
       - update SharePool state (BUY/SELL via HMRC rules)
-      - update unrealised value (Σ held_qty × last_price for all securities)
+      - update unrealised value (Σ held_qty × yahoo_price[symbol][event_date] × fx for all securities)
       - update unrealised gain/loss (unrealised value − cost basis)
       - update realised gain/loss (HMRC disposal result)
       - update income (dividends + interest)
