@@ -13,6 +13,7 @@ In this comprehensive guide, we will break down the intricacies of HMRC’s matc
 
 ---
 
+{{youtube:kfDLjo2YqUg}}
 ## Understanding HMRC Share Matching Rules
 
 When you buy shares of the same company at different times and prices, and then sell a portion of them, how does HMRC know *which* shares you sold? You cannot simply choose to sell the shares you bought at the highest price to minimize your gain. Instead, HMRC enforces strict "matching rules" that dictate the order in which shares are sold. 

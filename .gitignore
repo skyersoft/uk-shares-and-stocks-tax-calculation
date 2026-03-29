@@ -184,3 +184,6 @@ test_multipart_upload.py
 verify_samples.py
 playwright-junit.xml
 frontend/vite-react-ssg-readme.md
+
+
+scripts
