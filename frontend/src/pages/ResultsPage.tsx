@@ -25,6 +25,7 @@ import { calculateComprehensiveTax } from '../utils/comprehensiveTaxCalculation'
 import SEOHead from '../components/seo/SEOHead';
 import { UnrealisedGainsResults } from '../components/results/UnrealisedGainsResults';
 import { UnrealisedGainsResult } from '../types/calculation';
+import { TimelineResponse } from '../types/timeline';
 
 interface AdditionalIncomeData {
   otherIncome: number;
@@ -148,6 +149,18 @@ const ResultsPage: React.FC = () => {
     return null;
   }, [state.raw]);
 
+  // Extract timeline data from context (fetched in parallel by CalculatorPage)
+  const timelineData: TimelineResponse | null = useMemo(() => {
+    if (
+      state.timelineRaw &&
+      Array.isArray(state.timelineRaw.events) &&
+      state.timelineRaw.summary
+    ) {
+      return state.timelineRaw as TimelineResponse;
+    }
+    return null;
+  }, [state.timelineRaw]);
+
   if (state.status === 'submitting') {
     return (
       <div className="container-fluid py-4">
@@ -268,10 +281,10 @@ const ResultsPage: React.FC = () => {
                   <Button
                     variant="outline-secondary"
                     size="sm"
-                    onClick={() => window.print()}
+                    onClick={() => navigate('/print-report')}
                   >
                     <i className="fas fa-print me-2"></i>
-                    Print
+                    Print Report
                   </Button>
                 </div>
               </div>
@@ -356,7 +369,7 @@ const ResultsPage: React.FC = () => {
               <Button
                 variant="outline-secondary"
                 size="sm"
-                onClick={() => window.print()}
+                onClick={() => navigate('/print-report')}
               >
                 <i className="fas fa-print me-2"></i>
                 Print Results
@@ -447,6 +460,7 @@ const ResultsPage: React.FC = () => {
             normalizedResults={normalizedResults}
             portfolioAnalysis={portfolioAnalysis}
             taxCalculations={taxCalculations}
+            timelineData={timelineData}
             className="shadow-sm border-0"
           />
         </div>
