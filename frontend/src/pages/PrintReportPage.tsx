@@ -51,7 +51,6 @@ const MATCHING_RULE_LABELS: Record<string, string> = {
   'same-day': 'Same-day',
   'bed-breakfast': '30-day (B&B)',
   section104: 'Section 104',
-  'section_104': 'Section 104',
 };
 
 const UK_AEA: Record<string, number> = {
@@ -347,7 +346,7 @@ const CGTCalculation: React.FC<CGTCalcProps> = ({ taxYear, disposalEvents, norma
 
   const sameDay = disposalEvents.filter(d => d.matching_rule === 'same-day').length;
   const bb = disposalEvents.filter(d => d.matching_rule === 'bed-breakfast').length;
-  const s104 = disposalEvents.filter(d => d.matching_rule === 'section104' || d.matching_rule === 'section_104').length;
+  const s104 = disposalEvents.filter(d => d.matching_rule === 'section104').length;
 
   return (
     <div className="section no-break">
