@@ -639,6 +639,17 @@ def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
 
                 print(f"Detected broker: {broker_metadata['broker']} (confidence: {broker_metadata['confidence']})")
 
+                # A recognised broker file that converts to zero transactions is a parsing problem:
+                # keep the file so the converter can be fixed against real data.
+                if broker_metadata['transaction_count'] == 0 and files:
+                    log_error_file_to_s3(
+                        file_content=files[0].get('content', ''),
+                        filename=files[0].get('filename', 'unknown'),
+                        error_type='conversion_empty',
+                        error_message=f"{broker_metadata['broker']} file converted to 0 transactions",
+                        extra_metadata={'broker': broker_metadata['broker']}
+                    )
+
             # Process the files with correct parser
             calculator = create_enhanced_calculator(file_type)
             print(f"Using {file_type} parser for {len(temp_file_paths)} files")

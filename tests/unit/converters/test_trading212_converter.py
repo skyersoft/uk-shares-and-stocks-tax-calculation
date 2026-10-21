@@ -241,3 +241,64 @@ class TestTrading212RealWorldFormats:
         f = tmp_path / "bom.csv"
         f.write_text(src, encoding="utf-8-sig")
         assert len(Trading212Converter().convert(str(f))) == 4
+
+
+class TestTrading212Fees:
+    """Fees are exported in GBP (account currency) and must reach the cost calculations."""
+
+    @pytest.fixture
+    def converter(self):
+        return Trading212Converter()
+
+    def _usd_row(self, **overrides):
+        row = {
+            'Action': 'Market buy', 'Time': '2024-05-02 14:31:00', 'Ticker': 'AAPL',
+            'ISIN': 'US0378331005', 'No. of shares': '10', 'Price / share': '170.00',
+            'Currency (Price / share)': 'USD', 'Exchange rate': '1.25',
+            'Total': '1362.00', 'Currency (Total)': 'GBP',
+            'Currency conversion fee': '2.04', 'Currency (Currency conversion fee)': 'GBP',
+        }
+        row.update(overrides)
+        return row
+
+    def test_gbp_fee_on_foreign_trade_is_converted_to_transaction_currency(self, converter):
+        tx = converter._process_row(self._usd_row())
+        # fee_gbp = fee_usd * gbp_per_usd  =>  GBP 2.04 must come back as GBP 2.04
+        assert tx.fees_base == pytest.approx(Decimal('2.04'), abs=Decimal('0.01'))
+
+    def test_gbp_fee_on_gbp_trade_is_unchanged(self, converter):
+        tx = converter._process_row(self._usd_row(**{
+            'Ticker': 'SHEL', 'Currency (Price / share)': 'GBP', 'Exchange rate': '1.00',
+            'Stamp duty reserve tax': '3.75', 'Currency (Stamp duty reserve tax)': 'GBP',
+            'Currency conversion fee': '',
+        }))
+        assert tx.stamp_duty == Decimal('3.75')
+
+    def test_other_exchange_fees_are_captured(self, converter):
+        tx = converter._process_row(self._usd_row(**{
+            'Finra fee': '0.01', 'Currency (Finra fee)': 'GBP',
+            'Transaction fee': '0.02', 'Currency (Transaction fee)': 'GBP',
+            'French transaction tax': '0.03', 'Currency (French transaction tax)': 'GBP',
+            'Charge amount': '0.04',
+        }))
+        assert tx.other_fees > Decimal('0.09')
+
+    def test_fees_without_currency_column_are_left_as_exported(self, converter):
+        tx = converter._process_row(self._usd_row(**{'Currency (Currency conversion fee)': ''}))
+        assert tx.currency_conversion_fee == Decimal('2.04')
+
+
+class TestFeesReachDomainTransactions:
+    def test_stamp_duty_and_conversion_fee_become_allowable_costs(self):
+        from src.main.python.parsers.multi_broker_parser import MultiBrokerParser
+        from src.main.python.models.standard_transaction import StandardTransaction
+
+        st = StandardTransaction(
+            date=datetime(2024, 5, 2), symbol='SHEL', transaction_type=TransactionType.BUY,
+            quantity=Decimal('100'), price=Decimal('25'), transaction_currency='GBP',
+            stamp_duty=Decimal('3.75'), currency_conversion_fee=Decimal('1.00'),
+            other_fees=Decimal('0.50'), broker='Trading 212',
+        )
+        tx = MultiBrokerParser()._map_to_domain_transaction(st)
+        assert tx.taxes == pytest.approx(4.25)       # stamp duty + other fees
+        assert tx.commission == pytest.approx(1.00)  # conversion fee

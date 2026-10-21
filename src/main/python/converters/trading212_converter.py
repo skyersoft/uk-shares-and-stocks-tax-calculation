@@ -74,6 +74,31 @@ class Trading212Converter(BaseBrokerConverter):
         '%Y-%m-%d',
     )
 
+    # Fee columns beyond stamp duty and currency conversion
+    OTHER_FEE_COLUMNS = (
+        'Charge amount', 'Finra fee', 'Transaction fee', 'French transaction tax',
+        'Italian transaction tax', 'Currency conversion charge',
+    )
+
+    @staticmethod
+    def _fee(row: Dict[str, str], column: str, txn_currency: str, gbp_per_unit: Decimal) -> Decimal:
+        """
+        Read a fee column and return it in the transaction currency.
+
+        Trading 212 reports fees in the account currency (GBP). Fee amounts are
+        carried in the transaction currency, so a GBP fee on a foreign trade is
+        divided by the GBP-per-unit rate. If the export does not state the fee's
+        currency the amount is kept exactly as exported.
+        """
+        raw = (row.get(column) or '').strip()
+        if not raw:
+            return Decimal('0')
+        amount = Decimal(raw)
+        fee_currency = (row.get(f'Currency ({column})') or '').strip().upper()
+        if fee_currency == 'GBP' and txn_currency != 'GBP' and gbp_per_unit > 0:
+            return amount / gbp_per_unit
+        return amount
+
     @classmethod
     def _parse_date(cls, value: str) -> Optional[datetime]:
         value = (value or '').strip()
@@ -224,14 +249,14 @@ class Trading212Converter(BaseBrokerConverter):
             wht_str = row.get('Withholding tax', '').strip()
             wht = Decimal(wht_str) if wht_str else Decimal('0')
 
-            stamp_duty_str = row.get('Stamp duty reserve tax', '').strip()
-            stamp_duty = Decimal(stamp_duty_str) if stamp_duty_str else Decimal('0')
+            stamp_duty = self._fee(row, 'Stamp duty reserve tax', currency, fx_rate)
+            conversion_fee = self._fee(row, 'Currency conversion fee', currency, fx_rate)
 
-            conversion_fee_str = row.get('Currency conversion fee', '').strip()
-            conversion_fee = Decimal(conversion_fee_str) if conversion_fee_str else Decimal('0')
-
-            charge_amount_str = row.get('Charge amount', '').strip()  # Usually other fees
-            other_fees = Decimal(charge_amount_str) if charge_amount_str else Decimal('0')
+            # Other charges: exchange/regulatory fees and the generic "Charge amount"
+            other_fees = sum(
+                (self._fee(row, col, currency, fx_rate) for col in self.OTHER_FEE_COLUMNS),
+                Decimal('0'),
+            )
 
         except Exception as e:
             logger.warning(f"Error parsing numeric fields in row: {row} - {e}")

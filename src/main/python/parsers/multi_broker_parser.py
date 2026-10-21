@@ -129,8 +129,10 @@ class MultiBrokerParser(FileParserInterface):
             date=st.date,
             quantity=quantity,
             price_per_unit=price_per_unit,
-            commission=float(st.commission),
-            taxes=float(st.other_fees),  # Map other fees to taxes for now
+            # Currency conversion fees are dealing costs; stamp duty and other charges are taxes/duties.
+            # All are allowable costs and are stored in the transaction currency.
+            commission=float(st.commission + st.currency_conversion_fee),
+            taxes=float(st.other_fees + st.stamp_duty),
             currency=currency,
             withholding_tax=float(st.withholding_tax)
         )
