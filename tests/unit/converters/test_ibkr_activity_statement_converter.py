@@ -110,7 +110,26 @@ def test_date_time_with_comma_and_quoted_form(conv):
 def test_pence_prices_converted_to_pounds(conv):
     tx = conv.convert(fx("activity_statement_pence.csv"))[0]
     assert tx.price == Decimal("12.035")
+    assert tx.commission == Decimal("0.95")
     assert tx.transaction_currency == "GBP"
+
+
+def test_etf_category_row_is_converted(conv, tmp_path):
+    text = Path(fx("activity_statement_basic.csv")).read_text(encoding="utf-8-sig").replace(
+        "Order,Stocks,USD,U0000000,AAAA", "Order,ETFs,USD,U0000000,AAAA")
+    p = tmp_path / "etf.csv"
+    p.write_text(text, encoding="utf-8")
+    txs = conv.convert(str(p))
+    assert len(txs) == 2
+    assert txs[0].asset_class.name == "ETF"
+
+
+def test_missing_quantity_column_counts_as_failed_row_not_crash(conv, tmp_path):
+    text = Path(fx("activity_statement_basic.csv")).read_text(encoding="utf-8-sig")
+    text = text.replace("Date/Time,Quantity,T. Price", "Date/Time,Qty,T. Price")
+    p = tmp_path / "noqty.csv"
+    p.write_text(text, encoding="utf-8")
+    assert conv.convert(str(p)) == []
 
 
 def test_no_trades_section_returns_empty_list(conv):
@@ -158,8 +177,6 @@ class TestFactoryRegistration:
         assert result["broker"] == "Interactive Brokers"
 
     def test_trading212_still_detected(self):
-        t212 = next(Path(__file__).resolve().parents[2].rglob("*trading212*.csv"), None)
-        if t212 is None:
-            pytest.skip("no trading212 fixture")
+        t212 = Path(__file__).resolve().parents[2] / "data" / "trading212" / "export_realistic.csv"
         result = get_factory().detect_broker(str(t212))
-        assert result is None or result["broker"] != "Interactive Brokers (Activity Statement)"
+        assert result["broker"] == "Trading 212"

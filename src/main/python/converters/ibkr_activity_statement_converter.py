@@ -162,7 +162,7 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
         if date is None or not symbol:
             return None
 
-        quantity = Decimal(row['Quantity'].replace(',', ''))
+        quantity = Decimal(row.get('Quantity', '').replace(',', ''))
         if quantity == 0:
             return None
         price_str = row.get('T. Price', '').replace(',', '')
