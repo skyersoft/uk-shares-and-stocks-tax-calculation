@@ -7,6 +7,7 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { PortfolioSummary } from '../components/results/PortfolioSummary';
 import DataVisualization from '../components/results/DataVisualization';
 import {
+  DisposalEvent,
   NormalizedResults,
   PortfolioAnalysis,
   TaxCalculation
@@ -467,11 +468,12 @@ const ResultsPage: React.FC = () => {
       </div>
 
       {/* Additional Tables (if available) */}
-      {state.raw?.disposal_events && state.raw.disposal_events.length > 0 && (
+      {Array.isArray((state.raw as { disposal_events?: DisposalEvent[] } | null)?.disposal_events) &&
+        (state.raw as { disposal_events?: DisposalEvent[] }).disposal_events!.length > 0 && (
         <div className="row mb-4">
           <div className="col-12">
             <DisposalDetailsTable
-              disposalEvents={state.raw.disposal_events}
+              disposalEvents={(state.raw as { disposal_events: DisposalEvent[] }).disposal_events}
               className="shadow-sm border-0"
             />
           </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatCurrency, getCurrencySymbol } from '../../utils/currency';
 
 interface CurrencyDisplayProps {
   amount: number;
@@ -6,29 +7,6 @@ interface CurrencyDisplayProps {
   gbpAmount?: number;
   showSymbol?: boolean;
   className?: string;
-}
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  JPY: '¥',
-  CHF: 'CHF ',
-  CAD: 'C$',
-  AUD: 'A$',
-  HKD: 'HK$',
-  SGD: 'S$'
-};
-
-function getCurrencySymbol(currency: string): string {
-  return CURRENCY_SYMBOLS[currency] || currency + ' ';
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-GB', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(Math.abs(amount));
 }
 
 export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({ 

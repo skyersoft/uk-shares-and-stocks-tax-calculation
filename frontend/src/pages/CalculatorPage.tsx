@@ -18,6 +18,12 @@ const CalculatorPage: React.FC = () => {
   const { dispatch } = useCalculation();
   const navigate = useNavigate();
 
+  const formatCsvValidationError = (error: CSVValidationError): string => {
+    const missingCols = error.missing_columns.join(', ');
+    const requiredCols = error.required_columns.join(', ');
+    return `Invalid CSV format.\n\nMissing columns: ${missingCols}\n\nRequired columns: ${requiredCols}\n\nPlease check your CSV file format and try again. See /guide#csv-format for the expected format.`;
+  };
+
   // Handle form completion from MultiStepCalculator
   const handleCalculatorComplete = async (data: any) => {
     console.log('[CalculatorPage] Calculator completed with data:', data);
@@ -113,10 +119,7 @@ const CalculatorPage: React.FC = () => {
 
       // Handle CSV validation errors with detailed information
       if (error instanceof CSVValidationError) {
-        const missingCols = error.missing_columns.join(', ');
-        const requiredCols = error.required_columns.join(', ');
-        const detailedMessage = `Invalid CSV format.\n\nMissing columns: ${missingCols}\n\nRequired columns: ${requiredCols}\n\nPlease check your CSV file format and try again.`;
-        dispatch({ type: 'SUBMIT_ERROR', payload: detailedMessage });
+        dispatch({ type: 'SUBMIT_ERROR', payload: formatCsvValidationError(error) });
       } else {
         dispatch({ type: 'SUBMIT_ERROR', payload: error.message || 'An error occurred during calculation' });
       }
