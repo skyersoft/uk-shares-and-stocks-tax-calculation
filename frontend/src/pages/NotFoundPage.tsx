@@ -8,6 +8,7 @@ const NotFoundPage: React.FC = () => {
             <SEOHead
                 title="Page Not Found - IBKR Tax Calculator"
                 description="The page you are looking for does not exist."
+                robots="noindex,follow"
             />
             <div className="row justify-content-center">
                 <div className="col-lg-6 col-md-8">

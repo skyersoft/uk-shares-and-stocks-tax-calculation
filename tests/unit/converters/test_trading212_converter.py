@@ -155,3 +155,89 @@ class TestTrading212Converter:
         
         # Currently we return None for deposits without ticker in _process_row
         assert tx is None
+
+
+class TestTrading212RealWorldFormats:
+    """Regression tests for issues found against real-world Trading 212 exports."""
+
+    @pytest.fixture
+    def converter(self):
+        return Trading212Converter()
+
+    def _row(self, **overrides):
+        row = {
+            'Action': 'Market buy', 'Time': '2024-05-02 10:00:00',
+            'ISIN': 'GB00B03MLX29', 'Ticker': 'SHEL', 'Name': 'Shell',
+            'No. of shares': '100', 'Price / share': '2500.00',
+            'Currency (Price / share)': 'GBX', 'Exchange rate': 'Not available',
+            'Total': '2503.75', 'Currency (Total)': 'GBP',
+        }
+        row.update(overrides)
+        return row
+
+    @pytest.mark.parametrize("code", ["GBX", "GBp"])
+    def test_pence_prices_are_converted_to_pounds(self, converter, code):
+        tx = converter._process_row(self._row(**{'Currency (Price / share)': code}))
+        assert tx.transaction_currency == 'GBP'
+        assert tx.price == Decimal('25.00')
+        assert tx.fx_rate_to_base == Decimal('1.0')
+        assert tx.gross_amount == Decimal('2500.00')
+
+    @pytest.mark.parametrize("action", [
+        "Currency conversion", "Deposit", "Withdrawal", "Card debit",
+        "Spending cashback", "New card cost",
+    ])
+    def test_cash_movements_are_never_trades(self, converter, action):
+        assert converter._parse_transaction_type(action) is None
+        assert converter._process_row(self._row(Action=action)) is None
+
+    def test_exchange_rate_quoted_as_foreign_per_gbp_is_inverted(self, converter):
+        # 10 x $200 at 1.26 USD per GBP = GBP 1587.30 (the exported Total)
+        tx = converter._process_row(self._row(**{
+            'Action': 'Market sell', 'Ticker': 'AAPL', 'ISIN': 'US0378331005',
+            'No. of shares': '10', 'Price / share': '200.00',
+            'Currency (Price / share)': 'USD', 'Exchange rate': '1.26',
+            'Total': '1587.30',
+        }))
+        assert tx.fx_rate_to_base == pytest.approx(Decimal('0.79365'), abs=Decimal('0.0001'))
+        assert tx.gross_amount_base == pytest.approx(Decimal('1587.30'), abs=Decimal('0.1'))
+
+    def test_exchange_rate_quoted_as_gbp_per_unit_is_kept(self, converter):
+        tx = converter._process_row(self._row(**{
+            'Ticker': 'AAPL', 'No. of shares': '10', 'Price / share': '150.00',
+            'Currency (Price / share)': 'USD', 'Exchange rate': '0.82',
+            'Total': '1230.00',
+        }))
+        assert tx.fx_rate_to_base == Decimal('0.82')
+
+    def test_unclear_exchange_rate_evidence_keeps_exported_rate(self, converter):
+        # Total in a non-GBP currency: cannot infer direction, keep as exported
+        tx = converter._process_row(self._row(**{
+            'Ticker': 'AAPL', 'Currency (Price / share)': 'USD',
+            'Exchange rate': '1.26', 'Currency (Total)': 'EUR', 'Total': '999',
+        }))
+        assert tx.fx_rate_to_base == Decimal('1.26')
+
+    @pytest.mark.parametrize("value", [
+        "2024-05-02 10:00:00", "2024-05-02 10:00:00.123",
+        "2024-05-02T10:00:00Z", "2024-05-02T10:00:00.123Z", "2024-05-02",
+    ])
+    def test_date_formats(self, converter, value):
+        assert converter._process_row(self._row(Time=value)).date.date().isoformat() == "2024-05-02"
+
+    def test_row_with_empty_time_is_skipped(self, converter):
+        assert converter._process_row(self._row(Time='')) is None
+
+    def test_realistic_export_end_to_end(self):
+        path = "tests/data/trading212/export_realistic.csv"
+        conv = Trading212Converter()
+        assert conv.detect_confidence(path) == 1.0
+        txs = conv.convert(path)
+        assert [t.symbol for t in txs] == ['AAPL', 'RDSA', 'AAPL', 'RDSA']  # no phantom trade
+        assert txs[0].fx_rate_to_base == pytest.approx(Decimal('0.8'), abs=Decimal('0.001'))
+
+    def test_utf8_bom_file(self, tmp_path):
+        src = open("tests/data/trading212/export_realistic.csv", encoding="utf-8").read()
+        f = tmp_path / "bom.csv"
+        f.write_text(src, encoding="utf-8-sig")
+        assert len(Trading212Converter().convert(str(f))) == 4

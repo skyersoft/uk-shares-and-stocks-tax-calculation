@@ -47,7 +47,7 @@ class Trading212Converter(BaseBrokerConverter):
         Look for specific T212 headers.
         """
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, 'r', encoding='utf-8-sig') as f:
                 header = f.readline().strip()
 
             # Check for T212 specific column combination
@@ -60,6 +60,70 @@ class Trading212Converter(BaseBrokerConverter):
             return 0.0
         except Exception:
             return 0.0
+
+    # Pence-quoted currency codes used for London-listed securities
+    PENCE_CODES = {'GBX', 'GBp', 'GBPENCE'}
+
+    DATE_FORMATS = (
+        '%Y-%m-%d %H:%M:%S',
+        '%Y-%m-%d %H:%M:%S.%f',
+        '%Y-%m-%dT%H:%M:%S',
+        '%Y-%m-%dT%H:%M:%S.%f',
+        '%Y-%m-%dT%H:%M:%SZ',
+        '%Y-%m-%dT%H:%M:%S.%fZ',
+        '%Y-%m-%d',
+    )
+
+    @classmethod
+    def _parse_date(cls, value: str) -> Optional[datetime]:
+        value = (value or '').strip()
+        if not value:
+            return None
+        for fmt in cls.DATE_FORMATS:
+            try:
+                return datetime.strptime(value, fmt)
+            except ValueError:
+                continue
+        return None
+
+    @staticmethod
+    def _resolve_fx_rate(
+        currency: str,
+        raw_rate: str,
+        quantity: Decimal,
+        price: Decimal,
+        total: Decimal,
+        total_currency: str,
+    ) -> Decimal:
+        """
+        Return the GBP-per-unit rate for the transaction currency.
+
+        Trading 212 exports an "Exchange rate" column, but the quoting direction
+        (GBP per unit vs units per GBP) is not stated. When the row's Total is in
+        GBP we can tell which direction was used: Total / (price * quantity) is
+        the effective GBP-per-unit rate, so we pick whichever of ``rate`` or
+        ``1 / rate`` is clearly closer to it. If the evidence is not clear we keep
+        the rate exactly as exported.
+        """
+        if currency == 'GBP':
+            return Decimal('1.0')
+
+        raw = (raw_rate or '').strip()
+        if not raw or raw.lower() in ('not available', 'n/a'):
+            return Decimal('1.0')
+        rate = Decimal(raw)
+        if rate <= 0:
+            return Decimal('1.0')
+
+        gross = abs(quantity * price)
+        if (total_currency or 'GBP').strip().upper() == 'GBP' and gross > 0 and total != 0:
+            implied = abs(total) / gross
+            inverse = Decimal('1') / rate
+            err_rate = abs(rate - implied) / implied
+            err_inverse = abs(inverse - implied) / implied
+            if err_inverse < Decimal('0.10') and err_rate > Decimal('0.20'):
+                return inverse
+        return rate
 
     @property
     def supported_file_extensions(self) -> List[str]:
@@ -74,8 +138,10 @@ class Trading212Converter(BaseBrokerConverter):
         """Convert Trading 212 CSV to StandardTransaction objects."""
         transactions = []
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, 'r', encoding='utf-8-sig') as f:
             reader = csv.DictReader(f)
+            skipped_dates = 0
+            failed_rows = 0
 
             for row in reader:
                 try:
@@ -88,8 +154,12 @@ class Trading212Converter(BaseBrokerConverter):
                         transactions.append(tx)
 
                 except Exception as e:
-                    logger.warning(f"Error processing row: {row}. Error: {e}")
+                    failed_rows += 1
+                    logger.debug(f"Error processing row: {row}. Error: {e}")
                     continue
+
+        if failed_rows:
+            logger.warning(f"Trading 212: {failed_rows} rows could not be processed")
 
         return transactions
 
@@ -117,17 +187,10 @@ class Trading212Converter(BaseBrokerConverter):
             return None
 
         # Parse date
-        date_str = row.get('Time', '')
-        try:
-            # T212 format: YYYY-MM-DD HH:MM:SS
-            date = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            try:
-                # Fallback for just date
-                date = datetime.strptime(date_str, '%Y-%m-%d')
-            except ValueError:
-                logger.warning(f"Could not parse date: {date_str}")
-                return None
+        date = self._parse_date(row.get('Time', ''))
+        if date is None:
+            logger.debug(f"Could not parse date: {row.get('Time', '')!r}")
+            return None
 
         # Parse amounts
         try:
@@ -141,13 +204,21 @@ class Trading212Converter(BaseBrokerConverter):
             total_amount = Decimal(total_str) if total_str else Decimal('0')
 
             # Currency
-            currency = row.get('Currency (Price / share)', '') or row.get('Currency (Withholding tax)', '') or 'GBP'
+            currency = (row.get('Currency (Price / share)', '') or row.get('Currency (Withholding tax)', '') or 'GBP').strip()
 
-            # FX Rate
-            fx_rate_str = row.get('Exchange rate', '').strip()
-            # T212 provides rate to account currency (usually GBP for UK users)
-            # If empty, assume 1.0 (same currency)
-            fx_rate = Decimal(fx_rate_str) if fx_rate_str and fx_rate_str != 'Not available' else Decimal('1.0')
+            # London-listed shares are quoted in pence (GBX / GBp): convert to pounds
+            if currency in self.PENCE_CODES:
+                price = price / 100
+                currency = 'GBP'
+
+            fx_rate = self._resolve_fx_rate(
+                currency=currency,
+                raw_rate=row.get('Exchange rate', ''),
+                quantity=quantity,
+                price=price,
+                total=total_amount,
+                total_currency=row.get('Currency (Total)', ''),
+            )
 
             # Fees and Taxes
             wht_str = row.get('Withholding tax', '').strip()
@@ -236,20 +307,17 @@ class Trading212Converter(BaseBrokerConverter):
         """Parse Trading 212 action string to TransactionType."""
         action = action.lower()
 
-        if 'buy' in action:
-            return TransactionType.BUY
-        elif 'sell' in action:
-            return TransactionType.SELL
-        elif 'dividend' in action:
+        if 'dividend' in action:
             return TransactionType.DIVIDEND
         elif 'interest' in action:
             return TransactionType.INTEREST
-        elif 'deposit' in action:
-            return None  # Ignore cash deposits for now
-        elif 'withdrawal' in action:
-            return None  # Ignore cash withdrawals for now
         elif 'split' in action:
             return TransactionType.STOCK_SPLIT
+        elif 'buy' in action:
+            return TransactionType.BUY
+        elif 'sell' in action:
+            return TransactionType.SELL
 
-        return TransactionType.BUY  # Default/Fallback? Or maybe raise error?
-        # Better to log and return a safe default or specific UNKNOWN type
+        # Deposits, withdrawals, currency conversions, card transactions, cashback etc.
+        # are cash movements, not securities transactions: never treat them as trades.
+        return None

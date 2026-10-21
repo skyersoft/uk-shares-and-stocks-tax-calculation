@@ -1,8 +1,12 @@
-# CloudFront Function for www redirect
+# CloudFront Function: www redirect + canonical URL handling for the S3-hosted SPA
+# - www.<apex>/...            -> 301 https://<apex>/...
+# - /x/ and /x/index.html     -> 301 /x   (canonical URLs have no trailing slash)
+# - legacy /blog.html etc.   -> 301 to the SPA route
+# - /x (no file extension)    -> served internally from /x/index.html (no S3 302 hop)
 resource "aws_cloudfront_function" "www_redirect" {
   name    = "ibkr-www-redirect-terraform"
   runtime = "cloudfront-js-1.0"
-  comment = "Redirect www to apex domain"
+  comment = "www redirect and canonical URL normalisation"
   publish = true
 
   code = <<-EOT
@@ -10,20 +14,47 @@ function handler(event) {
   var request = event.request;
   var host = request.headers.host.value;
   var apex = '${var.domain_name}';
-  
-  // If host starts with www. and matches apex after stripping
-  if (host === 'www.' + apex) {
-    var redirectUrl = 'https://' + apex + request.uri;
-    if (request.querystring && request.querystring.length > 0) {
-      redirectUrl += '?' + request.querystring;
+  var original = request.uri;
+  var uri = original;
+
+  // Legacy static-site URLs that Google still knows -> current SPA routes
+  var legacy = {
+    '/blog.html': '/blog',
+    '/about.html': '/about',
+    '/help.html': '/help',
+    '/privacy.html': '/privacy',
+    '/terms.html': '/terms',
+    '/cgt-guide.html': '/guide',
+    '/cgt-guide': '/guide',
+    '/calculate.html': '/calculator',
+    '/results.html': '/calculator'
+  };
+  if (legacy.hasOwnProperty(uri)) { uri = legacy[uri] + '/'; }
+
+  // Canonical path: drop trailing slashes and any trailing /index.html
+  var target = uri.replace(/\/+$/, '').replace(/\/index\.html$/, '').replace(/\/+$/, '');
+  if (target === '') { target = '/'; }
+
+  if (host === 'www.' + apex || target !== original) {
+    var qs = '';
+    var parts = [];
+    for (var key in request.querystring) {
+      var item = request.querystring[key];
+      parts.push(item.multiValue ? item.multiValue.map(function (m) { return key + '=' + m.value; }).join('&') : key + '=' + item.value);
     }
+    if (parts.length > 0) { qs = '?' + parts.join('&'); }
     return {
       statusCode: 301,
       statusDescription: 'Moved Permanently',
-      headers: { 'location': { value: redirectUrl } }
+      headers: { 'location': { value: 'https://' + apex + target + qs } }
     };
   }
-  return request; // no change
+
+  // Extensionless path -> pre-rendered directory index
+  if (uri !== '/' && uri.split('/').pop().indexOf('.') === -1) {
+    request.uri = uri + '/index.html';
+  }
+  return request;
 }
 EOT
 }
@@ -67,19 +98,19 @@ resource "aws_cloudfront_distribution" "cdn" {
     }
   }
 
-  # SPA Routing Fallback
+  # Unknown URLs must return a real 404 (SPA routes are all pre-rendered to S3)
   custom_error_response {
     error_code            = 403
-    response_code         = 200
-    error_caching_min_ttl = 300
-    response_page_path    = "/index.html"
+    response_code         = 404
+    error_caching_min_ttl = 60
+    response_page_path    = "/404.html"
   }
 
   custom_error_response {
     error_code            = 404
-    response_code         = 200
-    error_caching_min_ttl = 300
-    response_page_path    = "/index.html"
+    response_code         = 404
+    error_caching_min_ttl = 60
+    response_page_path    = "/404.html"
   }
 
   # API Gateway Origin

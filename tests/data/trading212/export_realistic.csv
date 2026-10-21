@@ -1,0 +1,7 @@
+Action,Time,ISIN,Ticker,Name,ID,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Currency (Result),Total,Currency (Total),Withholding tax,Currency (Withholding tax),Stamp duty reserve tax,Currency (Stamp duty reserve tax),Currency conversion fee,Currency (Currency conversion fee),Notes
+Deposit,2024-05-01 09:00:00,,,,D1,,,,,,,1000.00,GBP,,,,,,,
+Market buy,2024-05-02 14:31:00,US0378331005,AAPL,Apple,B1,10,170.00,USD,1.25,,GBP,1362.00,GBP,,,,,2.04,GBP,
+Currency conversion,2024-05-03 10:00:00,,,,C1,,,,,,,50.00,GBP,,,,,,,
+Market buy,2024-06-02 14:31:00,GB00B03MLX29,RDSA,Shell,B2,100,25.00,GBP,1.00,,GBP,2503.75,GBP,,,3.75,GBP,,,
+Market sell,2025-01-10 15:00:00,US0378331005,AAPL,Apple,S1,10,200.00,USD,1.26,10.00,GBP,1580.00,GBP,,,,,2.37,GBP,
+Limit sell,2025-02-10 15:00:00,GB00B03MLX29,RDSA,Shell,S2,100,30.00,GBP,1.00,480.00,GBP,2995.00,GBP,,,,,,,

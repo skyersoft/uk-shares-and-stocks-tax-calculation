@@ -70,6 +70,10 @@ export interface CalculationResult {
   currency_balances?: CurrencyBalance[];
 }
 
+export interface CalculationResponse extends CalculationResult {
+  disposal_events: DisposalEvent[];
+}
+
 export interface DisposalEvent {
   disposal_id: string;
   disposal_date: string;

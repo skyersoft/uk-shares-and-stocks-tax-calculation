@@ -1,5 +1,19 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import { Head as Helmet } from 'vite-react-ssg';
+import { useInRouterContext, useLocation } from 'react-router-dom';
+
+const SITE_URL = 'https://cgttaxtool.uk';
+
+// Canonical URLs have no trailing slash (CloudFront 301s /x/ and /x/index.html to /x).
+const RouteCanonical: React.FC = () => {
+  const { pathname } = useLocation();
+  const path = pathname.replace(/(\/index\.html)?\/*$/, '') || '/';
+  return (
+    <Helmet>
+      <link rel="canonical" href={`${SITE_URL}${path}`} />
+    </Helmet>
+  );
+};
 
 interface AlternateLanguage {
   lang: string;
@@ -57,11 +71,14 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
   alternateLanguages,
   structuredData
 }) => {
+  const inRouter = useInRouterContext();
   const fullTitle = title.includes('UK Stock Tax Calculator')
     ? title
     : `${title} | UK Stock Tax Calculator`;
 
   return (
+    <>
+    {!canonical && inRouter && robots.startsWith('index') && <RouteCanonical />}
     <Helmet>
       {/* Basic Meta Tags */}
       <title>{fullTitle}</title>
@@ -112,6 +129,7 @@ export const SEOHead: React.FC<SEOHeadProps> = ({
         </script>
       )}
     </Helmet>
+    </>
   );
 };
 
