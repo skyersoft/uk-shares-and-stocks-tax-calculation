@@ -3,7 +3,7 @@ Statement,Data,BrokerName,Example Broker
 Statement,Data,Title,Activity Statement
 Statement,Data,Period,"January 1, 2025 - December 31, 2025"
 Account Information,Header,Field Name,Field Value
-Account Information,Data,Base Currency,USD
+Account Information,Data,Base Currency,GBP
 Account Information,Data,Name,Example Person
 Account Information,Data,Account Type,Individual
 Account Information,Data,Customer Type,Individual

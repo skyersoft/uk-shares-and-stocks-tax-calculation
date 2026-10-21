@@ -3,7 +3,7 @@ Statement,Data,BrokerName,Example Broker
 Statement,Data,Title,Activity Statement
 Statement,Data,Period,"January 1, 2025 - December 31, 2025"
 Account Information,Header,Field Name,Field Value
-Account Information,Data,Base Currency,USD
+Account Information,Data,Base Currency,GBP
 Account Information,Data,Name,Example Person
 Account Information,Data,Account Type,Individual
 Account Information,Data,Customer Type,Individual
@@ -11,4 +11,4 @@ Account Information,Data,Account Capabilities,Margin
 Net Asset Value,Header,Asset Class,Prior Total,Current Total
 Net Asset Value,Data,Cash,0,100
 Trades,Header,DataDiscriminator,Asset Category,Currency,Account,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Realized P/L %,MTM P/L,Notional Value,Code
-Trades,Data,Order,Stocks,EUR,U0000000,CCCC,"2025-05-02, 08:05:09",10,100.00,101.00,-1000,-1.25,1001.25,0,0,10,1010,O
+Trades,Data,Order,Stocks,GBP,U0000000,CCCC,"2025-05-02, 08:05:09",10,100.00,101.00,-1000,-1.25,1001.25,0,0,10,1010,O

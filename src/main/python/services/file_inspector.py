@@ -22,12 +22,13 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from ..config.format_fingerprints import FormatFingerprint, identify_format
+from ..config.format_fingerprints import IBKR_QFX, FormatFingerprint, identify_format
 from ..converters import (
     IBKRActivityStatementConverter,
     get_factory,
     register_default_converters,
 )
+from ..converters.converter_factory import MIN_CONVERT_CONFIDENCE
 from ..models.file_inspection import (
     ColumnInfo,
     FileInspection,
@@ -46,6 +47,12 @@ BOM = "﻿"
 HEAD_BYTES = 64 * 1024
 HEAD_LINES = 12
 DUPLICATE_RATIO = 0.8
+QFX_EXTENSIONS = (".qfx", ".ofx")
+# Column statistics bounds for generic CSVs (cost guard on a public endpoint). The
+# conversion itself is not capped; only the per-column fill/sample scan is.
+MAX_STAT_COLUMNS = 500
+MAX_STAT_CELLS = 2_000_000
+MIXED_QFX_CSV = "Upload QFX and CSV files in separate calculations; we can't combine them yet."
 
 ACTION_LABELS = {
     "add_earlier_file": "Add an earlier export",
@@ -120,6 +127,10 @@ def _summarise(trades: List[_Trade]) -> Summary:
     )
 
 
+def _ext(name: str) -> str:
+    return os.path.splitext(Path(name or "").name)[1].lower()
+
+
 def _trade_from_standard(tx) -> Optional[_Trade]:
     if tx.transaction_type not in (TransactionType.BUY, TransactionType.SELL):
         return None
@@ -128,6 +139,7 @@ def _trade_from_standard(tx) -> Optional[_Trade]:
 
 
 def _format_info(fp: FormatFingerprint, confidence: float = 1.0) -> FormatInfo:
+    # confidence 1.0 only for formats identified by fingerprint alone (no converter score)
     return FormatInfo(id=fp.id, name=fp.name, confidence=confidence, supported=fp.supported)
 
 
@@ -198,41 +210,88 @@ def _explain_no_trades(path: str, ins: FileInspection) -> None:
 
 # --------------------------------------------------------------- per-file
 
-def _basic_inspection(filename: str, path: str, fmt: FormatInfo, trades: List[_Trade],
-                      is_csv: bool) -> FileInspection:
+def _column_stats(path: str, index: int) -> Tuple[List[ColumnInfo], List[str]]:
+    """Fill/blank counts and samples per column, bounded by MAX_STAT_COLUMNS and MAX_STAT_CELLS."""
     columns: List[ColumnInfo] = []
-    if is_csv:
-        try:
-            text, _ = IBKRActivityStatementConverter._read_text(path)
-            reader = csv.DictReader(io.StringIO(text))
-            rows = list(reader)
-            for h in reader.fieldnames or []:
-                values = [(r.get(h) or "").strip() for r in rows]
-                filled = [v for v in values if v]
-                columns.append(ColumnInfo(
-                    header=h, mapped_to=None, status="understood", filled=len(filled),
-                    blank=len(values) - len(filled), samples=list(dict.fromkeys(filled))[:3]))
-        except Exception:
-            logger.debug("Could not read column stats for %s", filename, exc_info=True)
+    notes: List[str] = []
+    try:
+        text, _ = IBKRActivityStatementConverter._read_text(path)
+        reader = csv.reader(io.StringIO(text))
+        header = next(reader, None) or []
+        if len(header) > MAX_STAT_COLUMNS:
+            notes.append(f"This file has {len(header)} columns; we only checked the first {MAX_STAT_COLUMNS}.")
+            header = header[:MAX_STAT_COLUMNS]
+        width = max(len(header), 1)
+        max_rows = max(MAX_STAT_CELLS // width, 1)
+        filled = [0] * len(header)
+        blank = [0] * len(header)
+        samples: List[List[str]] = [[] for _ in header]
+        scanned = 0
+        for row in reader:
+            if scanned >= max_rows:
+                notes.append(f"Column statistics are based on the first {max_rows:,} rows of this file.")
+                break
+            scanned += 1
+            for i in range(len(header)):
+                v = row[i].strip() if i < len(row) else ""
+                if v:
+                    filled[i] += 1
+                    if len(samples[i]) < 3 and v not in samples[i]:
+                        samples[i].append(v)
+                else:
+                    blank[i] += 1
+        for i, h in enumerate(header):
+            columns.append(ColumnInfo(header=h, mapped_to=None, status="understood",
+                                      filled=filled[i], blank=blank[i], samples=samples[i]))
+    except Exception:
+        logger.debug("Could not read column stats for file %d", index, exc_info=True)
+    return columns, notes
+
+
+def _basic_inspection(filename: str, path: str, fmt: FormatInfo, trades: List[_Trade],
+                      is_csv: bool, tx_count: int, currencies: List[str], index: int = 0) -> FileInspection:
+    """Inspection for files whose converter has no inspect(): QFX and non-IBKR CSVs.
+
+    ``tx_count`` counts every converted transaction (dividends, interest, ...), ``trades``
+    only the buys and sells.
+    """
+    columns, notes = _column_stats(path, index) if is_csv else ([], [])
+    summary = _summarise(trades)
+    summary.currencies = sorted({c for c in currencies if c})
     ins = FileInspection(
         filename=filename, format=fmt, verdict="ready", columns=columns,
-        rows=RowStats(total=len(trades), usable=len(trades)), summary=_summarise(trades))
-    if not trades:
+        rows=RowStats(total=tx_count, usable=tx_count), summary=summary, warnings=notes)
+    if tx_count == 0:
         ins.verdict = "no_trades"
-        ins.warnings.append("We found no buy or sell transactions in this file.")
+        ins.warnings.append("We found no transactions in this file.")
         ins.next_actions = _actions("view_export_steps", "remove_file")
+    elif not trades:
+        ins.verdict = "ready_with_warnings"
+        ins.warnings.append("There are no buys or sells in these files, dividends/interest only. "
+                            "Dividend income can still be calculated, but there are no capital gains.")
+    elif notes:
+        ins.verdict = "ready_with_warnings"
     return ins
 
 
 def _inspect_one(name: str, data: bytes, workdir: str, index: int) -> Tuple[FileInspection, List[_Trade]]:
     fp = identify_format(_raw_cells(data), name)
-    if fp is not None and not fp.supported:
+    is_qfx_name = _ext(name) in QFX_EXTENSIONS
+    if fp is not None and not fp.supported and not is_qfx_name:
         return _unsupported(name, fp), []
 
     suffix = re.sub(r"[^A-Za-z0-9.]", "", os.path.splitext(Path(name).name)[1])[:8] or ".csv"
     path = os.path.join(workdir, f"upload_{index}{suffix}")
     with open(path, "wb") as f:
         f.write(data)
+
+    # /calculate routes by extension (.qfx/.ofx -> QFX parser, anything else -> CSV), so the X-ray does too
+    if is_qfx_name:
+        if b"<OFX" not in data[:HEAD_BYTES].upper():
+            return _unknown(name, "This does not look like a QFX/OFX file."), []
+        return _inspect_qfx(name, path, IBKR_QFX, index)
+    if fp is not None and fp.id == "ibkr_qfx":
+        return _unknown(name, "It looks like a QFX/OFX file: save it with a .qfx extension and upload it again."), []
 
     if fp is not None and fp.id == "ibkr_activity_statement":
         conv = IBKRActivityStatementConverter()
@@ -243,34 +302,40 @@ def _inspect_one(name: str, data: bytes, workdir: str, index: int) -> Tuple[File
         if ins.verdict == "no_trades":
             _explain_no_trades(path, ins)
         elif ins.verdict == "blocked":
-            ins.next_actions = _actions("view_export_steps", "remove_file")
+            if conv.non_gbp_currencies(path):
+                # No FX rates in the statement: convert() refuses these rows (see converter)
+                ins.next_actions = _actions("request_support", "view_export_steps", "remove_file")
+            else:
+                ins.next_actions = _actions("view_export_steps", "remove_file")
         else:
             trades = [t for t in map(_trade_from_standard, conv.convert(path)) if t]
             if ins.verdict == "ready_with_warnings" and any(s.count for s in ins.rows.skipped):
                 ins.next_actions = _actions("show_skipped_rows")
         return ins, trades
 
-    if fp is not None and fp.id == "ibkr_qfx":
-        return _inspect_qfx(name, path, fp)
-
-    detection = get_factory().detect_broker(path)
+    # Same threshold as /calculate (convert_file), so "ready" here means /calculate accepts it
+    detection = get_factory().detect_broker(path, min_confidence=MIN_CONVERT_CONFIDENCE)
     if detection is None:
-        return _unknown(name), []
+        why = (f"It looks like a {fp.name} file, but some of the columns we need are missing."
+               if fp is not None else "")
+        return _unknown(name, why), []
     conv = detection["converter"]
-    fmt = _format_info(fp, 1.0) if fp else FormatInfo(
+    confidence = float(detection["confidence"])
+    fmt = FormatInfo(id=fp.id, name=fp.name, confidence=confidence, supported=True) if fp else FormatInfo(
         id=re.sub(r"\W+", "_", detection["broker"].lower()).strip("_"),
-        name=detection["broker"], confidence=float(detection["confidence"]), supported=True)
+        name=detection["broker"], confidence=confidence, supported=True)
     ins = conv.inspect(path)
     if ins is not None:
         ins.filename, ins.format = name, fmt
         txs = conv.convert(path)
     else:
         txs = conv.convert(path)
-        ins = _basic_inspection(name, path, fmt, [t for t in map(_trade_from_standard, txs) if t], True)
+        ins = _basic_inspection(name, path, fmt, [t for t in map(_trade_from_standard, txs) if t], True,
+                                len(txs), [getattr(t, "transaction_currency", None) for t in txs], index)
     return ins, [t for t in map(_trade_from_standard, txs) if t]
 
 
-def _inspect_qfx(name: str, path: str, fp: FormatFingerprint) -> Tuple[FileInspection, List[_Trade]]:
+def _inspect_qfx(name: str, path: str, fp: FormatFingerprint, index: int = 0) -> Tuple[FileInspection, List[_Trade]]:
     from ..parsers.qfx_parser import QfxParser
     from ..models.domain_models import TransactionType as DomainType
 
@@ -283,7 +348,8 @@ def _inspect_qfx(name: str, path: str, fp: FormatFingerprint) -> Tuple[FileInspe
         if symbol:
             trades.append(_Trade(tx.date, symbol, tx.transaction_type == DomainType.BUY,
                                  abs(Decimal(str(tx.quantity))), Decimal(str(tx.price_per_unit))))
-    return _basic_inspection(name, path, _format_info(fp), trades, False), trades
+    currencies = [getattr(getattr(tx, "currency", None), "code", None) for tx in parsed]
+    return _basic_inspection(name, path, _format_info(fp), trades, False, len(parsed), currencies, index), trades
 
 
 # ----------------------------------------------------------- cross-file checks
@@ -374,11 +440,11 @@ def _find_sells_without_buy(entries: List[_Entry], effective: Dict[int, List[_Tr
         if t.quantity > have:
             found.append((i, SellWithoutBuy(t.symbol, t.date.date().isoformat(),
                                             format(t.quantity - have, "f").rstrip("0").rstrip(".") or "0",
-                                            entries[i].name)))
+                                            entries[i].name, i)))
             held[key] = Decimal(0)
         else:
             held[key] = have - t.quantity
-    found.sort(key=lambda p: (p[1].date, p[1].symbol.strip().upper(), p[1].filename, p[1].quantity))
+    found.sort(key=lambda p: (p[1].date, p[1].symbol.strip().upper(), p[1].filename, p[1].quantity, p[0]))
     return found
 
 
@@ -399,6 +465,20 @@ def _apply_sell_warnings(entries: List[_Entry], found: List[Tuple[int, SellWitho
         _add_actions(ins, "add_earlier_file", "add_opening_holdings")
 
 
+def _block_mixed_qfx_csv(entries: List[_Entry]) -> bool:
+    """/calculate picks one parser for the whole upload, so QFX and CSV files cannot be mixed."""
+    kinds = {_ext(e.name) in QFX_EXTENSIONS for e in entries}
+    if len(kinds) < 2:
+        return False
+    for e in entries:
+        ins = e.inspection
+        ins.verdict = "blocked"
+        if MIXED_QFX_CSV not in ins.warnings:
+            ins.warnings.append(MIXED_QFX_CSV)
+        ins.next_actions = _actions("remove_file")
+    return True
+
+
 # ------------------------------------------------------------------ public API
 
 def inspect_files(files: List[Tuple[str, bytes]]) -> InspectionResult:
@@ -414,7 +494,8 @@ def inspect_files(files: List[Tuple[str, bytes]]) -> InspectionResult:
             try:
                 ins, trades = _inspect_one(name, data, workdir, index)
             except Exception as exc:  # never let one bad file break the batch
-                logger.warning("Inspection failed for %s: %s", name, exc, exc_info=True)
+                # Index only: user filenames (IBKR default names hold account numbers) stay out of logs
+                logger.warning("Inspection failed for file %d: %s", index, type(exc).__name__, exc_info=True)
                 ins, trades = _unknown(name, "The file could not be read."), []
             entries.append(_Entry(name, hashlib.sha256(data).hexdigest(), ins, trades))
     finally:
@@ -433,6 +514,9 @@ def inspect_files(files: List[Tuple[str, bytes]]) -> InspectionResult:
         # Cross-file checks are advisory: fall back to per-file results only
         logger.warning("Cross-file checks failed; returning per-file results only", exc_info=True)
         expectations, requires_ack = [], False
+
+    if _block_mixed_qfx_csv(entries):
+        requires_ack = False
 
     inspections = [e.inspection for e in entries]
     can_continue = bool(inspections) and not any(f.verdict in BAD_VERDICTS for f in inspections)

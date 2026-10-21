@@ -12,10 +12,12 @@ class SellWithoutBuy:
     date: str  # ISO YYYY-MM-DD
     quantity: str  # decimal as string, JSON-safe
     filename: str
+    file_index: int = 0  # position of the file in the upload; filenames can repeat
 
     def to_dict(self) -> Dict[str, Any]:
         return {"symbol": self.symbol, "date": self.date,
-                "quantity": self.quantity, "filename": self.filename}
+                "quantity": self.quantity, "filename": self.filename,
+                "file_index": self.file_index}
 
 
 @dataclass

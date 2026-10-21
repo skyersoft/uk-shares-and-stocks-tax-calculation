@@ -16,12 +16,14 @@ PREAMBLE = ("Statement,Header,Field Name,Field Value\n"
 
 
 def statement(trades, extra="") -> bytes:
-    """trades: (symbol, 'YYYY-MM-DD', qty, price[, category])."""
+    """trades: (symbol, 'YYYY-MM-DD', qty, price[, category[, currency]]). Currency defaults to GBP:
+    non-GBP stock rows are blocked (the Activity Statement carries no FX rates)."""
     lines = [PREAMBLE, HEADER]
     for t in trades:
         sym, day, qty, price = t[:4]
         cat = t[4] if len(t) > 4 else "Stocks"
-        lines.append(f'Trades,Data,Order,{cat},USD,U0000000,{sym},"{day}, 10:00:00",{qty},{price},'
+        ccy = t[5] if len(t) > 5 else "GBP"
+        lines.append(f'Trades,Data,Order,{cat},{ccy},U0000000,{sym},"{day}, 10:00:00",{qty},{price},'
                      f'{price},0,-1,0,0,0,O\n')
     lines.append(extra)
     return "".join(lines).encode()
@@ -80,7 +82,12 @@ def test_upload_order_does_not_matter():
     short = ("short.csv", statement([("AAAA", "2025-07-01", -12, 6)]))
     a = inspect_files([buy, short]).expectations[0]
     b = inspect_files([short, buy]).expectations[0]
-    assert not a.passed and a.to_dict() == b.to_dict()
+    def strip_index(e):  # file_index is the upload position, so it follows the order by design
+        d = e.to_dict()
+        for x in d["details"]:
+            x.pop("file_index")
+        return d
+    assert not a.passed and strip_index(a) == strip_index(b)
     assert a.details[0].quantity == "2"
 
 
@@ -242,3 +249,163 @@ def test_cross_file_failure_falls_back_to_per_file_results(monkeypatch):
     monkeypatch.setattr(file_inspector, "_mark_duplicates", boom)
     r = inspect_files([("a.csv", statement([("AAAA", "2025-05-01", 5, 5)]))])
     assert r.files[0].verdict == "ready" and r.expectations == [] and not r.requires_acknowledgement
+
+
+# ------------------------------------------------------- final-review fix wave
+
+QFX = DATA / "qfx"
+
+
+def test_usd_activity_statement_is_blocked_with_fx_message_and_actions():
+    for name in ("ibkr/activity_statement_usd.csv", "ibkr/activity_statement_mixed_currency.csv"):
+        r = inspect_files([("s.csv", fixture_bytes(name))])
+        f = only(r)
+        assert f.verdict == "blocked" and not r.can_continue
+        text = " ".join(f.warnings)
+        assert "USD" in text and "exchange rates" in text and "pounds" in text
+        assert {"request_support", "remove_file"} <= actions(f)
+        assert f.summary.currencies == (["USD"] if "usd" in name else ["GBP", "USD"])
+        assert r.expectations == []  # blocked rows never feed the sell-without-buy walk
+
+
+def test_gbp_and_gbx_activity_statements_still_ready():
+    for name in ("ibkr/activity_statement_basic.csv", "ibkr/activity_statement_pence.csv"):
+        f = only(inspect_files([("s.csv", fixture_bytes(name))]))
+        assert f.verdict in ("ready", "ready_with_warnings")
+        assert f.summary.currencies == ["GBP"]
+
+
+def test_inspect_uses_same_confidence_threshold_as_calculate():
+    from src.main.python.converters.converter_factory import MIN_CONVERT_CONFIDENCE
+    assert MIN_CONVERT_CONFIDENCE == 0.8
+    weak = b"Symbol,Quantity,TradeDate,Price,Currency\nAAA,1,20250603,2,GBP\n"
+    f = only(inspect_files([("weak.csv", weak)]))
+    assert f.verdict not in ("ready", "ready_with_warnings")
+
+
+def test_genuine_flex_query_ready_with_real_confidence():
+    f = only(inspect_files([("flex.csv", fixture_bytes("ibkr/flex_query.csv"))]))
+    assert f.verdict in ("ready", "ready_with_warnings")
+    from src.main.python.converters.ibkr_converter import IBKRConverter
+    import tempfile, os
+    with tempfile.NamedTemporaryFile("wb", suffix=".csv", delete=False) as t:
+        t.write(fixture_bytes("ibkr/flex_query.csv"))
+    try:
+        assert f.format.confidence == IBKRConverter().detect_confidence(t.name)
+    finally:
+        os.unlink(t.name)
+
+
+def test_wide_csv_column_stats_are_capped_with_warning(monkeypatch):
+    monkeypatch.setattr(file_inspector, "MAX_STAT_COLUMNS", 5)
+    header = "Date,Type,Ticker,Quantity,Price,Currency," + ",".join(f"X{i}" for i in range(20))
+    row = "2025-06-03,BUY,AAAA,10,5,GBP," + ",".join("1" for _ in range(20))
+    f = only(inspect_files([("wide.csv", f"{header}\n{row}\n".encode())]))
+    assert len(f.columns) == 5
+    assert any("columns" in w for w in f.warnings)
+    assert f.verdict in ("ready", "ready_with_warnings")
+
+
+def test_long_csv_column_stats_scan_is_capped_with_warning(monkeypatch):
+    monkeypatch.setattr(file_inspector, "MAX_STAT_CELLS", 60)  # 6 columns -> 10 rows scanned
+    rows = "".join(f"2025-06-{d:02d},BUY,AAAA,1,5,GBP\n" for d in range(1, 29))
+    f = only(inspect_files([("long.csv", ("Date,Type,Ticker,Quantity,Price,Currency\n" + rows).encode())]))
+    assert f.summary.buys == 28  # the conversion itself is not capped
+    assert max(c.filled + c.blank for c in f.columns) == 10
+    assert any("first 10 rows" in w for w in f.warnings)
+
+
+def test_dividends_only_file_is_ready_with_warnings_not_no_trades():
+    t212 = (b"Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),"
+            b"Exchange rate,Result,Total,Withholding tax,Currency (Withholding tax),Charge amount,"
+            b"Stamp duty reserve tax,Notes,ID,Currency conversion fee\n"
+            b"Dividend (Ordinary),2025-03-01 09:00:00,XX0000000001,AAAA,Example A,,0.23,GBP,1,0.00,"
+            b"1.91,0.00,GBP,0.00,0.00,,DIV1,0.00\n")
+    r = inspect_files([("divs.csv", t212)])
+    f = only(r)
+    assert f.verdict == "ready_with_warnings", f.warnings
+    assert "dividends/interest only" in " ".join(f.warnings)
+    assert r.can_continue
+
+
+def test_file_with_no_transactions_at_all_is_still_no_trades():
+    t212 = (b"Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),"
+            b"Exchange rate,Result,Total,Withholding tax,Currency (Withholding tax),Charge amount,"
+            b"Stamp duty reserve tax,Notes,ID,Currency conversion fee\n")
+    f = only(inspect_files([("empty.csv", t212)]))
+    assert f.verdict in ("no_trades", "unknown")
+
+
+@pytest.mark.parametrize("name", ["synthetic_sgml.qfx", "synthetic_xml.qfx"])
+def test_qfx_both_header_styles_are_inspected(name):
+    r = inspect_files([(name, (QFX / name).read_bytes())])
+    f = only(r)
+    assert f.format.id == "ibkr_qfx"
+    assert f.verdict == "ready"
+    assert (f.summary.buys, f.summary.sells) == (1, 1)
+    assert f.summary.tickers == ["AAAA"] and f.summary.currencies == ["GBP"]
+    assert r.expectations[0].passed
+
+
+def test_qfx_with_bom_and_xml_prolog_routed_by_extension_even_if_misnamed_content():
+    data = b"\xef\xbb\xbf" + (QFX / "synthetic_xml.qfx").read_bytes()
+    assert only(inspect_files([("a.ofx", data)])).verdict == "ready"
+
+
+def test_qfx_extension_with_non_ofx_content_is_unknown():
+    f = only(inspect_files([("a.qfx", b"hello, this is not ofx\n")]))
+    assert f.verdict == "unknown"
+
+
+def test_corporate_actions_and_assignment_warn_through_inspector():
+    for name, needle in (("ibkr/activity_statement_corporate_actions.csv", "splits/mergers"),
+                         ("ibkr/activity_statement_assignment.csv", "assignment/exercise")):
+        f = only(inspect_files([("s.csv", fixture_bytes(name))]))
+        assert f.verdict == "ready_with_warnings"
+        assert needle in " ".join(f.warnings)
+
+
+def test_mixed_qfx_and_csv_upload_is_blocked():
+    r = inspect_files([("a.csv", statement([("AAAA", "2025-06-03", 10, 5)])),
+                       ("b.qfx", (QFX / "synthetic_sgml.qfx").read_bytes())])
+    assert [f.verdict for f in r.files] == ["blocked", "blocked"]
+    for f in r.files:
+        assert "separate calculations" in " ".join(f.warnings)
+        assert actions(f) == {"remove_file"}
+    assert not r.can_continue
+
+
+def test_two_qfx_files_are_not_mixed():
+    data = (QFX / "synthetic_sgml.qfx").read_bytes()
+    r = inspect_files([("a.qfx", data), ("b.ofx", (QFX / "synthetic_xml.qfx").read_bytes())])
+    assert all("separate calculations" not in " ".join(f.warnings) for f in r.files)
+
+
+def test_failure_log_does_not_contain_filename(monkeypatch, caplog):
+    def boom(*a, **k):
+        raise RuntimeError("bug")
+    monkeypatch.setattr(file_inspector, "_inspect_one", boom)
+    with caplog.at_level("DEBUG"):
+        inspect_files([("U1234567_statement.csv", b"x")])
+    assert "U1234567" not in caplog.text
+    assert "file 0" in caplog.text
+
+
+def test_sell_without_buy_carries_file_index():
+    sell = statement([("AAAA", "2025-07-01", -5, 6)])
+    r = inspect_files([("same.csv", statement([("BBBB", "2025-06-01", 1, 5)])), ("same.csv", sell)])
+    d = r.expectations[0].details[0]
+    assert d.file_index == 1
+    assert r.expectations[0].to_dict()["details"][0]["file_index"] == 1
+
+
+def test_non_ibkr_csv_reports_currencies():
+    f = only(inspect_files([("t212.csv", fixture_bytes("trading212/export.csv"))]))
+    assert f.summary.currencies
+
+
+def test_qfx_content_with_csv_extension_is_not_ready():
+    # /calculate routes by extension: a .csv holding OFX would go to the CSV parsers and fail
+    f = only(inspect_files([("export.csv", (QFX / "synthetic_sgml.qfx").read_bytes())]))
+    assert f.verdict == "unknown"
+    assert ".qfx" in " ".join(f.warnings)

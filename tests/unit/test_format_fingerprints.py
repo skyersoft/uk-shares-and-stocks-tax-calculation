@@ -32,6 +32,14 @@ def test_ibkr_qfx():
     assert ident([["<OFX>"]], "x.qfx").supported
 
 
+def test_ibkr_qfx_with_xml_prolog_and_bom():
+    rows = [[BOM + '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'],
+            ['<?OFX OFXHEADER="200" VERSION="220" SECURITY="NONE"?>'], ["<OFX>"]]
+    assert ident(rows, "x.qfx").id == "ibkr_qfx"
+    assert ident([['<?xml version="1.0"?>'], ["<OFX>"]], "x.ofx").id == "ibkr_qfx"
+    assert ident([['<?xml version="1.0"?>'], ["<note>hi</note>"]], "x.xml") is None
+
+
 def test_trading212():
     fp = ident([["Action", "Time", "ISIN", "Ticker", "No. of shares", "Price / share", "Result"]])
     assert fp.id == "trading212" and fp.supported

@@ -54,6 +54,7 @@ def test_missing_file_confidence_zero(conv):
 @pytest.mark.parametrize("name", [
     "activity_statement_basic.csv", "activity_statement_mixed_assets.csv",
     "activity_statement_no_cprice.csv", "activity_statement_pence.csv",
+    "activity_statement_usd.csv", "activity_statement_mixed_currency.csv",
 ])
 def test_existing_ibkr_converter_does_not_match(name):
     assert IBKRConverter().detect_confidence(fx(name)) < 0.5
@@ -74,15 +75,15 @@ def test_buy_sell_from_quantity_sign(conv):
     assert buy.quantity == Decimal("100")
     assert sell.quantity == Decimal("40")
     assert buy.price == Decimal("10.50")
-    assert buy.transaction_currency == "USD"
+    assert buy.transaction_currency == "GBP"
     assert buy.symbol == "AAAA"
     assert buy.broker == conv.broker_name
 
 
 @pytest.mark.parametrize("name,symbol,qty,price,ccy,comm", [
-    ("activity_statement_basic.csv", "AAAA", "100", "10.50", "USD", "1.00"),
-    ("activity_statement_no_cprice.csv", "BBBB", "25", "20.00", "USD", "0.50"),
-    ("activity_statement_variant_account.csv", "CCCC", "10", "100.00", "EUR", "1.25"),
+    ("activity_statement_basic.csv", "AAAA", "100", "10.50", "GBP", "1.00"),
+    ("activity_statement_no_cprice.csv", "BBBB", "25", "20.00", "GBP", "0.50"),
+    ("activity_statement_variant_account.csv", "CCCC", "10", "100.00", "GBP", "1.25"),
 ])
 def test_maps_columns_by_name_across_header_variants(conv, name, symbol, qty, price, ccy, comm):
     tx = conv.convert(fx(name))[0]
@@ -96,7 +97,7 @@ def test_maps_columns_by_name_across_header_variants(conv, name, symbol, qty, pr
 def test_commission_is_absolute_and_in_row_currency(conv):
     for tx in conv.convert(fx("activity_statement_basic.csv")):
         assert tx.commission >= 0
-        assert tx.transaction_currency == "USD"
+        assert tx.transaction_currency == "GBP"
     assert conv.convert(fx("activity_statement_basic.csv"))[1].commission == Decimal("1.10")
 
 
@@ -116,7 +117,7 @@ def test_pence_prices_converted_to_pounds(conv):
 
 def test_etf_category_row_is_converted(conv, tmp_path):
     text = Path(fx("activity_statement_basic.csv")).read_text(encoding="utf-8-sig").replace(
-        "Order,Stocks,USD,U0000000,AAAA", "Order,ETFs,USD,U0000000,AAAA")
+        "Order,Stocks,GBP,U0000000,AAAA", "Order,ETFs,GBP,U0000000,AAAA")
     p = tmp_path / "etf.csv"
     p.write_text(text, encoding="utf-8")
     txs = conv.convert(str(p))
@@ -124,12 +125,15 @@ def test_etf_category_row_is_converted(conv, tmp_path):
     assert txs[0].asset_class.name == "ETF"
 
 
-def test_missing_quantity_column_counts_as_failed_row_not_crash(conv, tmp_path):
+def test_missing_quantity_column_raises_like_inspect_blocks(conv, tmp_path):
+    # Contract: inspect() blocked <=> convert() raises (it used to return [] silently)
     text = Path(fx("activity_statement_basic.csv")).read_text(encoding="utf-8-sig")
     text = text.replace("Date/Time,Quantity,T. Price", "Date/Time,Qty,T. Price")
     p = tmp_path / "noqty.csv"
     p.write_text(text, encoding="utf-8")
-    assert conv.convert(str(p)) == []
+    assert conv.inspect(str(p)).verdict == "blocked"
+    with pytest.raises(BrokerConversionError, match="Quantity"):
+        conv.convert(str(p))
 
 
 def test_no_trades_section_returns_empty_list(conv):
@@ -199,3 +203,98 @@ def test_inspect_blocked_when_asset_category_column_missing(conv, tmp_path):
     result = conv.inspect(str(p))
     assert result.verdict == "blocked"
     assert any(c.header == "Asset Category" and c.status == "blocked" for c in result.columns)
+
+
+# ---------------------------------------------------------------- non-GBP rows (C2)
+
+from src.main.python.interfaces.broker_converter import BrokerConversionError  # noqa: E402
+
+
+@pytest.mark.parametrize("name,ccys", [
+    ("activity_statement_usd.csv", "USD"),
+    ("activity_statement_mixed_currency.csv", "USD"),
+])
+def test_non_gbp_stock_rows_block_inspect_and_convert(conv, name, ccys):
+    """inspect() blocked <=> convert() raises: a non-GBP row must never convert at rate 1.0."""
+    ins = conv.inspect(fx(name))
+    assert ins.verdict == "blocked"
+    text = " ".join(ins.warnings)
+    assert ccys in text and "exchange rate" in text and "Flex Query" in text
+    with pytest.raises(BrokerConversionError) as exc:
+        conv.convert(fx(name))
+    assert ccys in str(exc.value) and "exchange rate" in str(exc.value)
+
+
+@pytest.mark.parametrize("name", [
+    "activity_statement_basic.csv", "activity_statement_pence.csv",
+    "activity_statement_no_cprice.csv", "activity_statement_variant_account.csv",
+    "activity_statement_mixed_assets.csv",
+])
+def test_gbp_and_gbx_files_convert_and_are_not_blocked(conv, name):
+    assert conv.inspect(fx(name)).verdict != "blocked"
+    assert conv.convert(fx(name))
+
+
+def test_non_gbp_non_stock_rows_do_not_block(conv):
+    # basic has a USD Forex row and mixed_assets USD option/future rows: only stock rows count
+    assert conv.non_gbp_currencies(fx("activity_statement_basic.csv")) == []
+    assert conv.non_gbp_currencies(fx("activity_statement_mixed_assets.csv")) == []
+    assert conv.non_gbp_currencies(fx("activity_statement_mixed_currency.csv")) == ["USD"]
+
+
+def test_inspect_blocked_iff_convert_raises_on_all_fixtures(conv):
+    for path in sorted(DATA.glob("activity_statement_*.csv")):
+        blocked = conv.inspect(str(path)).verdict == "blocked"
+        try:
+            conv.convert(str(path))
+            raised = False
+        except BrokerConversionError:
+            raised = True
+        assert blocked == raised, path.name
+
+
+# ------------------------------------------- header in force for stock rows (m1)
+
+def test_required_columns_checked_against_stock_rows_header(conv, tmp_path):
+    p = tmp_path / "s.csv"
+    p.write_text(
+        "Statement,Header,Field Name,Field Value\n"
+        "Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,Proceeds\n"
+        "Trades,Data,Order,Forex,USD,GBP.USD,\"2025-06-03, 10:00:00\",-1000,1350\n"
+        "Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,Comm/Fee\n"
+        "Trades,Data,Order,Stocks,GBP,AAAA,\"2025-06-03, 14:31:07\",10,5,-1\n")
+    result = conv.inspect(str(p))
+    assert result.verdict == "ready_with_warnings", result.warnings  # Forex row skipped, not blocked
+    assert result.rows.usable == 1
+    assert any(c.header == "T. Price" for c in result.columns)
+
+
+def test_missing_column_in_stock_header_still_blocks(conv, tmp_path):
+    p = tmp_path / "s.csv"
+    p.write_text(
+        "Statement,Header,Field Name,Field Value\n"
+        "Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,Comm/Fee\n"
+        "Trades,Data,Order,Forex,USD,GBP.USD,\"2025-06-03, 10:00:00\",-1000,1.35,-2\n"
+        "Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,Comm/Fee\n"
+        "Trades,Data,Order,Stocks,GBP,AAAA,\"2025-06-03, 14:31:07\",10,-1\n")
+    result = conv.inspect(str(p))
+    assert result.verdict == "blocked"
+    assert "T. Price" in " ".join(result.warnings)
+
+
+# ------------------------------------------- cost-changing events (I6)
+
+def test_corporate_actions_section_warns_with_tickers(conv):
+    result = conv.inspect(fx("activity_statement_corporate_actions.csv"))
+    assert result.verdict == "ready_with_warnings"
+    text = " ".join(result.warnings)
+    assert "splits/mergers" in text and "AAAA" in text and "MMMM" in text
+    assert "OPTX" not in text  # option corporate actions are not stock actions
+
+
+def test_assignment_and_exercise_codes_warn_with_tickers(conv):
+    result = conv.inspect(fx("activity_statement_assignment.csv"))
+    assert result.verdict == "ready_with_warnings"
+    text = " ".join(result.warnings)
+    assert "assignment/exercise" in text and "premium not included" in text
+    assert "XXXX" in text and "YYYY" in text and "ZZZZ" not in text

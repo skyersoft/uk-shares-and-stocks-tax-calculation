@@ -1,0 +1,17 @@
+Statement,Header,Field Name,Field Value
+Statement,Data,BrokerName,Example Broker
+Statement,Data,Title,Activity Statement
+Statement,Data,Period,"January 1, 2025 - December 31, 2025"
+Account Information,Header,Field Name,Field Value
+Account Information,Data,Base Currency,GBP
+Account Information,Data,Name,Example Person
+Account Information,Data,Account Type,Individual
+Account Information,Data,Customer Type,Individual
+Account Information,Data,Account Capabilities,Margin
+Net Asset Value,Header,Asset Class,Prior Total,Current Total
+Net Asset Value,Data,Cash,0,100
+Trades,Header,DataDiscriminator,Asset Category,Currency,Account,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code
+Trades,Data,Order,Stocks,GBP,U0000000,XXXX,"2025-06-20, 16:20:00",100,50.00,51.00,-5000,0,5000,0,100,A;O
+Trades,Data,Order,Stocks,GBP,U0000000,YYYY,"2025-06-20, 16:20:00",-100,30.00,29.00,3000,0,-2800,200,100,C;Ex
+Trades,Data,Order,Stocks,GBP,U0000000,ZZZZ,"2025-06-21, 10:00:00",10,5.00,5.00,-50,-1,51,0,0,O
+Trades,Data,Order,Equity and Index Options,GBP,U0000000,XXXX 250620P00050000,"2025-06-20, 16:20:00",1,0,0,0,0,0,0,0,A;C

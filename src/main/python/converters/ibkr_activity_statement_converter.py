@@ -4,7 +4,14 @@ IBKR Activity Statement converter.
 Activity Statements are multi-section CSVs: column 0 is the section name and
 column 1 is ``Header`` / ``Data`` / ``Total``. Only the ``Trades`` section is
 read, and only stock orders are converted.
+
+Contract shared by ``inspect()`` and ``convert()``: a file is blocked by
+``inspect()`` exactly when ``convert()`` raises ``BrokerConversionError``
+(see ``_blocking_problems``). In particular, non-GBP stock rows are refused:
+the statement carries no exchange rates, and converting them at 1.0 would
+report a foreign-currency gain as pounds.
 """
+import re
 import csv
 import io
 import logging
@@ -14,7 +21,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from ..interfaces.broker_converter import BaseBrokerConverter
+from ..interfaces.broker_converter import BaseBrokerConverter, BrokerConversionError
 from ..models.file_inspection import (
     ColumnInfo,
     FileInspection,
@@ -36,15 +43,21 @@ BOM = "﻿"
 @dataclass
 class TradesSection:
     """Rows of the Trades section, across all asset categories."""
-    headers: List[str] = field(default_factory=list)
+    headers: List[str] = field(default_factory=list)  # first Trades header (any category)
     rows: List[Dict[str, str]] = field(default_factory=list)
     encoding_warnings: List[str] = field(default_factory=list)
+    # The Trades header in force for each row (parallel to ``rows``); a statement repeats
+    # the header per asset category and the columns can differ between them.
+    row_headers: List[Tuple[str, ...]] = field(default_factory=list)
 
 
 class IBKRActivityStatementConverter(BaseBrokerConverter):
     """Converter for IBKR Activity Statement CSV exports (Trades section, stocks)."""
 
     PENCE_CODES = {'GBX', 'GBp', 'GBPENCE'}
+    GBP_CODES = {'GBP'} | PENCE_CODES
+    # Trades "Code" values that mean the stock trade came from an option
+    ASSIGNMENT_CODES = {'A': 'assignment', 'Ex': 'exercise'}
     STOCK_CATEGORIES = {'Stocks': AssetClass.STOCK, 'ETFs': AssetClass.ETF}
     REQUIRED_COLUMNS = ('Symbol', 'Date/Time', 'Quantity', 'T. Price', 'Currency', 'Comm/Fee')
     # Asset Category decides which rows are stocks, so inspection treats it as required too
@@ -103,7 +116,28 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
                 if len(values) < len(header):
                     values = values + [''] * (len(header) - len(values))
                 section.rows.append({h: values[i].strip() for i, h in enumerate(header)})
+                section.row_headers.append(tuple(header))
         return section
+
+    def _corporate_action_tickers(self, text: str) -> List[str]:
+        """Tickers of stock rows in the Corporate Actions section (splits, mergers, ...)."""
+        header: Optional[List[str]] = None
+        tickers: List[str] = []
+        for row in self._rows(text):
+            if len(row) < 2 or row[0].strip() != 'Corporate Actions':
+                continue
+            kind = row[1].strip()
+            if kind == 'Header':
+                header = [h.strip() for h in row[2:]]
+            elif kind == 'Data' and header is not None:
+                rec = dict(zip(header, (v.strip() for v in row[2:])))
+                if rec.get('Asset Category') not in self.STOCK_CATEGORIES:
+                    continue
+                # No Symbol column: the description starts "TICKER(ISIN) Split ..."
+                m = re.match(r'\s*([^\s(]+)', rec.get('Description', ''))
+                if m and m.group(1) not in tickers:
+                    tickers.append(m.group(1))
+        return sorted(tickers)
 
     # ---------------------------------------------------------------- detection
 
@@ -151,8 +185,58 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
             if row.get('DataDiscriminator') == 'Order':
                 yield row, self.STOCK_CATEGORIES.get(row.get('Asset Category', ''))
 
+    def _required_missing(self, section: TradesSection) -> List[str]:
+        """Required columns missing from the header(s) in force for the stock rows.
+
+        A statement repeats the Trades header per asset category, so the first header may
+        belong to Forex or options and must not decide whether the stock rows are readable.
+        """
+        order_headers = [h for r, h in zip(section.rows, section.row_headers)
+                         if r.get('DataDiscriminator') == 'Order']
+        stock_headers = [h for r, h in zip(section.rows, section.row_headers)
+                         if r.get('DataDiscriminator') == 'Order'
+                         and r.get('Asset Category', '') in self.STOCK_CATEGORIES]
+        if stock_headers:
+            return [c for c in self.INSPECT_REQUIRED if any(c not in h for h in set(stock_headers))]
+        if order_headers:
+            # Only non-stock rows: blocked only if we cannot even tell the asset category
+            return ['Asset Category'] if any('Asset Category' not in h for h in order_headers) else []
+        if section.headers:
+            return [c for c in self.INSPECT_REQUIRED if c not in section.headers]
+        return []
+
+    def _non_gbp(self, section: TradesSection) -> List[str]:
+        return sorted({(row.get('Currency') or 'GBP') for row, asset_class in self._order_rows(section.rows)
+                       if asset_class is not None and (row.get('Currency') or 'GBP') not in self.GBP_CODES})
+
+    def non_gbp_currencies(self, file_path: str) -> List[str]:
+        """Currencies (other than GBP/GBX) of the stock rows in the file, sorted."""
+        return self._non_gbp(self.read_trades_section(file_path))
+
+    @staticmethod
+    def non_gbp_message(currencies: List[str]) -> str:
+        return (f"This statement contains trades in {', '.join(currencies)}. The Activity Statement has no "
+                "exchange rates, so we cannot convert them to pounds yet. Ask us to add support, or export "
+                "a Flex Query that includes FX rates (the FXRateToBase column) and upload that instead.")
+
+    def _blocking_problems(self, section: TradesSection) -> Tuple[List[str], List[str]]:
+        """(missing required columns, warnings) that make the file unusable.
+
+        inspect() reports these as ``blocked``; convert() raises with the same text, so the
+        two can never disagree (no silent FX rate of 1.0, no silently empty conversion).
+        """
+        missing = self._required_missing(section)
+        problems = ["Missing required column(s): " + ", ".join(missing)] if missing else []
+        currencies = [] if 'Currency' in missing else self._non_gbp(section)
+        if currencies:
+            problems.append(self.non_gbp_message(currencies))
+        return missing, problems
+
     def convert(self, file_path: str, base_currency: str = "GBP", **kwargs) -> List[StandardTransaction]:
         section = self.read_trades_section(file_path)
+        _, problems = self._blocking_problems(section)
+        if problems:
+            raise BrokerConversionError(self.broker_name, file_path, " ".join(problems))
         transactions: List[StandardTransaction] = []
         failed = 0
 
@@ -163,7 +247,7 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
                 tx = self._to_transaction(row, asset_class, base_currency)
             except (InvalidOperation, ValueError) as e:
                 failed += 1
-                logger.debug("Skipping unparseable row %s: %s", row, e)
+                logger.debug("Skipping unparseable stock row: %s", type(e).__name__)  # no row content in logs
                 continue
             if tx is None:
                 failed += 1
@@ -176,6 +260,9 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
 
     def _to_transaction(self, row: Dict[str, str], asset_class: AssetClass,
                         base_currency: str) -> Optional[StandardTransaction]:
+        # IBKR Date/Time is in the timezone the statement was generated in (often US Eastern),
+        # not UK time. It is used as the trade date as-is: a fill late in the US evening could
+        # in theory fall on the next UK calendar day. Follow-up, see the X-ray fix report.
         date = self._parse_date(row.get('Date/Time', ''))
         symbol = row.get('Symbol', '')
         if date is None or not symbol:
@@ -215,6 +302,29 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
 
     # --------------------------------------------------------------- inspection
 
+    def _cost_event_warnings(self, file_path: str, transactions: List[StandardTransaction]) -> List[str]:
+        """Warn about events that change share count or cost but are not applied (not calculated)."""
+        out: List[str] = []
+        text, _ = self._read_text(file_path)
+        actions = self._corporate_action_tickers(text)
+        if actions:
+            out.append(
+                "This statement has corporate actions for " + ", ".join(actions) + ": splits/mergers "
+                "change your share count and cost; we have not applied them, check these tickers.")
+        section = self.read_trades_section(file_path)
+        hit: List[str] = []
+        for row, asset_class in self._order_rows(section.rows):
+            if asset_class is None:
+                continue
+            codes = {c.strip() for c in (row.get('Code') or '').split(';')}
+            if codes & set(self.ASSIGNMENT_CODES) and row.get('Symbol') and row['Symbol'] not in hit:
+                hit.append(row['Symbol'])
+        if hit:
+            out.append(
+                "This statement includes option assignment/exercise for " + ", ".join(sorted(hit))
+                + "; premium not included in cost, so check these tickers.")
+        return out
+
     @staticmethod
     def _tax_year(d: datetime) -> str:
         start = d.year if (d.month, d.day) >= (4, 6) else d.year - 1
@@ -246,10 +356,17 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
         order_rows = list(self._order_rows(section.rows))
         orders = [row for row, _ in order_rows]
 
-        columns = [self._column_info(h, orders) for h in section.headers]
-        missing = ([c for c in self.INSPECT_REQUIRED if c not in section.headers]
-                   if section.headers else [])
+        # Show the columns of the header the stock rows use (falls back to the first header)
+        display = next((list(h) for r, h in zip(section.rows, section.row_headers)
+                        if r.get('DataDiscriminator') == 'Order'
+                        and r.get('Asset Category', '') in self.STOCK_CATEGORIES), section.headers)
+        columns = [self._column_info(h, orders) for h in display]
+        missing, problems = self._blocking_problems(section)
         for name in missing:
+            shown = next((c for c in columns if c.header == name), None)
+            if shown is not None:  # present in this header, missing from another stock header
+                shown.status, shown.note = "blocked", "Missing from some of the stock rows"
+                continue
             columns.append(ColumnInfo(
                 header=name, mapped_to=name, status="blocked", filled=0, blank=len(orders),
                 samples=[], note="Required column is missing",
@@ -278,9 +395,11 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
             skipped.append(SkippedRows("Stock rows that could not be read", failed))
 
         stock_rows = len(transactions) + failed
-        if missing:
+        if not problems:
+            warnings.extend(self._cost_event_warnings(file_path, transactions))
+        if problems:
             verdict = "blocked"
-            warnings.append("Missing required column(s): " + ", ".join(missing))
+            warnings.extend(problems)
         elif stock_rows == 0:
             verdict = "no_trades"
         elif not transactions:
@@ -291,12 +410,19 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
         else:
             verdict = "ready"
 
+        if problems:
+            # Nothing from a blocked file reaches the calculation, so nothing is summarised as usable;
+            # the currencies still show which stock rows caused the block
+            transactions = []
+            currencies = sorted({(r.get('Currency') or 'GBP') for r, a in order_rows if a is not None})
+        else:
+            currencies = sorted({t.transaction_currency for t in transactions})
         dates = sorted(t.date for t in transactions)
         summary = Summary(
             buys=sum(1 for t in transactions if t.transaction_type == TransactionType.BUY),
             sells=sum(1 for t in transactions if t.transaction_type == TransactionType.SELL),
             tickers=sorted({t.symbol for t in transactions}),
-            currencies=sorted({t.transaction_currency for t in transactions}),
+            currencies=currencies,
             first_date=dates[0].date().isoformat() if dates else None,
             last_date=dates[-1].date().isoformat() if dates else None,
             tax_years=sorted({self._tax_year(d) for d in dates}),

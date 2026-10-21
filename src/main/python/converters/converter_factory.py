@@ -23,6 +23,12 @@ from ..models.standard_transaction import StandardTransaction
 
 logger = logging.getLogger(__name__)
 
+# Minimum detection confidence for converting a file without a named broker. /calculate
+# (MultiBrokerParser -> convert_file) and the upload X-ray (/inspect-file) both use it, so
+# the X-ray never calls "ready" a file the calculation would reject. /detect-broker keeps
+# its looser 0.5 on purpose: it only pre-fills the broker selector.
+MIN_CONVERT_CONFIDENCE = 0.8
+
 
 class ConverterFactory:
     """
@@ -207,7 +213,7 @@ class ConverterFactory:
         file_path: str,
         broker: Optional[str] = None,
         base_currency: str = "GBP",
-        min_confidence: float = 0.8,
+        min_confidence: float = MIN_CONVERT_CONFIDENCE,
         **kwargs
     ) -> List[StandardTransaction]:
         """

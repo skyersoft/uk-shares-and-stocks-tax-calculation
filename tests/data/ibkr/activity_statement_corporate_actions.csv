@@ -1,0 +1,20 @@
+Statement,Header,Field Name,Field Value
+Statement,Data,BrokerName,Example Broker
+Statement,Data,Title,Activity Statement
+Statement,Data,Period,"January 1, 2025 - December 31, 2025"
+Account Information,Header,Field Name,Field Value
+Account Information,Data,Base Currency,GBP
+Account Information,Data,Name,Example Person
+Account Information,Data,Account Type,Individual
+Account Information,Data,Customer Type,Individual
+Account Information,Data,Account Capabilities,Margin
+Net Asset Value,Header,Asset Class,Prior Total,Current Total
+Net Asset Value,Data,Cash,0,100
+Trades,Header,DataDiscriminator,Asset Category,Currency,Account,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code
+Trades,Data,Order,Stocks,GBP,U0000000,AAAA,"2025-05-02, 10:00:00",10,40.00,40.00,-400,-1,401,0,0,O
+Trades,Data,Order,Stocks,GBP,U0000000,AAAA,"2025-09-02, 10:00:00",-20,22.00,22.00,440,-1,-200.5,238.5,0,C
+Corporate Actions,Header,Asset Category,Currency,Report Date,Date/Time,Description,Quantity,Proceeds,Value,Realized P/L,Code
+Corporate Actions,Data,Stocks,GBP,2025-06-10,"2025-06-09, 20:25:00",AAAA(XX0000000001) Split 2 for 1 (AAAA, EXAMPLE A PLC, XX0000000001),10,0,0,0,
+Corporate Actions,Data,Stocks,GBP,2025-07-01,"2025-06-30, 20:25:00","MMMM(XX0000000002) Merged(Acquisition) WITH XX0000000003 1 FOR 2 (MMMM, EXAMPLE M PLC, XX0000000002)",-5,0,0,0,
+Corporate Actions,Data,Equity and Index Options,GBP,2025-07-02,"2025-07-01, 20:25:00",OPTX 250620C00050000 Adjusted option,1,0,0,0,
+Corporate Actions,Total,,,,,,,0,0,0,

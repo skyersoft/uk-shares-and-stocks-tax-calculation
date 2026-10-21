@@ -37,7 +37,7 @@ def test_activity_statement_inspect_column_stats():
     assert col(insp, "Code").filled == 2 and col(insp, "Code").blank == 1
     assert insp.summary.buys == 1 and insp.summary.sells == 1
     assert insp.summary.tickers == ["AAAA"]
-    assert insp.summary.currencies == ["USD"]
+    assert insp.summary.currencies == ["GBP"]
     assert insp.summary.first_date == "2025-06-03"
     assert insp.summary.last_date == "2025-08-11"
     assert insp.summary.tax_years == ["2025-2026"]
@@ -100,7 +100,7 @@ def test_inspect_encoding_warning_is_ready_with_warnings(tmp_path):
 def test_samples_are_capped_at_three_and_trimmed(tmp_path):
     lines = Path(fx("activity_statement_basic.csv")).read_text(encoding="utf-8-sig").splitlines()
     hdr = next(l for l in lines if l.startswith("Trades,Header"))
-    rows = [f"Trades,Data,Order,Stocks,USD,U0000000,  S{i}  ,\"2025-06-0{i}, 10:00:00\",1,1,1,-1,-1,1,0,0,0,O"
+    rows = [f"Trades,Data,Order,Stocks,GBP,U0000000,  S{i}  ,\"2025-06-0{i}, 10:00:00\",1,1,1,-1,-1,1,0,0,0,O"
             for i in range(1, 6)]
     p = tmp_path / "many.csv"
     p.write_text("\n".join([lines[0], hdr] + rows), encoding="utf-8")

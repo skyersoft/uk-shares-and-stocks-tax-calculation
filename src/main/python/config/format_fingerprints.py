@@ -122,8 +122,14 @@ COST_BASIS_REPORT = FormatFingerprint(
 # ----------------------------------------------------------------- predicates
 
 def _is_qfx(rows: Rows) -> bool:
-    first = rows[0][0] if rows and rows[0] else ""
-    return first.upper().startswith("OFXHEADER") or first.upper().startswith("<OFX")
+    # OFX 1.x starts with "OFXHEADER:100"; OFX 2.x with an XML declaration, then
+    # "<?OFX OFXHEADER=...?>" and "<OFX>". BOMs are already stripped by _clean_rows.
+    for row in rows:
+        first = (row[0] if row else "").upper()
+        if first.startswith("<?XML"):
+            continue
+        return first.startswith(("OFXHEADER", "<OFX", "<?OFX"))
+    return False
 
 
 def _is_activity(rows: Rows) -> bool:
