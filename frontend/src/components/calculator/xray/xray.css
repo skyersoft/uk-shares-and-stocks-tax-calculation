@@ -1,0 +1,13 @@
+.xray-strip { display: flex; gap: 6px; padding: 0; margin: 10px 0 14px; list-style: none; }
+.xray-step { flex: 1; padding: 8px 10px; border-radius: 6px; background: #f2f2f2; text-align: center; font-size: 0.8rem; }
+.xray-step[data-state='done'] { background: #d1f0dc; }
+.xray-step[data-state='current'] { background: #fff0c2; }
+.xray-step[data-state='failed'] { background: #fbd5d5; }
+.xray-bar { width: 110px; height: 8px; border-radius: 4px; background: #eee; overflow: hidden; display: inline-block; vertical-align: middle; }
+.xray-bar > i { display: block; height: 100%; }
+.xray-bar .good { background: #2fa35b; }
+.xray-bar .partial { background: #e6a817; }
+.xray-mono { font-family: monospace; font-size: 0.8rem; color: #555; }
+@media (max-width: 767.98px) {
+  .xray-strip { flex-direction: column; }
+}
