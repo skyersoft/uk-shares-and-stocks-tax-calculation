@@ -209,3 +209,36 @@ def test_temp_files_are_removed(monkeypatch):
 def test_empty_upload_cannot_continue():
     r = inspect_files([])
     assert not r.can_continue and r.files == []
+
+
+def test_subset_first_is_flagged_and_does_not_double_count():
+    year = [("AAAA", f"2025-05-{d:02d}", 1, 5) for d in range(1, 11)]
+    month = year[:3]
+    big = statement(year + [("AAAA", "2025-07-01", -12, 6)])
+    r = inspect_files([("month.csv", statement(month)), ("year.csv", big)])
+    assert r.files[0].verdict == "ready_with_warnings"
+    assert "year.csv" in " ".join(r.files[0].warnings)
+    # 10 held once, selling 12 leaves 2 uncovered (double counting would hide it)
+    exp = r.expectations[0]
+    assert not exp.passed and exp.details[0].quantity == "2"
+    assert r.requires_acknowledgement
+
+
+def test_identical_fills_within_one_file_are_kept():
+    data = statement([("AAAA", "2025-05-01", 1, 5), ("AAAA", "2025-05-01", 1, 5),
+                      ("AAAA", "2025-07-01", -2, 6)])
+    r = inspect_files([("a.csv", data)])
+    assert r.expectations[0].passed and r.files[0].verdict == "ready"
+
+
+def test_symbol_whitespace_is_ignored_in_walk():
+    r = inspect_files([("a.csv", statement([("AAAA ", "2025-05-01", 5, 5), ("AAAA", "2025-07-01", -5, 6)]))])
+    assert r.expectations[0].passed
+
+
+def test_cross_file_failure_falls_back_to_per_file_results(monkeypatch):
+    def boom(*a, **k):
+        raise RuntimeError("bug")
+    monkeypatch.setattr(file_inspector, "_mark_duplicates", boom)
+    r = inspect_files([("a.csv", statement([("AAAA", "2025-05-01", 5, 5)]))])
+    assert r.files[0].verdict == "ready" and r.expectations == [] and not r.requires_acknowledgement

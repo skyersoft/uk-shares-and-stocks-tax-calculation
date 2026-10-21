@@ -73,7 +73,7 @@ class _Trade:
 
     @property
     def key(self) -> Tuple:
-        return (self.date, self.symbol.upper(), self.is_buy, self.quantity, self.price)
+        return (self.date, self.symbol.strip().upper(), self.is_buy, self.quantity, self.price)
 
 
 @dataclass
@@ -298,42 +298,62 @@ def _add_actions(ins: FileInspection, *ids: str) -> None:
     ins.next_actions.extend(a for a in _actions(*ids) if a.id not in have)
 
 
-def _mark_duplicates(entries: List[_Entry]) -> Dict[int, List[_Trade]]:
-    """Warn on later files that repeat an earlier one; return the trades to use for the walk.
+def _subtract(trades: List[_Trade], other: List[_Trade]) -> List[_Trade]:
+    """Remove from ``trades`` as many copies of each trade as ``other`` holds (multiset difference).
 
-    Design choice: the sell-without-buy walk runs on de-duplicated trades. A file flagged as a
-    duplicate contributes only the trades not already present in an earlier file, so a
-    duplicate upload neither hides a shortfall (by double-counting buys) nor fakes one.
+    Identical fills inside one file survive unless the other file really holds the same number.
     """
-    effective: Dict[int, List[_Trade]] = {}
+    seen = Counter(t.key for t in other)
+    kept = []
+    for t in trades:
+        if seen[t.key] > 0:
+            seen[t.key] -= 1
+        else:
+            kept.append(t)
+    return kept
+
+
+def _mark_duplicates(entries: List[_Entry]) -> Dict[int, List[_Trade]]:
+    """Warn on redundant files and return the trades to use for the walk.
+
+    Design choice: the sell-without-buy walk runs on de-duplicated trades, so a duplicate
+    upload neither hides a shortfall (by double-counting buys) nor fakes one. Overlap is
+    measured against the smaller file, so a monthly export uploaded BEFORE the annual
+    export that contains it is caught too. The redundant file is the smaller one (the
+    later one when sizes tie); it is warned about and contributes only trades the other
+    file does not hold.
+    """
+    effective: Dict[int, List[_Trade]] = {i: e.trades for i, e in enumerate(entries)}
     for i, e in enumerate(entries):
-        effective[i] = e.trades
         for j in range(i):
             earlier = entries[j]
             if e.content_hash == earlier.content_hash:
                 ratio, same = 1.0, True
             elif e.trades and earlier.trades:
                 mine, theirs = Counter(t.key for t in e.trades), Counter(t.key for t in earlier.trades)
-                ratio, same = sum((mine & theirs).values()) / len(e.trades), False
+                ratio = sum((mine & theirs).values()) / min(len(e.trades), len(earlier.trades))
+                same = False
             else:
                 continue
-            if ratio > DUPLICATE_RATIO:
-                what = "an identical copy of" if same else f"{ratio:.0%} the same trades as"
-                e.inspection.warnings.append(
-                    f"This file looks like a duplicate: it is {what} {earlier.name}. "
-                    "Counting both would double the trades, so duplicate trades are ignored in these checks. "
-                    "Remove one of them unless they genuinely differ.")
-                _bump(e.inspection)
-                if e.trades:
-                    seen = Counter(t.key for prev in entries[:i] for t in prev.trades)
-                    kept = []
-                    for t in e.trades:
-                        if seen[t.key] > 0:
-                            seen[t.key] -= 1
-                        else:
-                            kept.append(t)
-                    effective[i] = kept
-                break
+            if ratio <= DUPLICATE_RATIO:
+                continue
+            # Redundant file r (warned, de-duplicated) versus the file o it repeats
+            if len(earlier.trades) < len(e.trades):
+                r, o = j, i
+            else:
+                r, o = i, j
+            red, other = entries[r], entries[o]
+            what = "an identical copy of" if same else f"{ratio:.0%} the same trades as"
+            if r == j:
+                what = f"contained in ({ratio:.0%} of its trades appear in)"
+            red.inspection.warnings.append(
+                f"This file looks like a duplicate: it is {what} {other.name}. "
+                "Counting both would double the trades, so duplicate trades are ignored in these checks. "
+                "Remove one of them unless they genuinely differ.")
+            _bump(red.inspection)
+            if red.trades:
+                effective[r] = _subtract(effective[r], other.trades)
+            break
     return effective
 
 
@@ -341,12 +361,12 @@ def _find_sells_without_buy(entries: List[_Entry], effective: Dict[int, List[_Tr
     flat = [(t, i) for i, trades in effective.items() for t in trades]
     # Same-day buys count before sells (HMRC same-day rule); name breaks remaining ties so
     # the result never depends on upload order.
-    flat.sort(key=lambda p: (p[0].date.date(), 0 if p[0].is_buy else 1, p[0].symbol.upper(),
+    flat.sort(key=lambda p: (p[0].date.date(), 0 if p[0].is_buy else 1, p[0].symbol.strip().upper(),
                              entries[p[1]].name, p[0].quantity))
     held: Dict[str, Decimal] = {}
     found: List[Tuple[int, SellWithoutBuy]] = []
     for t, i in flat:
-        key = t.symbol.upper()
+        key = t.symbol.strip().upper()
         if t.is_buy:
             held[key] = held.get(key, Decimal(0)) + t.quantity
             continue
@@ -358,7 +378,7 @@ def _find_sells_without_buy(entries: List[_Entry], effective: Dict[int, List[_Tr
             held[key] = Decimal(0)
         else:
             held[key] = have - t.quantity
-    found.sort(key=lambda p: (p[1].date, p[1].symbol.upper(), p[1].filename, p[1].quantity))
+    found.sort(key=lambda p: (p[1].date, p[1].symbol.strip().upper(), p[1].filename, p[1].quantity))
     return found
 
 
@@ -383,7 +403,10 @@ def _apply_sell_warnings(entries: List[_Entry], found: List[Tuple[int, SellWitho
 
 def inspect_files(files: List[Tuple[str, bytes]]) -> InspectionResult:
     """Inspect all uploaded files together. Never raises for bad input."""
-    register_default_converters()
+    try:
+        register_default_converters()
+    except Exception:
+        logger.warning("Could not register converters", exc_info=True)
     entries: List[_Entry] = []
     workdir = tempfile.mkdtemp(prefix="cgt_inspect_")
     try:
@@ -397,14 +420,19 @@ def inspect_files(files: List[Tuple[str, bytes]]) -> InspectionResult:
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
 
-    effective = _mark_duplicates(entries)
     expectations: List[Expectation] = []
     requires_ack = False
-    if any(e.trades for e in entries):
-        found = _find_sells_without_buy(entries, effective)
-        _apply_sell_warnings(entries, found)
-        requires_ack = bool(found)
-        expectations.append(Expectation(RULE_SELL_HAS_BUY, not found, [s for _, s in found]))
+    try:
+        effective = _mark_duplicates(entries)
+        if any(e.trades for e in entries):
+            found = _find_sells_without_buy(entries, effective)
+            _apply_sell_warnings(entries, found)
+            requires_ack = bool(found)
+            expectations.append(Expectation(RULE_SELL_HAS_BUY, not found, [s for _, s in found]))
+    except Exception:
+        # Cross-file checks are advisory: fall back to per-file results only
+        logger.warning("Cross-file checks failed; returning per-file results only", exc_info=True)
+        expectations, requires_ack = [], False
 
     inspections = [e.inspection for e in entries]
     can_continue = bool(inspections) and not any(f.verdict in BAD_VERDICTS for f in inspections)
