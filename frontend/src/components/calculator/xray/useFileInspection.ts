@@ -130,7 +130,11 @@ export function useFileInspection(files: InspectableFile[]) {
           setOutcome({ key: requestKey, error });
         });
     }, DEBOUNCE_MS);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      // Invalidate this request so a late response (after unmount or a list change) is ignored
+      requestId.current++;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requestKey]);
 

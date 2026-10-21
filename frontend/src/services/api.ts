@@ -203,24 +203,44 @@ export class InspectError extends Error {
 // API Gateway rejects bodies above ~6 MB before our handler runs (non-JSON response).
 const GATEWAY_LIMIT_BYTES = 5 * 1024 * 1024;
 
+/** Inspection must never hold up the user: give up after this long (cold Lambda, dropped connection). */
+export const INSPECT_TIMEOUT_MS = 20_000;
+
 /** Inspect one or more broker files without running a calculation. */
 export async function inspectFiles(files: File[]): Promise<InspectionResult> {
   const form = new FormData();
   files.forEach((file, index) => form.append(`file${index}`, file));
   const totalBytes = files.reduce((sum, f) => sum + f.size, 0);
 
-  let resp: Response;
-  try {
-    resp = await fetch(getApiBase() + '/inspect-file', { method: 'POST', body: form });
-  } catch {
-    throw new InspectError('network', 'We could not reach the server. Check your connection and try again.');
-  }
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller?.abort();
+      reject(new InspectError('network', 'The check took too long. Try again, or continue without it.'));
+    }, INSPECT_TIMEOUT_MS);
+  });
 
+  let resp: Response;
   let body: any = null;
   try {
-    body = await resp.json();
-  } catch {
-    body = null;
+    try {
+      resp = await Promise.race([
+        fetch(getApiBase() + '/inspect-file', { method: 'POST', body: form, signal: controller?.signal }),
+        timeout,
+      ]);
+    } catch (err) {
+      if (err instanceof InspectError) throw err;
+      throw new InspectError('network', 'We could not reach the server. Check your connection and try again.');
+    }
+    try {
+      body = await Promise.race([resp.json(), timeout]);
+    } catch (err) {
+      if (err instanceof InspectError) throw err;
+      body = null;
+    }
+  } finally {
+    clearTimeout(timer);
   }
 
   if (!resp.ok) {

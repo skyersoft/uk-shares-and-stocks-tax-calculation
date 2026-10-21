@@ -59,3 +59,25 @@ describe('inspectFiles', () => {
     await expect(inspectFiles([file('a.csv')])).rejects.toMatchObject({ kind: 'network' });
   });
 });
+
+describe('inspectFiles timeout', () => {
+  afterEach(() => jest.useRealTimers());
+
+  it('rejects with a network InspectError after 20 s when fetch never resolves', async () => {
+    jest.useFakeTimers();
+    const f = mockFetch(() => new Promise(() => {}));
+    const p = inspectFiles([file('a.csv')]);
+    const assertion = expect(p).rejects.toMatchObject({ kind: 'network', message: expect.stringMatching(/took too long/) });
+    jest.advanceTimersByTime(19_999);
+    jest.advanceTimersByTime(1);
+    await assertion;
+    expect((f.mock.calls[0][1].signal as AbortSignal).aborted).toBe(true);
+  });
+
+  it('clears the timer when the request completes', async () => {
+    jest.useFakeTimers();
+    mockFetch(async () => resp(200, okBody));
+    await expect(inspectFiles([file('a.csv')])).resolves.toEqual(okBody);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+});

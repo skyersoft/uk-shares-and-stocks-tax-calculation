@@ -194,15 +194,15 @@ describe('FailureScreen', () => {
     expect(screen.getByRole('button', { name: 'Add another file' })).toBeInTheDocument();
   });
 
-  it('unknown offers pick broker, request support and remove even with no next_actions', () => {
+  it('unknown offers request support and remove even with no next_actions, but not pick broker yet', () => {
     const onAction = jest.fn();
     const ins = baseInspection({ verdict: 'unknown', format: null, next_actions: [],
       columns: [col({ header: 'Trade Date', mapped_to: 'Date' })] });
     render(<FailureScreen kind="unknown" inspection={ins} onAction={onAction} />);
     expect(screen.getByText(/Trade Date/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /pick my broker/i }));
-    expect(onAction).toHaveBeenCalledWith('pick_broker', 't212.csv');
-    expect(screen.getByRole('button', { name: /add support/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /pick my broker/i })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /add support/i }));
+    expect(onAction).toHaveBeenCalledWith('request_support', 't212.csv');
     expect(screen.getByRole('button', { name: /remove file/i })).toBeInTheDocument();
   });
 
@@ -264,6 +264,14 @@ describe('X-ray review follow-ups', () => {
     const keyWarnings = spy.mock.calls.filter(c => String(c[0]).includes('same key'));
     spy.mockRestore();
     expect(keyWarnings).toHaveLength(0);
+  });
+
+  it('never renders a pick_broker action even when the backend sends one', () => {
+    const ins = baseInspection({ verdict: 'unknown', format: null,
+      next_actions: [{ id: 'pick_broker', label: 'Pick my broker instead' }, { id: 'remove_file', label: 'Remove file' }] });
+    render(<FailureScreen kind="unknown" inspection={ins} onAction={jest.fn()} />);
+    expect(screen.queryByRole('button', { name: /pick my broker/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /remove file/i })).toBeInTheDocument();
   });
 
   it('prefixes each warning with a visible warning symbol', () => {

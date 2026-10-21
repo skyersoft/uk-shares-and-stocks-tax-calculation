@@ -187,12 +187,6 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
       case 'add_earlier_file':
         fileInputRef.current?.click();
         break;
-      case 'pick_broker': {
-        const select = document.getElementById(`broker-select-${fileId}`);
-        scrollTo(select);
-        select?.focus();
-        break;
-      }
       case 'request_support':
         setShowFeedback(true);
         setTimeout(() => scrollTo(document.getElementById('upload-feedback')), 0);

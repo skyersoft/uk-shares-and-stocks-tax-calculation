@@ -11,6 +11,13 @@ export const ACTION_LABELS: Record<NextActionId, string> = {
   remove_file: 'Remove file',
 };
 
+/**
+ * Actions the backend may emit that the UI cannot carry out yet, so they are never rendered.
+ * pick_broker: follow-up is a broker override sent to /calculate and /inspect-file; until then
+ * picking a broker changes nothing and would be a dead end.
+ */
+export const UNAVAILABLE_ACTIONS: NextActionId[] = ['pick_broker'];
+
 const PRIMARY: NextActionId[] = ['add_earlier_file', 'view_export_steps', 'pick_broker'];
 
 /** Merge backend actions with required defaults; remove_file is always present and last. */
@@ -33,7 +40,7 @@ interface Props {
 
 export const NextActions: React.FC<Props> = ({ actions, fileName, onAction, exclude = [] }) => (
   <div className="d-flex flex-wrap gap-2 mt-2">
-    {withActions(actions).filter(a => !exclude.includes(a.id)).map(a => (
+    {withActions(actions).filter(a => !exclude.includes(a.id) && !UNAVAILABLE_ACTIONS.includes(a.id)).map(a => (
       <button key={a.id} type="button"
         className={`btn btn-sm ${PRIMARY.includes(a.id) ? 'btn-primary' : 'btn-outline-primary'}`}
         onClick={() => onAction(a.id, fileName)}>

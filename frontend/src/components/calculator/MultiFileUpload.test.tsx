@@ -221,12 +221,15 @@ describe('MultiFileUpload with File X-ray', () => {
     expect(screen.getByText('Share Your Feedback')).toBeInTheDocument();
   });
 
-  it('pick_broker focuses the broker selector for that file', async () => {
-    mockInspect.mockResolvedValue(res([ins('a.csv', 'unknown', { format: null })], { can_continue: false }));
+  it('unknown shows request support and remove, but no pick broker button', async () => {
+    mockInspect.mockResolvedValue(res([ins('a.csv', 'unknown', { format: null,
+      next_actions: [{ id: 'pick_broker', label: 'Pick my broker instead' }, { id: 'remove_file', label: 'Remove file' }] })],
+      { can_continue: false }));
     const { container } = render(<Harness />);
     upload(container, mkFile('a.csv'));
-    fireEvent.click(await screen.findByRole('button', { name: 'Pick my broker instead' }));
-    expect(screen.getByLabelText('Broker for a.csv')).toHaveFocus();
+    expect(await screen.findByRole('button', { name: 'Ask us to add support' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove file' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Pick my broker/ })).toBeNull();
   });
 
   it('maps a JSON 413 to the too-large screen', async () => {
@@ -275,5 +278,45 @@ describe('MultiFileUpload with File X-ray', () => {
     expect(trackInspection).toHaveBeenCalledTimes(2);
     expect(trackInspection).toHaveBeenCalledWith('ready', 'trading212', 2);
     expect(trackInspection).toHaveBeenCalledWith('blocked', null, 2);
+  });
+
+  it('ignores a response that arrives after unmount (no telemetry)', async () => {
+    let resolve!: (r: InspectionResult) => void;
+    mockInspect.mockReturnValue(new Promise(r => { resolve = r; }));
+    const { container, unmount } = render(<Harness />);
+    upload(container, mkFile('a.csv'));
+    await waitFor(() => expect(mockInspect).toHaveBeenCalledTimes(1));
+    unmount();
+    await act(async () => { resolve(res([ins('a.csv')])); });
+    expect(trackInspection).not.toHaveBeenCalled();
+  });
+
+  it('ignores a response that arrives after the list became empty', async () => {
+    let resolve!: (r: InspectionResult) => void;
+    mockInspect.mockReturnValue(new Promise(r => { resolve = r; }));
+    const { container } = render(<Harness />);
+    upload(container, mkFile('a.csv'));
+    await waitFor(() => expect(mockInspect).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove a.csv' }));
+    await act(async () => { resolve(res([ins('a.csv')])); });
+    expect(trackInspection).not.toHaveBeenCalled();
+  });
+
+  it('a hung check times out after 20 s and leaves Continue open with the notice', async () => {
+    jest.useFakeTimers();
+    try {
+      const actual = jest.requireActual('../../services/api');
+      mockInspect.mockImplementation(actual.inspectFiles);
+      (global as any).fetch = jest.fn(() => new Promise(() => {}));
+      const { container } = render(<Harness />);
+      upload(container, mkFile('a.csv'));
+      await waitFor(() => expect((global as any).fetch).toHaveBeenCalledTimes(1));
+      expect(lastGate?.blockedReason).toMatch(/Checking/);
+      await act(async () => { jest.advanceTimersByTime(20_000); });
+      expect(await screen.findByText(/We couldn't check your file just now/)).toBeInTheDocument();
+      expect(lastGate).toEqual({ blockedReason: null, requiresAck: false });
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
