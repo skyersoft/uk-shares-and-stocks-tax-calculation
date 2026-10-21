@@ -180,3 +180,22 @@ class TestFactoryRegistration:
         t212 = Path(__file__).resolve().parents[2] / "data" / "trading212" / "export_realistic.csv"
         result = get_factory().detect_broker(str(t212))
         assert result["broker"] == "Trading 212"
+
+
+@pytest.mark.parametrize("day,expected", [
+    (datetime(2025, 4, 5, 23, 59), "2024-2025"),
+    (datetime(2025, 4, 6, 0, 0), "2025-2026"),
+])
+def test_tax_year_boundary(day, expected):
+    assert IBKRActivityStatementConverter._tax_year(day) == expected
+
+
+def test_inspect_blocked_when_asset_category_column_missing(conv, tmp_path):
+    p = tmp_path / "s.csv"
+    p.write_text(
+        "Statement,Header,Field Name,Field Value\n"
+        "Trades,Header,DataDiscriminator,Symbol,Date/Time,Quantity,T. Price,Currency,Comm/Fee\n"
+        "Trades,Data,Order,AAAA,\"2025-06-03, 14:31:07\",10,5,USD,-1\n")
+    result = conv.inspect(str(p))
+    assert result.verdict == "blocked"
+    assert any(c.header == "Asset Category" and c.status == "blocked" for c in result.columns)

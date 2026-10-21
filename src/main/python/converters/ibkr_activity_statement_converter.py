@@ -11,9 +11,8 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Dict, List, Optional, Tuple
-
 from pathlib import Path
+from typing import Dict, Iterator, List, Optional, Tuple
 
 from ..interfaces.broker_converter import BaseBrokerConverter
 from ..models.file_inspection import (
@@ -48,7 +47,9 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
     PENCE_CODES = {'GBX', 'GBp', 'GBPENCE'}
     STOCK_CATEGORIES = {'Stocks': AssetClass.STOCK, 'ETFs': AssetClass.ETF}
     REQUIRED_COLUMNS = ('Symbol', 'Date/Time', 'Quantity', 'T. Price', 'Currency', 'Comm/Fee')
-    USED_COLUMNS = REQUIRED_COLUMNS + ('Asset Category',)
+    # Asset Category decides which rows are stocks, so inspection treats it as required too
+    INSPECT_REQUIRED = REQUIRED_COLUMNS + ('Asset Category',)
+    USED_COLUMNS = INSPECT_REQUIRED
     MAX_SAMPLES = 3
     DATE_FORMATS = ('%Y-%m-%d, %H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d')
 
@@ -141,15 +142,21 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
                 continue
         return None
 
+    def _order_rows(self, rows: List[Dict[str, str]]) -> Iterator[Tuple[Dict[str, str], Optional[AssetClass]]]:
+        """Yield (row, asset_class) for every Order row; asset_class is None for unsupported categories.
+
+        Shared by convert() and inspect() so the two cannot disagree about which rows count.
+        """
+        for row in rows:
+            if row.get('DataDiscriminator') == 'Order':
+                yield row, self.STOCK_CATEGORIES.get(row.get('Asset Category', ''))
+
     def convert(self, file_path: str, base_currency: str = "GBP", **kwargs) -> List[StandardTransaction]:
         section = self.read_trades_section(file_path)
         transactions: List[StandardTransaction] = []
         failed = 0
 
-        for row in section.rows:
-            if row.get('DataDiscriminator') != 'Order':
-                continue
-            asset_class = self.STOCK_CATEGORIES.get(row.get('Asset Category', ''))
+        for row, asset_class in self._order_rows(section.rows):
             if asset_class is None:
                 continue
             try:
@@ -236,10 +243,11 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
     def inspect(self, file_path: str) -> FileInspection:
         section = self.read_trades_section(file_path)
         warnings = list(section.encoding_warnings)
-        orders = [r for r in section.rows if r.get('DataDiscriminator') == 'Order']
+        order_rows = list(self._order_rows(section.rows))
+        orders = [row for row, _ in order_rows]
 
         columns = [self._column_info(h, orders) for h in section.headers]
-        missing = ([c for c in self.REQUIRED_COLUMNS if c not in section.headers]
+        missing = ([c for c in self.INSPECT_REQUIRED if c not in section.headers]
                    if section.headers else [])
         for name in missing:
             columns.append(ColumnInfo(
@@ -250,10 +258,9 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
         skipped_counts: Dict[str, int] = {}
         transactions = []
         failed = 0
-        for row in orders:
-            category = row.get('Asset Category', '')
-            asset_class = self.STOCK_CATEGORIES.get(category)
+        for row, asset_class in order_rows:
             if asset_class is None:
+                category = row.get('Asset Category', '')
                 reason = f"{category or 'Unknown asset category'} (not supported)"
                 skipped_counts[reason] = skipped_counts.get(reason, 0) + 1
                 continue
