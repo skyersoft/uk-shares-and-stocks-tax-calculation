@@ -16,6 +16,7 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 from ..models.standard_transaction import StandardTransaction
+from ..models.file_inspection import FileInspection
 
 
 class BrokerConverterInterface(ABC):
@@ -229,6 +230,14 @@ class BaseBrokerConverter(BrokerConverterInterface):
     - Defines skeleton of conversion algorithm
     - Subclasses fill in specific steps
     """
+
+    def inspect(self, file_path: str) -> Optional[FileInspection]:
+        """
+        Describe what was understood in the file (the upload "X-ray").
+
+        Optional: converters opt in by overriding. None means not supported.
+        """
+        return None
 
     def can_handle(self, file_path: str) -> bool:
         """

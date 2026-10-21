@@ -13,7 +13,16 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Dict, List, Optional, Tuple
 
+from pathlib import Path
+
 from ..interfaces.broker_converter import BaseBrokerConverter
+from ..models.file_inspection import (
+    ColumnInfo,
+    FileInspection,
+    RowStats,
+    SkippedRows,
+    Summary,
+)
 from ..models.standard_transaction import (
     AssetClass,
     StandardTransaction,
@@ -38,6 +47,9 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
 
     PENCE_CODES = {'GBX', 'GBp', 'GBPENCE'}
     STOCK_CATEGORIES = {'Stocks': AssetClass.STOCK, 'ETFs': AssetClass.ETF}
+    REQUIRED_COLUMNS = ('Symbol', 'Date/Time', 'Quantity', 'T. Price', 'Currency', 'Comm/Fee')
+    USED_COLUMNS = REQUIRED_COLUMNS + ('Asset Category',)
+    MAX_SAMPLES = 3
     DATE_FORMATS = ('%Y-%m-%d, %H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d')
 
     @property
@@ -192,4 +204,103 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
             asset_class=asset_class,
             commission=commission,
             base_currency=base_currency,
+        )
+
+    # --------------------------------------------------------------- inspection
+
+    @staticmethod
+    def _tax_year(d: datetime) -> str:
+        start = d.year if (d.month, d.day) >= (4, 6) else d.year - 1
+        return f"{start}-{start + 1}"
+
+    def _column_info(self, header: str, orders: List[Dict[str, str]]) -> ColumnInfo:
+        values = [r.get(header, '').strip() for r in orders]
+        filled = [v for v in values if v]
+        samples: List[str] = []
+        for v in filled:
+            if v not in samples:
+                samples.append(v)
+            if len(samples) == self.MAX_SAMPLES:
+                break
+        used = header in self.USED_COLUMNS
+        return ColumnInfo(
+            header=header,
+            mapped_to=header if used else None,
+            status="understood" if used else "ignored",
+            filled=len(filled),
+            blank=len(values) - len(filled),
+            samples=samples,
+            note=None if used else "Not needed for the calculation",
+        )
+
+    def inspect(self, file_path: str) -> FileInspection:
+        section = self.read_trades_section(file_path)
+        warnings = list(section.encoding_warnings)
+        orders = [r for r in section.rows if r.get('DataDiscriminator') == 'Order']
+
+        columns = [self._column_info(h, orders) for h in section.headers]
+        missing = ([c for c in self.REQUIRED_COLUMNS if c not in section.headers]
+                   if section.headers else [])
+        for name in missing:
+            columns.append(ColumnInfo(
+                header=name, mapped_to=name, status="blocked", filled=0, blank=len(orders),
+                samples=[], note="Required column is missing",
+            ))
+
+        skipped_counts: Dict[str, int] = {}
+        transactions = []
+        failed = 0
+        for row in orders:
+            category = row.get('Asset Category', '')
+            asset_class = self.STOCK_CATEGORIES.get(category)
+            if asset_class is None:
+                reason = f"{category or 'Unknown asset category'} (not supported)"
+                skipped_counts[reason] = skipped_counts.get(reason, 0) + 1
+                continue
+            try:
+                tx = None if missing else self._to_transaction(row, asset_class, "GBP")
+            except (InvalidOperation, ValueError):
+                tx = None
+            if tx is None:
+                failed += 1
+            else:
+                transactions.append(tx)
+
+        skipped = [SkippedRows(r, n) for r, n in skipped_counts.items()]
+        if failed:
+            skipped.append(SkippedRows("Stock rows that could not be read", failed))
+
+        stock_rows = len(transactions) + failed
+        if missing:
+            verdict = "blocked"
+            warnings.append("Missing required column(s): " + ", ".join(missing))
+        elif stock_rows == 0:
+            verdict = "no_trades"
+        elif not transactions:
+            verdict = "no_trades"
+            warnings.append("None of the stock rows could be read.")
+        elif warnings or skipped:
+            verdict = "ready_with_warnings"
+        else:
+            verdict = "ready"
+
+        dates = sorted(t.date for t in transactions)
+        summary = Summary(
+            buys=sum(1 for t in transactions if t.transaction_type == TransactionType.BUY),
+            sells=sum(1 for t in transactions if t.transaction_type == TransactionType.SELL),
+            tickers=sorted({t.symbol for t in transactions}),
+            currencies=sorted({t.transaction_currency for t in transactions}),
+            first_date=dates[0].date().isoformat() if dates else None,
+            last_date=dates[-1].date().isoformat() if dates else None,
+            tax_years=sorted({self._tax_year(d) for d in dates}),
+        )
+        return FileInspection(
+            filename=Path(file_path).name,
+            format=None,
+            verdict=verdict,
+            columns=columns,
+            rows=RowStats(total=len(orders), usable=len(transactions), skipped=skipped),
+            summary=summary,
+            next_actions=[],
+            warnings=warnings,
         )
