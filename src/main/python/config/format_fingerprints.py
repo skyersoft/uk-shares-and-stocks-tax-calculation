@@ -4,6 +4,11 @@ Pure data/predicate module (no converter imports). ``identify_format`` looks
 at the first rows of an upload and names the format, saying whether the
 calculator supports it and, if not, what the user should do instead.
 Predicates are ordered most specific first; the first match wins.
+
+Input contract: ``first_rows`` must be the file's first lines split on the
+delimiter by the caller (e.g. ``line.split(',')``) with quote characters left
+intact. Do NOT pass ``csv.reader`` output: it strips quotes, which makes the
+quoted IBKR Flex Query variant indistinguishable from the unquoted one.
 """
 
 from dataclasses import dataclass, field
@@ -172,9 +177,9 @@ def _is_fidelity(rows: Rows) -> bool:
 
 
 def _is_hargreaves(rows: Rows) -> bool:
+    # Mirrors HargreavesConverter.detect_confidence.
     return (_has_all(rows, "Transaction Type", "Security", "Account Type")
-            or _has_all(rows, "Date", "Transaction Type", "ISIN")
-            or _has_all(rows, "Transaction Type", "Security"))
+            or _has_all(rows, "Date", "Transaction Type", "ISIN"))
 
 
 def _is_freetrade(rows: Rows) -> bool:
@@ -201,11 +206,16 @@ _REGISTRY: List[tuple] = [
     (_is_hargreaves, HARGREAVES),
     (_is_freetrade, FREETRADE),
     (_is_generic_no_currency, GENERIC_NO_CURRENCY),
-]  # type: List[tuple]
+]
 
 
 def identify_format(first_rows: Rows, filename: str) -> Optional[FormatFingerprint]:
-    """Return the matching fingerprint for the file's first rows, or None."""
+    """Return the matching fingerprint for the file's first rows, or None.
+
+    ``first_rows`` are raw split cells with quotes intact (not ``csv.reader``
+    output); see the module docstring. ``filename`` is currently unused and is
+    kept for the interface.
+    """
     rows = _clean_rows(first_rows)
     if not rows:
         return None

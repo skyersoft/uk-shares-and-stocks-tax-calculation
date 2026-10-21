@@ -119,3 +119,19 @@ def test_only_bom_returns_none():
 def test_blank_leading_rows_skipped():
     rows = [[""], [BOM], ["Portfolio Summary"]]
     assert ident(rows).id == "portfolio_summary"
+
+
+def test_quote_stripped_flex_header_does_not_trigger_quoted_fingerprint():
+    """Contract: callers must pass raw split cells; csv-parsed cells lose the quotes."""
+    fp = ident([["CurrencyPrimary", "FXRateToBase", "Symbol", "Quantity"]])
+    assert fp is None or fp.id != "ibkr_flex_query_quoted"
+
+
+def test_hargreaves_date_isin_variant():
+    fp = ident([["Date", "Transaction Type", "ISIN", "Quantity"]])
+    assert fp.id == "hargreaves_lansdown"
+
+
+def test_non_hargreaves_transaction_type_security_not_labelled():
+    fp = ident([["Transaction Type", "Security", "Amount"]])
+    assert fp is None or fp.id != "hargreaves_lansdown"
