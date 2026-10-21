@@ -49,6 +49,11 @@ except ImportError as e:
 # stop at 4 MiB (about 5.6 MB once base64-encoded) to leave headroom.
 MAX_INSPECT_BYTES = 4 * 1024 * 1024
 
+# Maximum number of file parts per /inspect-file request. The UI allows 10 files; the
+# cap stops a 4 MiB body of tiny parts (tens of thousands) from tying up the Lambda
+# past API Gateway's 29 s timeout, since cross-file checks compare files pairwise.
+MAX_INSPECT_FILES = 20
+
 # Import calculator (heavy dependencies like pandas)
 try:
     from main.python.capital_gains_calculator import create_enhanced_calculator
@@ -554,8 +559,11 @@ def _inspect_response(status: int, payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _parse_multipart_file_parts(body: bytes, content_type: str) -> list:
+def _parse_multipart_file_parts(body: bytes, content_type: str, limit: int = None) -> list:
     """Return [(filename, raw_bytes)] for every file part, in upload order.
+
+    With ``limit``, stops after that many file parts (callers pass MAX + 1 to detect
+    an over-limit upload without parsing the rest).
 
     Deliberately not parse_multipart_data_proper: that decodes file bytes as
     UTF-8 (`part.raw.decode('utf-8')`), which breaks cp1252 exports, and the
@@ -590,6 +598,8 @@ def _parse_multipart_file_parts(body: bytes, content_type: str) -> list:
         else:
             continue
         files.append((filename, content))
+        if limit is not None and len(files) >= limit:
+            break
     return files
 
 
@@ -606,7 +616,9 @@ def handle_inspect_request(event: Dict[str, Any]) -> Dict[str, Any]:
             except (binascii.Error, ValueError):
                 return _inspect_response(400, {'error': 'The upload could not be read. Please try again.'})
         elif isinstance(raw_body, str):
-            body = raw_body.encode('latin-1', errors='replace')
+            # Without binary_media_types API Gateway delivers the body as a UTF-8 str
+            # (same as /calculate). latin-1 would turn the BOM into "?" and break filenames.
+            body = raw_body.encode('utf-8')
         else:
             body = raw_body
 
@@ -622,15 +634,21 @@ def handle_inspect_request(event: Dict[str, Any]) -> Dict[str, Any]:
                          'Try exporting a shorter date range, or upload fewer files at once.'
             })
 
-        files = _parse_multipart_file_parts(body, content_type)
+        files = _parse_multipart_file_parts(body, content_type, limit=MAX_INSPECT_FILES + 1)
         if not files:
             return _inspect_response(400, {'error': 'No file content received'})
+        if len(files) > MAX_INSPECT_FILES:
+            return _inspect_response(400, {
+                'error': f'You can check up to {MAX_INSPECT_FILES} files at once. '
+                         'Remove some files and try again.'
+            })
 
         result = inspect_files(files)
         return _inspect_response(200, result.to_dict())
 
     except Exception as e:
-        print(f"Inspect error: {type(e).__name__}: {e}")
+        # Type only: the message could quote file content or a filename
+        print(f"Inspect error: {type(e).__name__}")
         return _inspect_response(500, {'error': 'Something went wrong while checking your files.'})
 
 

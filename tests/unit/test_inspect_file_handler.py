@@ -1,6 +1,7 @@
 """Tests for the /inspect-file Lambda handler (synthetic data only)."""
 import base64
 import json
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -11,6 +12,7 @@ from src.main.python.services.file_inspector import inspect_files
 from tests.unit.test_file_inspector import statement
 
 BOUNDARY = "----testboundary123"
+DATA = Path(__file__).resolve().parents[1] / "data"
 
 
 @pytest.fixture(autouse=True)
@@ -133,11 +135,66 @@ def test_inspect_unavailable_returns_503_json():
     assert "error" in json.loads(resp["body"])
 
 
-def test_inspect_handles_non_base64_body():
-    ev = event(multipart([("a.csv", statement([("AAPL", "2024-05-01", 10, 100)]))]))
-    ev["body"] = multipart([("a.csv", statement([("AAPL", "2024-05-01", 10, 100)]))]).decode("latin-1")
+def text_event(body: bytes):
+    """What API Gateway sends without binary_media_types: the body as a UTF-8 str."""
+    ev = event(body)
+    ev["body"] = body.decode("utf-8")
     ev["isBase64Encoded"] = False
-    assert call(ev)["statusCode"] == 200
+    return ev
+
+
+def test_inspect_handles_non_base64_body():
+    resp = call(text_event(multipart([("a.csv", statement([("AAPL", "2024-05-01", 10, 100)]))])))
+    assert resp["statusCode"] == 200
+    assert json.loads(resp["body"])["files"][0]["verdict"] == "ready"
+
+
+def test_inspect_text_mode_bom_statement_is_recognised():
+    raw = (DATA / "ibkr" / "activity_statement_basic.csv").read_bytes()
+    assert raw.startswith(b"\xef\xbb\xbf")
+    data = json.loads(call(text_event(multipart([("activity.csv", raw)])))["body"])
+    f = data["files"][0]
+    assert f["verdict"] != "unknown"
+    assert f["format"]["id"] == "ibkr_activity_statement"
+
+
+def test_inspect_text_mode_non_ascii_content_and_filename_round_trip():
+    raw = (DATA / "ibkr" / "activity_statement_basic.csv").read_bytes().replace(
+        b"Example Person", "Ex\u00e9mple \u00a3 Person".encode("utf-8")).replace(b"AAAA", "CAF\u00c9".encode("utf-8"))
+    name = "caf\u00e9 \u00a3.csv"
+    data = json.loads(call(text_event(multipart([(name, raw)])))["body"])
+    f = data["files"][0]
+    assert f["verdict"] not in ("unknown", "blocked")
+    assert f["filename"] == name
+    assert f["summary"]["tickers"] == ["CAF\u00c9"]
+
+
+def test_inspect_base64_bom_statement_still_works():
+    raw = (DATA / "ibkr" / "activity_statement_basic.csv").read_bytes()
+    data = json.loads(call(event(multipart([("activity.csv", raw)])))["body"])
+    assert data["files"][0]["format"]["id"] == "ibkr_activity_statement"
+
+
+def test_inspect_rejects_too_many_files_before_inspecting():
+    parts = [(f"f{i}.csv", b"x") for i in range(lh.MAX_INSPECT_FILES + 1)]
+    with patch.object(lh, "inspect_files", side_effect=AssertionError("must not inspect"), create=True):
+        resp = call(event(multipart(parts)))
+    assert resp["statusCode"] == 400
+    assert str(lh.MAX_INSPECT_FILES) in json.loads(resp["body"])["error"]
+    assert resp["headers"]["Access-Control-Allow-Origin"] == "*"
+
+
+def test_inspect_accepts_max_file_count():
+    parts = [(f"f{i}.csv", statement([("AAPL", "2024-05-01", 10, 100)])) for i in range(lh.MAX_INSPECT_FILES)]
+    resp = call(event(multipart(parts)))
+    assert resp["statusCode"] == 200
+    assert len(json.loads(resp["body"])["files"]) == lh.MAX_INSPECT_FILES
+
+
+def test_multipart_parser_stops_after_limit():
+    parts = [(f"f{i}.csv", b"x") for i in range(50)]
+    ct = f"multipart/form-data; boundary={BOUNDARY}"
+    assert len(lh._parse_multipart_file_parts(multipart(parts), ct, limit=21)) == 21
 
 
 @pytest.mark.parametrize("name", ["caf\u00e9.csv", "\u53d6\u5f15.csv"])
