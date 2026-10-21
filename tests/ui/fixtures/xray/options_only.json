@@ -1,0 +1,216 @@
+{
+  "can_continue": false,
+  "expectations": [],
+  "files": [
+    {
+      "columns": [
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "DataDiscriminator",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "Order"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Asset Category",
+          "mapped_to": "Asset Category",
+          "note": null,
+          "samples": [
+            "Equity and Index Options"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Currency",
+          "mapped_to": "Currency",
+          "note": null,
+          "samples": [
+            "USD"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Account",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "U0000000"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Symbol",
+          "mapped_to": "Symbol",
+          "note": null,
+          "samples": [
+            "DDDD 250620C00050000"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Date/Time",
+          "mapped_to": "Date/Time",
+          "note": null,
+          "samples": [
+            "2025-04-08, 10:00:00"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Quantity",
+          "mapped_to": "Quantity",
+          "note": null,
+          "samples": [
+            "1"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "T. Price",
+          "mapped_to": "T. Price",
+          "note": null,
+          "samples": [
+            "2.0"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "C. Price",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "2.0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Proceeds",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Comm/Fee",
+          "mapped_to": "Comm/Fee",
+          "note": null,
+          "samples": [
+            "-1"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Basis",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Realized P/L",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "MTM P/L",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 1,
+          "header": "Code",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "O"
+          ],
+          "status": "ignored"
+        }
+      ],
+      "filename": "options_only.csv",
+      "format": {
+        "confidence": 1.0,
+        "id": "ibkr_activity_statement",
+        "name": "IBKR Activity Statement",
+        "supported": true
+      },
+      "next_actions": [
+        {
+          "id": "request_support",
+          "label": "Ask us to add support"
+        },
+        {
+          "id": "remove_file",
+          "label": "Remove file"
+        }
+      ],
+      "rows": {
+        "skipped": [
+          {
+            "count": 1,
+            "reason": "Equity and Index Options (not supported)"
+          }
+        ],
+        "total": 1,
+        "usable": 0
+      },
+      "summary": {
+        "buys": 0,
+        "currencies": [],
+        "first_date": null,
+        "last_date": null,
+        "sells": 0,
+        "tax_years": [],
+        "tickers": []
+      },
+      "verdict": "no_trades",
+      "warnings": [
+        "This file only contains unsupported asset types (Equity and Index Options: 1). Only stocks and ETFs can be calculated at the moment."
+      ]
+    }
+  ],
+  "requires_acknowledgement": false
+}

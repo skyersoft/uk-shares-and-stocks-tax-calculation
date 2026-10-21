@@ -1,0 +1,52 @@
+{
+  "can_continue": false,
+  "expectations": [],
+  "files": [
+    {
+      "columns": [],
+      "filename": "flex_quoted.csv",
+      "format": {
+        "confidence": 1.0,
+        "id": "ibkr_flex_query_quoted",
+        "name": "IBKR Flex Query CSV (quoted headers)",
+        "supported": false
+      },
+      "next_actions": [
+        {
+          "id": "view_export_steps",
+          "label": "How to export this file"
+        },
+        {
+          "id": "request_support",
+          "label": "Ask us to add support"
+        },
+        {
+          "id": "remove_file",
+          "label": "Remove file"
+        }
+      ],
+      "rows": {
+        "skipped": [],
+        "total": 0,
+        "usable": 0
+      },
+      "summary": {
+        "buys": 0,
+        "currencies": [],
+        "first_date": null,
+        "last_date": null,
+        "sells": 0,
+        "tax_years": [],
+        "tickers": []
+      },
+      "verdict": "unsupported_format",
+      "warnings": [
+        "This is an Interactive Brokers Flex Query CSV with every column heading in quotes, which we cannot read yet. Re-export the query with quotes switched off, or export an Activity Statement instead.",
+        "Step 1: Log in to IBKR Client Portal and open Performance & Reports > Flex Queries.",
+        "Step 2: Edit your Trades Flex Query and in the delivery settings turn off the option to include quotes around fields (the exact wording may vary), keeping the format as CSV.",
+        "Step 3: Run the query again and upload the new CSV, or export an Activity Statement (CSV) from Performance & Reports > Statements."
+      ]
+    }
+  ],
+  "requires_acknowledgement": false
+}

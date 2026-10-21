@@ -15,6 +15,7 @@ export default defineConfig({
   ...base,
   testDir: './tests/ui',
   testMatch: 'xray.spec.ts',
+  testIgnore: [],
   globalSetup: require.resolve('./tests/ui/xray-global-setup.ts'),
   globalTeardown: undefined,
   // The Vite dev server serves unbundled modules; parallel cold browsers make the first render

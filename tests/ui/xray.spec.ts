@@ -31,8 +31,11 @@ test.beforeEach(async ({ page }) => {
 async function reachUploadStep(page: Page) {
   await page.goto('/calculator');
   const consent = page.getByRole('button', { name: /^consent$/i }).first();
-  if (await consent.isVisible({ timeout: 2000 }).catch(() => false)) {
+  try {
+    await consent.waitFor({ state: 'visible', timeout: 2000 });
     await consent.click();
+  } catch {
+    // no consent overlay
   }
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page.locator('input[type="file"]')).toBeAttached();
@@ -42,7 +45,7 @@ const nextButton = (page: Page) => page.getByRole('button', { name: 'Next' });
 
 test.describe('File X-ray on the upload step', () => {
   test('X-ray - basic Activity Statement is recognised and Next is enabled', async ({ page }) => {
-    await stubInspect(page, 'basic.json');
+    const calls = await stubInspect(page, 'basic.json');
     await reachUploadStep(page);
 
     await test.step('upload the file', async () => {
@@ -58,17 +61,19 @@ test.describe('File X-ray on the upload step', () => {
 
     await test.step('Next is enabled', async () => {
       await expect(nextButton(page)).toBeEnabled();
+      expect(calls).toHaveLength(1);
     });
   });
 
   test('X-ray - options-only statement shows unsupported assets and blocks Next', async ({ page }) => {
-    await stubInspect(page, 'options_only.json');
+    const calls = await stubInspect(page, 'options_only.json');
     await reachUploadStep(page);
     await page.locator('input[type="file"]').setInputFiles(upload('options_only.csv'));
 
     await expect(page.getByText(/only contains unsupported asset types/i)).toBeVisible();
     await expect(nextButton(page)).toBeDisabled();
     await expect(page.getByText(/Fix or remove file options_only\.csv/i)).toBeVisible();
+    expect(calls).toHaveLength(1);
   });
 
   test('X-ray - a PDF fails instantly without calling the server', async ({ page }) => {
@@ -82,7 +87,7 @@ test.describe('File X-ray on the upload step', () => {
   });
 
   test('X-ray - sell with no earlier buy warns and needs acknowledgement', async ({ page }) => {
-    await stubInspect(page, 'sell_no_buy.json');
+    const calls = await stubInspect(page, 'sell_no_buy.json');
     await reachUploadStep(page);
     await page.locator('input[type="file"]').setInputFiles(upload('sell_no_buy.csv'));
 
@@ -104,11 +109,12 @@ test.describe('File X-ray on the upload step', () => {
       await expect(nextButton(page)).toBeDisabled();
       await page.getByRole('checkbox', { name: /I understand my history is incomplete/i }).check();
       await expect(nextButton(page)).toBeEnabled();
+      expect(calls).toHaveLength(1);
     });
   });
 
   test('X-ray - the same file twice shows a duplicate warning', async ({ page }) => {
-    await stubInspect(page, 'duplicate.json');
+    const calls = await stubInspect(page, 'duplicate.json');
     await reachUploadStep(page);
     await page
       .locator('input[type="file"]')
@@ -116,6 +122,7 @@ test.describe('File X-ray on the upload step', () => {
 
     await expect(page.getByText(/looks like a duplicate/i).first()).toBeVisible();
     await expect(page.getByText(/identical copy of duplicate_a\.csv/i).first()).toBeVisible();
+    expect(calls).toHaveLength(1);
   });
 
   test('X-ray - inspection failure shows a notice and does not block Next', async ({ page }) => {
@@ -128,16 +135,17 @@ test.describe('File X-ray on the upload step', () => {
   });
 
   test('X-ray - quoted Flex Query file shows the unsupported-format screen', async ({ page }) => {
-    await stubInspect(page, 'flex_quoted.json');
+    const calls = await stubInspect(page, 'flex_quoted.json');
     await reachUploadStep(page);
     await page.locator('input[type="file"]').setInputFiles(upload('flex_quoted.csv'));
 
     await expect(page.getByRole('heading', { name: /wrong report/i })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'How to export it' })).toBeVisible();
     await expect(page.getByTestId('export-steps')).toContainText('Flex Queries');
-    await expect(page.getByRole('button', { name: 'Ask us to support this format' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Remove this file' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Ask us to add support' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Remove file' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Pick my broker/i })).toHaveCount(0);
+    expect(calls).toHaveLength(1);
     await expect(nextButton(page)).toBeDisabled();
   });
 });

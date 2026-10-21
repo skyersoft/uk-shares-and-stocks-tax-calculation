@@ -53,8 +53,8 @@ ACTION_LABELS = {
     "show_skipped_rows": "Show skipped rows",
     "view_export_steps": "How to export this file",
     "pick_broker": "Choose your broker",
-    "request_support": "Ask us to support this format",
-    "remove_file": "Remove this file",
+    "request_support": "Ask us to add support",
+    "remove_file": "Remove file",
 }
 BAD_VERDICTS = {"blocked", "unsupported_format", "no_trades", "unknown"}
 

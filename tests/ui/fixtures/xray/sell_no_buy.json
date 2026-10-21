@@ -1,0 +1,234 @@
+{
+  "can_continue": true,
+  "expectations": [
+    {
+      "details": [
+        {
+          "date": "2025-07-01",
+          "filename": "sell_no_buy.csv",
+          "quantity": "15",
+          "symbol": "AAAA"
+        }
+      ],
+      "passed": false,
+      "rule": "every_sell_has_earlier_buy"
+    }
+  ],
+  "files": [
+    {
+      "columns": [
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "DataDiscriminator",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "Order"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Asset Category",
+          "mapped_to": "Asset Category",
+          "note": null,
+          "samples": [
+            "Stocks"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Currency",
+          "mapped_to": "Currency",
+          "note": null,
+          "samples": [
+            "USD"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Account",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "U0000000"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Symbol",
+          "mapped_to": "Symbol",
+          "note": null,
+          "samples": [
+            "AAAA"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Date/Time",
+          "mapped_to": "Date/Time",
+          "note": null,
+          "samples": [
+            "2025-06-03, 10:00:00",
+            "2025-07-01, 10:00:00"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Quantity",
+          "mapped_to": "Quantity",
+          "note": null,
+          "samples": [
+            "10",
+            "-25"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "T. Price",
+          "mapped_to": "T. Price",
+          "note": null,
+          "samples": [
+            "5",
+            "6"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "C. Price",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "5",
+            "6"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Proceeds",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Comm/Fee",
+          "mapped_to": "Comm/Fee",
+          "note": null,
+          "samples": [
+            "-1"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Basis",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Realized P/L",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "MTM P/L",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 2,
+          "header": "Code",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "O"
+          ],
+          "status": "ignored"
+        }
+      ],
+      "filename": "sell_no_buy.csv",
+      "format": {
+        "confidence": 1.0,
+        "id": "ibkr_activity_statement",
+        "name": "IBKR Activity Statement",
+        "supported": true
+      },
+      "next_actions": [
+        {
+          "id": "add_earlier_file",
+          "label": "Add an earlier export"
+        },
+        {
+          "id": "add_opening_holdings",
+          "label": "Enter opening holdings"
+        }
+      ],
+      "rows": {
+        "skipped": [],
+        "total": 2,
+        "usable": 2
+      },
+      "summary": {
+        "buys": 1,
+        "currencies": [
+          "USD"
+        ],
+        "first_date": "2025-06-03",
+        "last_date": "2025-07-01",
+        "sells": 1,
+        "tax_years": [
+          "2025-2026"
+        ],
+        "tickers": [
+          "AAAA"
+        ]
+      },
+      "verdict": "ready_with_warnings",
+      "warnings": [
+        "1 sell(s) have no earlier buy in the files you uploaded: AAAA on 2025-07-01 (15 shares). The Section 104 pool for AAAA is missing those shares and their cost, so the allowable cost is understated (possibly zero) and the calculated gain is overstated. Add an earlier export that covers the purchases, or enter your opening holdings."
+      ]
+    }
+  ],
+  "requires_acknowledgement": true
+}

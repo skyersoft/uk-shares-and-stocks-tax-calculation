@@ -1,0 +1,6 @@
+Statement,Header,Field Name,Field Value
+Statement,Data,BrokerName,Example Broker
+Statement,Data,Title,Activity Statement
+Trades,Header,DataDiscriminator,Asset Category,Currency,Account,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code
+Trades,Data,Order,Stocks,USD,U0000000,AAAA,"2025-06-03, 10:00:00",10,5,5,0,-1,0,0,0,O
+Trades,Data,Order,Stocks,USD,U0000000,AAAA,"2025-07-01, 10:00:00",-25,6,6,0,-1,0,0,0,O

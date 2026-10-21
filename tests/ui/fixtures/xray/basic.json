@@ -1,0 +1,254 @@
+{
+  "can_continue": true,
+  "expectations": [
+    {
+      "details": [],
+      "passed": true,
+      "rule": "every_sell_has_earlier_buy"
+    }
+  ],
+  "files": [
+    {
+      "columns": [
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "DataDiscriminator",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "Order"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Asset Category",
+          "mapped_to": "Asset Category",
+          "note": null,
+          "samples": [
+            "Stocks",
+            "Forex"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Currency",
+          "mapped_to": "Currency",
+          "note": null,
+          "samples": [
+            "USD"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Account",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "U0000000"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Symbol",
+          "mapped_to": "Symbol",
+          "note": null,
+          "samples": [
+            "AAAA",
+            "GBP.USD"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Date/Time",
+          "mapped_to": "Date/Time",
+          "note": null,
+          "samples": [
+            "2025-06-03, 14:31:07",
+            "2025-08-11, 09:45:00",
+            "2025-07-01, 10:00:00"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Quantity",
+          "mapped_to": "Quantity",
+          "note": null,
+          "samples": [
+            "100",
+            "-40",
+            "-1000"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "T. Price",
+          "mapped_to": "T. Price",
+          "note": null,
+          "samples": [
+            "10.50",
+            "12.00",
+            "1.35"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "C. Price",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "10.60",
+            "11.90",
+            "1.36"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Proceeds",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "-1050",
+            "480",
+            "1350"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Comm/Fee",
+          "mapped_to": "Comm/Fee",
+          "note": null,
+          "samples": [
+            "-1.00",
+            "-1.10",
+            "-2"
+          ],
+          "status": "understood"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Basis",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "1051",
+            "-420.4",
+            "1000"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Realized P/L",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0",
+            "59.5"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "Realized P/L %",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "0",
+            "14.1"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 0,
+          "filled": 3,
+          "header": "MTM P/L",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "10",
+            "-4",
+            "0"
+          ],
+          "status": "ignored"
+        },
+        {
+          "blank": 1,
+          "filled": 2,
+          "header": "Code",
+          "mapped_to": null,
+          "note": "Not needed for the calculation",
+          "samples": [
+            "O",
+            "C"
+          ],
+          "status": "ignored"
+        }
+      ],
+      "filename": "activity_basic.csv",
+      "format": {
+        "confidence": 1.0,
+        "id": "ibkr_activity_statement",
+        "name": "IBKR Activity Statement",
+        "supported": true
+      },
+      "next_actions": [
+        {
+          "id": "show_skipped_rows",
+          "label": "Show skipped rows"
+        }
+      ],
+      "rows": {
+        "skipped": [
+          {
+            "count": 1,
+            "reason": "Forex (not supported)"
+          }
+        ],
+        "total": 3,
+        "usable": 2
+      },
+      "summary": {
+        "buys": 1,
+        "currencies": [
+          "USD"
+        ],
+        "first_date": "2025-06-03",
+        "last_date": "2025-08-11",
+        "sells": 1,
+        "tax_years": [
+          "2025-2026"
+        ],
+        "tickers": [
+          "AAAA"
+        ]
+      },
+      "verdict": "ready_with_warnings",
+      "warnings": []
+    }
+  ],
+  "requires_acknowledgement": false
+}

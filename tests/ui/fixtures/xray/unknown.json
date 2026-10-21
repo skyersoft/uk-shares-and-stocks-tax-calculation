@@ -1,0 +1,44 @@
+{
+  "can_continue": false,
+  "expectations": [],
+  "files": [
+    {
+      "columns": [],
+      "filename": "garbage.csv",
+      "format": null,
+      "next_actions": [
+        {
+          "id": "pick_broker",
+          "label": "Choose your broker"
+        },
+        {
+          "id": "request_support",
+          "label": "Ask us to add support"
+        },
+        {
+          "id": "remove_file",
+          "label": "Remove file"
+        }
+      ],
+      "rows": {
+        "skipped": [],
+        "total": 0,
+        "usable": 0
+      },
+      "summary": {
+        "buys": 0,
+        "currencies": [],
+        "first_date": null,
+        "last_date": null,
+        "sells": 0,
+        "tax_years": [],
+        "tickers": []
+      },
+      "verdict": "unknown",
+      "warnings": [
+        "We could not tell which broker this file comes from."
+      ]
+    }
+  ],
+  "requires_acknowledgement": false
+}
