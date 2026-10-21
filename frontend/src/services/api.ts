@@ -1,3 +1,6 @@
+import { getApiBase } from './apiBase';
+import type { InspectionResult } from '../types/inspection';
+
 export class CSVValidationError extends Error {
   missing_columns: string[];
   required_columns: string[];
@@ -74,7 +77,7 @@ export interface BrokerMetadata {
  */
 export async function detectBroker(file: File): Promise<BrokerDetectionResult> {
   // Use /api prefix which is proxied in development, or full URL in production
-  const base = import.meta.env.DEV ? '/api' : (window.location.origin + '/prod');
+  const base = getApiBase();
   const form = new FormData();
   form.append('file', file);
 
@@ -107,7 +110,7 @@ export async function submitCalculation({
   taxYear: string;
   analysisType: string;
 }) {
-  const base = import.meta.env.DEV ? '/api' : (window.location.origin + '/prod');
+  const base = getApiBase();
   const form = new FormData();
 
   // Append each file with a unique field name (file0, file1, etc.)
@@ -160,7 +163,7 @@ export async function submitUnrealisedGains({
   taxYear: string;
   alreadyRealisedGainGbp?: number;
 }): Promise<{ raw: any }> {
-  const base = import.meta.env.DEV ? '/api' : (window.location.origin + '/prod');
+  const base = getApiBase();
   const form = new FormData();
   form.append('file', file);
   form.append('tax_year', taxYear);
@@ -180,4 +183,52 @@ export async function submitUnrealisedGains({
   }
   const raw = await resp.json();
   return { raw };
+}
+
+export type InspectErrorKind = 'too_large' | 'server' | 'network';
+
+export class InspectError extends Error {
+  kind: InspectErrorKind;
+
+  constructor(kind: InspectErrorKind, message: string) {
+    super(message);
+    this.name = 'InspectError';
+    this.kind = kind;
+  }
+}
+
+// API Gateway rejects bodies above ~6 MB before our handler runs (non-JSON response).
+const GATEWAY_LIMIT_BYTES = 5 * 1024 * 1024;
+
+/** Inspect one or more broker files without running a calculation. */
+export async function inspectFiles(files: File[]): Promise<InspectionResult> {
+  const form = new FormData();
+  files.forEach((file, index) => form.append(`file${index}`, file));
+  const totalBytes = files.reduce((sum, f) => sum + f.size, 0);
+
+  let resp: Response;
+  try {
+    resp = await fetch(getApiBase() + '/inspect-file', { method: 'POST', body: form });
+  } catch {
+    throw new InspectError('network', 'We could not reach the server. Check your connection and try again.');
+  }
+
+  let body: any = null;
+  try {
+    body = await resp.json();
+  } catch {
+    body = null;
+  }
+
+  if (!resp.ok) {
+    if (body === null && totalBytes >= GATEWAY_LIMIT_BYTES) {
+      throw new InspectError('too_large', 'Those files are too large to check together. Upload fewer or smaller files.');
+    }
+    const msg = body && typeof body.error === 'string' ? body.error : 'The server could not check your files (HTTP ' + resp.status + ').';
+    throw new InspectError('server', msg);
+  }
+  if (body === null) {
+    throw new InspectError('server', 'The server returned an unreadable response.');
+  }
+  return body as InspectionResult;
 }
