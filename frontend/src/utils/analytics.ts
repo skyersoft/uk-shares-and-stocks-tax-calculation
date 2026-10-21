@@ -1,3 +1,5 @@
+import type { NextActionId, Verdict } from '../types/inspection';
+
 /**
  * Google Analytics 4 Event Tracking Utilities
  * 
@@ -92,6 +94,27 @@ export function trackBrokerDetection(
         broker,
         confidence,
         file_type: fileType,
+    });
+}
+
+/**
+ * Track the File X-ray verdict for one uploaded file (sent once per inspection result).
+ */
+export function trackInspection(verdict: Verdict, formatId: string | null, fileCount: number): void {
+    trackEvent('file_inspection', {
+        verdict,
+        format_id: formatId ?? 'none',
+        file_count: fileCount,
+    });
+}
+
+/**
+ * Track the action a user took from the File X-ray.
+ */
+export function trackInspectionAction(action: NextActionId, verdict: Verdict): void {
+    trackEvent('file_inspection_action', {
+        action,
+        verdict,
     });
 }
 
