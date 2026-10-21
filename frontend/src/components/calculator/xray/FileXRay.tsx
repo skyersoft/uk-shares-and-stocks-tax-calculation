@@ -19,7 +19,11 @@ export const FileXRay: React.FC<FileXRayProps> = ({ inspection, result, onAction
       <h2 className="h5 mb-0">{inspection.filename}</h2>
       <ProgressStrip inspection={inspection} />
       {inspection.warnings.length > 0 && (
-        <ul className="small text-muted">{inspection.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+        <ul className="list-unstyled small text-warning-emphasis mb-2" aria-label="Warnings">
+          {inspection.warnings.map((w, i) => (
+            <li key={i}><span aria-hidden="true">{'⚠'} </span><span className="visually-hidden">Warning: </span>{w}</li>
+          ))}
+        </ul>
       )}
       <ColumnTable columns={inspection.columns} />
       <SummaryBoxes inspection={inspection} result={result} onAction={onAction}

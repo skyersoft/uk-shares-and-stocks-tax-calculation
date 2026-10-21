@@ -55,8 +55,8 @@ export const ColumnTable: React.FC<{ columns: ColumnInfo[] }> = ({ columns }) =>
             </tr>
           </thead>
           <tbody>
-            {columns.map(c => (
-              <tr key={c.header}>
+            {columns.map((c, index) => (
+              <tr key={`${c.header}-${index}`}>
                 <td><code>{c.header}</code></td>
                 <td className="fw-bold">{c.mapped_to ?? 'not needed'}</td>
                 <td><FillBar col={c} /></td>
@@ -68,8 +68,8 @@ export const ColumnTable: React.FC<{ columns: ColumnInfo[] }> = ({ columns }) =>
         </table>
       </div>
       <div className="d-md-none" data-testid="column-cards">
-        {sorted.map(c => (
-          <div key={c.header} className="card mb-2" data-testid="column-card">
+        {sorted.map((c, index) => (
+          <div key={`${c.header}-${index}`} className="card mb-2" data-testid="column-card">
             <div className="card-body py-2">
               <div className="d-flex justify-content-between align-items-start gap-2">
                 <div><code>{c.header}</code> <span className="text-muted">&rarr;</span> <strong>{c.mapped_to ?? 'not needed'}</strong></div>

@@ -222,3 +222,54 @@ describe('FailureScreen', () => {
     expect(onAction).toHaveBeenCalledWith('remove_file', 'x.pdf');
   });
 });
+
+describe('X-ray review follow-ups', () => {
+  it('shows a passing "What we expect" box when every sell has an earlier buy', () => {
+    render(<FileXRay inspection={baseInspection()} onAction={jest.fn()}
+      result={baseResult({ requires_acknowledgement: false,
+        expectations: [{ rule: 'every_sell_has_earlier_buy', passed: true, details: [] }] })} />);
+    expect(screen.getByText(/What we expect from a good file/)).toBeInTheDocument();
+    expect(screen.getByText('Every sell has an earlier buy in the files you uploaded')).toBeInTheDocument();
+    expect(screen.queryByTestId('sell-without-buy')).toBeNull();
+  });
+
+  it('gives each acknowledgement checkbox a unique id even with the same filename', () => {
+    render(<>
+      <FileXRay inspection={baseInspection()} result={baseResult()} onAction={jest.fn()} />
+      <FileXRay inspection={baseInspection()} result={baseResult()} onAction={jest.fn()} />
+    </>);
+    const boxes = screen.getAllByLabelText(/I understand my history is incomplete/i);
+    expect(boxes).toHaveLength(2);
+    expect(boxes[0].id).not.toBe(boxes[1].id);
+  });
+
+  it('hides "No buys before" when the first date is the start of the tax year', () => {
+    const ins = baseInspection();
+    render(<FileXRay inspection={{ ...ins, summary: { ...ins.summary, first_date: '2025-04-06' } }}
+      result={baseResult({ expectations: [] })} onAction={jest.fn()} />);
+    expect(screen.queryByText(/No buys before/)).toBeNull();
+  });
+
+  it('shows "No buys before" when the first date is later than the start of the tax year', () => {
+    const ins = baseInspection();
+    render(<FileXRay inspection={{ ...ins, summary: { ...ins.summary, first_date: '2025-04-07' } }}
+      result={baseResult({ expectations: [] })} onAction={jest.fn()} />);
+    expect(screen.getByText(/No buys before 2025-04-07/)).toBeInTheDocument();
+  });
+
+  it('renders duplicate headers without React key warnings', () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    render(<FileXRay inspection={baseInspection({ columns: [col({ header: 'Amount' }), col({ header: 'Amount', mapped_to: null, status: 'ignored' })] })}
+      result={baseResult()} onAction={jest.fn()} />);
+    const keyWarnings = spy.mock.calls.filter(c => String(c[0]).includes('same key'));
+    spy.mockRestore();
+    expect(keyWarnings).toHaveLength(0);
+  });
+
+  it('prefixes each warning with a visible warning symbol', () => {
+    render(<FileXRay inspection={baseInspection({ warnings: ['Prices may be in pence'] })} result={baseResult()} onAction={jest.fn()} />);
+    const li = screen.getByText(/Prices may be in pence/).closest('li')!;
+    expect(li).toHaveTextContent('⚠');
+    expect(li.closest('ul')).not.toHaveClass('text-muted');
+  });
+});
