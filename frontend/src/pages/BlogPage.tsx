@@ -239,7 +239,6 @@ const BlogPage: React.FC = () => {
         <SEOHead
           title="UK Tax & Investment Blog - IBKR Tax Calculator"
           description="Expert insights, guides, and updates on UK tax calculations for stocks and shares. Stay informed about CGT rules and investment strategies."
-          canonical="https://cgttaxtool.uk/blog"
         />
       )}
       <div className="row justify-content-center">

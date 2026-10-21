@@ -16,6 +16,7 @@ import os
 import json
 import re
 import datetime
+from xml.sax.saxutils import escape
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
@@ -23,6 +24,20 @@ from typing import Dict, List, Any, Optional
 PROJECT_ROOT = Path(__file__).parent.parent
 BLOG_POSTS_DIR = PROJECT_ROOT / 'frontend' / 'public' / 'blog' / 'posts'
 OUTPUT_INDEX_FILE = PROJECT_ROOT / 'frontend' / 'public' / 'blog' / 'index.json'
+SITEMAP_FILE = PROJECT_ROOT / 'frontend' / 'public' / 'sitemap.xml'
+SITE_URL = 'https://cgttaxtool.uk'
+
+# (path, changefreq, priority) for non-blog pages; /results is disallowed in robots.txt
+STATIC_PAGES = [
+    ('/', 'weekly', '1.0'),
+    ('/calculator', 'monthly', '0.9'),
+    ('/guide', 'monthly', '0.8'),
+    ('/help', 'monthly', '0.7'),
+    ('/about', 'monthly', '0.5'),
+    ('/blog', 'weekly', '0.8'),
+    ('/privacy', 'yearly', '0.3'),
+    ('/terms', 'yearly', '0.3'),
+]
 
 # Helper to estimate reading time
 def estimate_reading_time(content: str) -> int:
@@ -99,6 +114,21 @@ def parse_frontmatter(file_path: Path) -> Optional[Dict[str, Any]]:
         print(f"Error parsing {file_path}: {e}")
         return None
 
+def write_sitemap(posts: List[Dict[str, Any]]) -> None:
+    """Generate sitemap.xml with static pages plus one entry per blog post."""
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for path, freq, prio in STATIC_PAGES:
+        lines += ['  <url>', f'    <loc>{SITE_URL}{path}</loc>',
+                  f'    <changefreq>{freq}</changefreq>', f'    <priority>{prio}</priority>', '  </url>']
+    for post in posts:
+        lines += ['  <url>', f"    <loc>{SITE_URL}/blog/post/{escape(str(post['slug']))}</loc>",
+                  f"    <lastmod>{post['date']}</lastmod>",
+                  '    <changefreq>monthly</changefreq>', '    <priority>0.6</priority>', '  </url>']
+    lines.append('</urlset>')
+    SITEMAP_FILE.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    print(f"Wrote {len(STATIC_PAGES) + len(posts)} URLs to {SITEMAP_FILE}")
+
 def main():
     if not BLOG_POSTS_DIR.exists():
         print(f"Error: Blog posts directory not found at {BLOG_POSTS_DIR}")
@@ -122,6 +152,7 @@ def main():
         json.dump(posts, f, indent=2)
 
     print(f"Successfully generated index with {len(posts)} posts at {OUTPUT_INDEX_FILE}")
+    write_sitemap(posts)
 
 if __name__ == '__main__':
     main()
