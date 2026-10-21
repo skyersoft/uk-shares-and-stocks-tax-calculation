@@ -41,12 +41,13 @@ $IBKR_PIP install -r deployment/requirements.txt \
 #   manylinux2014_x86_64 wheels so they run on Amazon Linux 2 (Lambda).
 #   IMPORTANT: Delete the macOS installs first so __config__.py and other
 #   build-time files are fully replaced, not just the .so files.
-BINARY_PKGS="numpy pandas lxml pydantic pydantic_core cffi charset-normalizer websockets curl_cffi"
+BINARY_PKGS="numpy pandas lxml pydantic pydantic_core cffi charset-normalizer websockets"
 for pkg in numpy numpy-* pandas pandas-* lxml lxml-* pydantic pydantic-* pydantic_core pydantic_core-* cffi cffi-* charset_normalizer charset_normalizer-* websockets websockets-* curl_cffi curl_cffi-*; do
-    rm -rf "$DEPLOY_DIR/$pkg"
+    rm -rf "$DEPLOY_DIR"/$pkg
 done
 
-$IBKR_PIP install $BINARY_PKGS \
+# curl_cffi is pinned: yfinance requires curl_cffi<0.14 (newer releases are also ~15MB larger)
+$IBKR_PIP install $BINARY_PKGS "curl_cffi>=0.7,<0.14" \
     -t $DEPLOY_DIR/ \
     --platform manylinux2014_x86_64 \
     --python-version 3.13 \
