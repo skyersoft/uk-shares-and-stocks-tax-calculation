@@ -31,6 +31,23 @@ try:
 except ImportError as e:
     print(f"Converter import error: {e}")
 
+# Import the upload inspector (used by /inspect-file; light dependencies)
+INSPECT_AVAILABLE = False
+try:
+    from main.python.services.file_inspector import inspect_files
+    INSPECT_AVAILABLE = True
+except ImportError as e:
+    print(f"Inspector import error: {e}")
+
+# Maximum accepted request body for /inspect-file, in decoded bytes (4 MiB).
+# Limits: API Gateway accepts 10 MB, but a synchronous Lambda invocation
+# (which API Gateway proxy integrations use) accepts only 6 MB of request
+# payload. Binary multipart bodies reach the Lambda base64-encoded inside the
+# JSON event, which inflates them by 4/3: 6 MB / (4/3) = 4.5 MB of raw bytes
+# at the very most. Headers and the JSON envelope take further space, so we
+# stop at 4 MiB (about 5.6 MB once base64-encoded) to leave headroom.
+MAX_INSPECT_BYTES = 4 * 1024 * 1024
+
 # Import calculator (heavy dependencies like pandas)
 try:
     from main.python.capital_gains_calculator import create_enhanced_calculator
@@ -143,6 +160,10 @@ def handle_api_gateway_request(event: Dict[str, Any], context: Any) -> Dict[str,
     # Handle broker detection preview
     elif method == 'POST' and path == '/detect-broker':
         return handle_broker_detection_request(event)
+
+    # Inspect uploaded files (X-ray) without calculating anything
+    elif method == 'POST' and path == '/inspect-file':
+        return handle_inspect_request(event)
 
     # Handle unrealised gains / predictive tax calculation
     elif method == 'POST' and path == '/unrealised-gains':
@@ -519,6 +540,79 @@ def handle_broker_detection_request(event: Dict[str, Any]) -> Dict[str, Any]:
                 'message': 'Error processing broker detection request'
             })
         }
+
+
+def _inspect_response(status: int, payload: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        'statusCode': status,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+        },
+        'body': json.dumps(payload)
+    }
+
+
+def _parse_multipart_file_parts(body: bytes, content_type: str) -> list:
+    """Return [(filename, raw_bytes)] for every file part, in upload order.
+
+    Uses the stdlib email parser so the bytes are kept exactly as uploaded
+    (the inspector does its own encoding detection).
+    """
+    from email import policy
+    from email.parser import BytesParser
+
+    header = b'Content-Type: ' + content_type.encode('latin-1', 'replace') + b'\r\nMIME-Version: 1.0\r\n\r\n'
+    message = BytesParser(policy=policy.compat32).parsebytes(header + body)
+    files = []
+    if not message.is_multipart():
+        return files
+    for part in message.get_payload():
+        name = part.get_param('name', header='content-disposition') or ''
+        filename = part.get_filename()
+        if filename is None and not str(name).startswith('file'):
+            continue
+        content = part.get_payload(decode=True) or b''
+        files.append((filename or '', content))
+    return files
+
+
+def handle_inspect_request(event: Dict[str, Any]) -> Dict[str, Any]:
+    """Inspect uploaded files and return the X-ray JSON. Never stores anything."""
+    try:
+        if not INSPECT_AVAILABLE:
+            return _inspect_response(503, {'error': 'File inspection is temporarily unavailable.'})
+
+        raw_body = event.get('body') or ''
+        if event.get('isBase64Encoded', False):
+            body = base64.b64decode(raw_body)
+        elif isinstance(raw_body, str):
+            body = raw_body.encode('latin-1', errors='replace')
+        else:
+            body = raw_body
+
+        headers = event.get('headers') or {}
+        content_type = headers.get('content-type', '') or headers.get('Content-Type', '')
+        if 'multipart/form-data' not in content_type:
+            return _inspect_response(400, {'error': 'Invalid request format. Expected multipart/form-data.'})
+
+        if len(body) > MAX_INSPECT_BYTES:
+            return _inspect_response(413, {
+                'error': 'These files are too large to check together (limit about '
+                         f'{MAX_INSPECT_BYTES // (1024 * 1024)} MB in total). '
+                         'Try exporting a shorter date range, or upload fewer files at once.'
+            })
+
+        files = _parse_multipart_file_parts(body, content_type)
+        if not files:
+            return _inspect_response(400, {'error': 'No file content received'})
+
+        result = inspect_files(files)
+        return _inspect_response(200, result.to_dict())
+
+    except Exception as e:
+        print(f"Inspect error: {type(e).__name__}: {e}")
+        return _inspect_response(500, {'error': 'Something went wrong while checking your files.'})
 
 
 def handle_calculation_request(event: Dict[str, Any]) -> Dict[str, Any]:
