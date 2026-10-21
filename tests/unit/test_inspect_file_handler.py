@@ -138,3 +138,32 @@ def test_inspect_handles_non_base64_body():
     ev["body"] = multipart([("a.csv", statement([("AAPL", "2024-05-01", 10, 100)]))]).decode("latin-1")
     ev["isBase64Encoded"] = False
     assert call(ev)["statusCode"] == 200
+
+
+@pytest.mark.parametrize("name", ["caf\u00e9.csv", "\u53d6\u5f15.csv"])
+def test_inspect_non_ascii_filename_is_preserved(name):
+    body = multipart([(name, statement([("AAPL", "2024-05-01", 10, 100)]))])
+    data = json.loads(call(event(body))["body"])
+    assert data["files"][0]["filename"] == name
+
+
+def test_inspect_rfc5987_filename():
+    content = statement([("AAPL", "2024-05-01", 10, 100)])
+    body = (f'--{BOUNDARY}\r\nContent-Disposition: form-data; name="file0"; '
+            f"filename*=UTF-8''caf%C3%A9.csv\r\n\r\n").encode() + content + f"\r\n--{BOUNDARY}--\r\n".encode()
+    data = json.loads(call(event(body))["body"])
+    assert data["files"][0]["filename"] == "caf\u00e9.csv"
+
+
+def test_inspect_plain_field_named_file_prefix_is_ignored():
+    body = multipart([], fields={"filetype": "csv"})
+    resp = call(event(body))
+    assert resp["statusCode"] == 400
+
+
+def test_inspect_invalid_base64_returns_400():
+    ev = event(b"x")
+    ev["body"] = "!!!not base64!!!"
+    resp = call(ev)
+    assert resp["statusCode"] == 400
+    assert "error" in json.loads(resp["body"])

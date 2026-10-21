@@ -1,6 +1,7 @@
 """AWS Lambda handler for IBKR Tax Calculator web application."""
 import json
 import base64
+import binascii
 import tempfile
 import os
 from typing import Dict, Any
@@ -556,24 +557,39 @@ def _inspect_response(status: int, payload: Dict[str, Any]) -> Dict[str, Any]:
 def _parse_multipart_file_parts(body: bytes, content_type: str) -> list:
     """Return [(filename, raw_bytes)] for every file part, in upload order.
 
-    Uses the stdlib email parser so the bytes are kept exactly as uploaded
-    (the inspector does its own encoding detection).
+    Deliberately not parse_multipart_data_proper: that decodes file bytes as
+    UTF-8 (`part.raw.decode('utf-8')`), which breaks cp1252 exports, and the
+    inspector does its own encoding detection on the raw bytes. Headers are
+    decoded as UTF-8 here so non-ASCII filenames survive. A part counts as a
+    file only if its Content-Disposition has a filename parameter.
     """
-    from email import policy
-    from email.parser import BytesParser
+    import urllib.parse
 
-    header = b'Content-Type: ' + content_type.encode('latin-1', 'replace') + b'\r\nMIME-Version: 1.0\r\n\r\n'
-    message = BytesParser(policy=policy.compat32).parsebytes(header + body)
+    m = re.search(r'boundary=(?:"([^"]+)"|([^;\s]+))', content_type, re.IGNORECASE)
+    if not m:
+        return []
+    delimiter = b'--' + (m.group(1) or m.group(2)).encode('utf-8')
     files = []
-    if not message.is_multipart():
-        return files
-    for part in message.get_payload():
-        name = part.get_param('name', header='content-disposition') or ''
-        filename = part.get_filename()
-        if filename is None and not str(name).startswith('file'):
+    for chunk in body.split(delimiter)[1:]:
+        if chunk.startswith(b'--'):
+            break  # closing delimiter
+        if chunk.startswith(b'\r\n'):
+            chunk = chunk[2:]
+        head, sep, content = chunk.partition(b'\r\n\r\n')
+        if not sep:
             continue
-        content = part.get_payload(decode=True) or b''
-        files.append((filename or '', content))
+        if content.endswith(b'\r\n'):
+            content = content[:-2]
+        header_text = head.decode('utf-8', errors='replace')
+        star = re.search(r"filename\*\s*=\s*[^';]*'[^']*'([^;\r\n]+)", header_text, re.IGNORECASE)
+        plain = re.search(r'filename\s*=\s*(?:"([^"]*)"|([^;\r\n]+))', header_text, re.IGNORECASE)
+        if star:
+            filename = urllib.parse.unquote(star.group(1).strip(), encoding='utf-8', errors='replace')
+        elif plain:
+            filename = (plain.group(1) if plain.group(1) is not None else plain.group(2)).strip()
+        else:
+            continue
+        files.append((filename, content))
     return files
 
 
@@ -585,7 +601,10 @@ def handle_inspect_request(event: Dict[str, Any]) -> Dict[str, Any]:
 
         raw_body = event.get('body') or ''
         if event.get('isBase64Encoded', False):
-            body = base64.b64decode(raw_body)
+            try:
+                body = base64.b64decode(raw_body, validate=True)
+            except (binascii.Error, ValueError):
+                return _inspect_response(400, {'error': 'The upload could not be read. Please try again.'})
         elif isinstance(raw_body, str):
             body = raw_body.encode('latin-1', errors='replace')
         else:
