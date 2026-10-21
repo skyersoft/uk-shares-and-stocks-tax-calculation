@@ -32,7 +32,12 @@ describe('inspectFiles', () => {
 
   it('throws server InspectError with message for 413 JSON', async () => {
     mockFetch(async () => resp(413, { error: 'Too big' }));
-    await expect(inspectFiles([file('a.csv')])).rejects.toMatchObject({ kind: 'server', message: 'Too big' });
+    await expect(inspectFiles([file('a.csv')])).rejects.toMatchObject({ kind: 'server', message: 'Too big', status: 413 });
+  });
+
+  it('exposes the HTTP status on server errors', async () => {
+    mockFetch(async () => resp(500, { error: 'Oops' }));
+    await expect(inspectFiles([file('a.csv')])).rejects.toMatchObject({ kind: 'server', status: 500 });
   });
 
   it('maps non-JSON failure on a large payload to too_large', async () => {

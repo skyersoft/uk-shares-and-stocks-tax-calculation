@@ -55,7 +55,7 @@ export const FailureScreen: React.FC<Props> = ({ kind, inspection, precheck, fil
               <p className="xray-mono">Date/Time &middot; Symbol &middot; Buy/Sell &middot; Quantity &middot; Price &middot; Currency &middot; Commission</p>
             </div>
             {steps.length > 0 && (
-              <div className="col-md-6">
+              <div className="col-md-6" data-testid="export-steps">
                 <h3 className="h6">How to export it</h3>
                 <ol>{steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
               </div>

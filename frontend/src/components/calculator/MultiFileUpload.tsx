@@ -2,182 +2,167 @@ import React, { useState, useRef, useEffect } from 'react';
 import { BrokerFile, BrokerType, BROKER_OPTIONS } from '../../types/calculator';
 import { Button } from '../ui/Button';
 import { Alert } from '../ui/Alert';
-import { Modal } from '../ui/Modal';
-import { FileValidationPreview } from './FileValidationPreview';
-import { BrokerDetectionResult } from '../../services/api';
+import { detectBroker } from '../../services/api';
+import { MAX_UPLOAD_BYTES } from '../../utils/filePrecheck';
+import { trackInspectionAction } from '../../utils/analytics';
+import type { NextActionId } from '../../types/inspection';
+import { FeedbackForm } from '../feedback/FeedbackForm';
+import { FileXRay } from './xray/FileXRay';
+import { FailureScreen, FailureKind } from './xray/FailureScreen';
+import { useFileInspection, computeUploadGate, BAD_VERDICTS, FileCheck, UploadGate } from './xray/useFileInspection';
+
+export type { UploadGate } from './xray/useFileInspection';
 
 interface MultiFileUploadProps {
   files: BrokerFile[];
   onChange: (files: BrokerFile[]) => void;
   maxFiles?: number;
-  maxSizePerFile?: number; // in bytes
+  /** Shared "I understand my history is incomplete" flag, owned by the wizard. */
+  acknowledged?: boolean;
+  onAcknowledgeChange?: (value: boolean) => void;
+  /** Reports whether Continue should be allowed. */
+  onGateChange?: (gate: UploadGate) => void;
 }
 
 const MAX_FILES_DEFAULT = 10;
-const MAX_SIZE_PER_FILE_DEFAULT = 10 * 1024 * 1024; // 10MB
+
+const BROKER_TYPE_BY_NAME: Record<string, BrokerType> = {
+  'Interactive Brokers': 'interactive-brokers',
+  'Trading 212': 'trading212',
+  'Hargreaves Lansdown': 'hargreaves-lansdown',
+  'Freetrade': 'freetrade',
+  'Fidelity': 'fidelity',
+  'eToro': 'etoro',
+  'Vanguard': 'vanguard',
+  'AJ Bell': 'aj-bell'
+};
+
+const NOTICES: Partial<Record<NextActionId, string>> = {
+  add_opening_holdings:
+    'Entering opening holdings here is coming soon. For now, add an earlier export from your broker that covers the original purchases.',
+  show_skipped_rows:
+    'The skipped rows are listed by reason above. A row-by-row view is coming soon.',
+};
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const scrollTo = (el: Element | null) => {
+  if (el && typeof (el as HTMLElement).scrollIntoView === 'function') {
+    (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+};
 
 export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   files,
   onChange,
   maxFiles = MAX_FILES_DEFAULT,
-  maxSizePerFile = MAX_SIZE_PER_FILE_DEFAULT
+  acknowledged = false,
+  onAcknowledgeChange,
+  onGateChange,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [detectionResults, setDetectionResults] = useState<Record<string, BrokerDetectionResult>>({});
-  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   // Keep a ref to the latest files to avoid stale closures in async operations
   const filesRef = useRef<BrokerFile[]>(files);
-
   useEffect(() => {
     filesRef.current = files;
   }, [files]);
 
-  const generateId = () => `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const { checks, result, inFlight, serviceError, retry } = useFileInspection(files);
+  const gate = computeUploadGate(files, checks, result, inFlight);
 
-  const validateFile = (file: File): string | null => {
-    const allowedExtensions = ['.csv', '.qfx', '.ofx'];
-    const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+  useEffect(() => {
+    onGateChange?.(gate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gate.blockedReason, gate.requiresAck]);
 
-    if (!allowedExtensions.includes(extension)) {
-      return `File "${file.name}" has an invalid format. Only CSV, QFX, and OFX files are accepted.`;
+  // Reset the shared acknowledgement when the set of files changes
+  const idKey = files.map(f => f.id).join('|');
+  const prevIdKey = useRef(idKey);
+  useEffect(() => {
+    if (prevIdKey.current !== idKey) {
+      prevIdKey.current = idKey;
+      if (acknowledged) onAcknowledgeChange?.(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idKey]);
 
-    if (file.size > maxSizePerFile) {
-      const sizeMB = (maxSizePerFile / (1024 * 1024)).toFixed(0);
-      return `File "${file.name}" is too large. Maximum size is ${sizeMB}MB.`;
-    }
+  // ...or when a settled result no longer needs it
+  useEffect(() => {
+    if (!inFlight && !gate.requiresAck && acknowledged) onAcknowledgeChange?.(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inFlight, gate.requiresAck]);
 
-    return null;
-  };
-
-  const handleFiles = async (newFiles: FileList | null) => {
-    if (!newFiles || newFiles.length === 0) return;
-
-    setError(null);
-
-    if (files.length + newFiles.length > maxFiles) {
-      setError(`You can only upload up to ${maxFiles} files at a time.`);
-      return;
-    }
-
-    const brokerFiles: BrokerFile[] = [];
-    const errors: string[] = [];
-
-    // Validate and create initial broker file objects
-    Array.from(newFiles).forEach((file) => {
-      const validationError = validateFile(file);
-      if (validationError) {
-        errors.push(validationError);
-      } else {
-        const isCSV = file.name.toLowerCase().endsWith('.csv');
-        brokerFiles.push({
-          id: generateId(),
-          file,
-          broker: 'interactive-brokers', // default
-          accountName: undefined,
-          detectionStatus: isCSV ? 'pending' : undefined,
-          detectedBroker: undefined,
-          confidence: undefined,
-          transactionCount: undefined
-        });
-      }
+  // Broker detection pre-fills the broker selector. Only for files that passed the browser precheck.
+  const detectStarted = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    files.forEach(f => {
+      const status = checks[f.id]?.status;
+      if (f.detectionStatus !== 'pending' || status === 'precheck' || status === 'failed_precheck') return;
+      if (detectStarted.current.has(f.id)) return;
+      detectStarted.current.add(f.id);
+      detectBrokerForFile(f.id, f.file);
     });
+  });
 
-    if (errors.length > 0) {
-      setError(errors.join(' '));
-      return;
-    }
-
-    // Add files immediately (with pending status)
-    const updatedFiles = [...files, ...brokerFiles];
-    onChange(updatedFiles);
-
-    // Detect broker for CSV files asynchronously
-    for (const brokerFile of brokerFiles) {
-      if (brokerFile.detectionStatus === 'pending') {
-        detectBrokerForFile(brokerFile.id, brokerFile.file);
-      }
-    }
+  const updateFile = (fileId: string, patch: Partial<BrokerFile>) => {
+    onChange(filesRef.current.map(f => (f.id === fileId ? { ...f, ...patch } : f)));
   };
 
   const detectBrokerForFile = async (fileId: string, file: File) => {
-    // Import detectBroker function
-    const { detectBroker } = await import('../../services/api');
-
-    // Update status to detecting
-    // Use filesRef.current to get the latest files array
-    onChange(filesRef.current.map(f =>
-      f.id === fileId ? { ...f, detectionStatus: 'detecting' as const } : f
-    ));
-
+    updateFile(fileId, { detectionStatus: 'detecting' });
     try {
-      const result = await detectBroker(file);
-
-      if (result.detected) {
-        // Store full result
-        setDetectionResults(prev => ({ ...prev, [fileId]: result }));
-
-        // Map broker name to BrokerType
-        const brokerTypeMap: Record<string, BrokerType> = {
-          'Interactive Brokers': 'interactive-brokers',
-          'Trading 212': 'trading212',
-          'Hargreaves Lansdown': 'hargreaves-lansdown',
-          'Freetrade': 'freetrade',
-          'Fidelity': 'fidelity',
-          'eToro': 'etoro',
-          'Vanguard': 'vanguard',
-          'AJ Bell': 'aj-bell'
-        };
-
-        const brokerType = brokerTypeMap[result.broker!] || 'manual-csv';
-
-        onChange(filesRef.current.map(f =>
-          f.id === fileId ? {
-            ...f,
-            broker: brokerType,
-            detectionStatus: 'detected' as const,
-            detectedBroker: result.broker,
-            confidence: result.confidence,
-            transactionCount: result.metadata?.transaction_count
-          } : f
-        ));
+      const detection = await detectBroker(file);
+      if (detection.detected) {
+        updateFile(fileId, {
+          broker: BROKER_TYPE_BY_NAME[detection.broker!] || 'manual-csv',
+          detectionStatus: 'detected',
+          detectedBroker: detection.broker,
+          confidence: detection.confidence,
+          transactionCount: detection.metadata?.transaction_count
+        });
       } else {
-        onChange(filesRef.current.map(f =>
-          f.id === fileId ? {
-            ...f,
-            detectionStatus: 'error' as const,
-            detectionError: result.error || 'Could not detect broker'
-          } : f
-        ));
+        updateFile(fileId, { detectionStatus: 'error', detectionError: detection.error || 'Could not detect broker' });
       }
-    } catch (error) {
-      console.error('Broker detection failed:', error);
-      onChange(filesRef.current.map(f =>
-        f.id === fileId ? {
-          ...f,
-          detectionStatus: 'error' as const,
-          detectionError: error instanceof Error ? error.message : 'Detection failed'
-        } : f
-      ));
+    } catch (err) {
+      updateFile(fileId, { detectionStatus: 'error', detectionError: err instanceof Error ? err.message : 'Detection failed' });
     }
+  };
+
+  const generateId = () => `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  const handleFiles = (newFiles: FileList | File[] | null) => {
+    if (!newFiles || newFiles.length === 0) return;
+    setError(null);
+
+    if (files.length + newFiles.length > maxFiles) {
+      setError(`You can only upload up to ${maxFiles} files at a time. Remove a file first, or combine your exports.`);
+      return;
+    }
+
+    // Type and size problems are shown per file by the X-ray, so every file is added.
+    const brokerFiles: BrokerFile[] = Array.from(newFiles).map(file => ({
+      id: generateId(),
+      file,
+      broker: 'interactive-brokers', // default until detection runs
+      accountName: undefined,
+      detectionStatus: file.name.toLowerCase().endsWith('.csv') ? 'pending' : undefined,
+    }));
+    onChange([...files, ...brokerFiles]);
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragOver(false);
     handleFiles(e.dataTransfer.files);
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragOver(false);
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,23 +172,64 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     }
   };
 
-  const handleBrokerChange = (fileId: string, broker: BrokerType) => {
-    onChange(files.map(f => f.id === fileId ? { ...f, broker } : f));
-  };
-
-  const handleAccountNameChange = (fileId: string, accountName: string) => {
-    onChange(files.map(f => f.id === fileId ? { ...f, accountName } : f));
-  };
-
   const handleRemove = (fileId: string) => {
-    onChange(files.filter(f => f.id !== fileId));
+    onChange(filesRef.current.filter(f => f.id !== fileId));
     setError(null);
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  const handleAction = (action: NextActionId, fileId: string, check: FileCheck | undefined) => {
+    if (check?.status === 'inspected') trackInspectionAction(action, check.inspection.verdict);
+    setNotice(null);
+    switch (action) {
+      case 'remove_file':
+        handleRemove(fileId);
+        break;
+      case 'add_earlier_file':
+        fileInputRef.current?.click();
+        break;
+      case 'pick_broker': {
+        const select = document.getElementById(`broker-select-${fileId}`);
+        scrollTo(select);
+        select?.focus();
+        break;
+      }
+      case 'request_support':
+        setShowFeedback(true);
+        setTimeout(() => scrollTo(document.getElementById('upload-feedback')), 0);
+        break;
+      case 'view_export_steps': {
+        const steps = document.querySelector(`[data-file-id="${fileId}"] [data-testid="export-steps"]`);
+        scrollTo(steps ?? document.getElementById('brokerHelpAccordion'));
+        break;
+      }
+      default:
+        setNotice(NOTICES[action] ?? null);
+    }
+  };
+
+  const renderCheck = (brokerFile: BrokerFile) => {
+    const check = checks[brokerFile.id];
+    const onAction = (id: NextActionId) => handleAction(id, brokerFile.id, check);
+    if (!check || check.status === 'precheck' || check.status === 'inspecting') {
+      return (
+        <div className="d-flex align-items-center gap-2 text-muted small py-2 placeholder-glow" role="status">
+          <span className="spinner-border spinner-border-sm" aria-hidden="true"></span>
+          <span>Checking {brokerFile.file.name}…</span>
+        </div>
+      );
+    }
+    if (check.status === 'failed_precheck') {
+      return <FailureScreen kind={check.precheck.kind} precheck={check.precheck} fileName={brokerFile.file.name} onAction={onAction} />;
+    }
+    if (check.status === 'error' || !result) return null;
+    const { inspection } = check;
+    if (BAD_VERDICTS.includes(inspection.verdict)) {
+      return <FailureScreen kind={inspection.verdict as FailureKind} inspection={inspection} onAction={onAction} />;
+    }
+    return (
+      <FileXRay inspection={inspection} result={result} onAction={onAction}
+        acknowledged={acknowledged} onAcknowledgeChange={onAcknowledgeChange} />
+    );
   };
 
   const totalSize = files.reduce((sum, f) => sum + f.file.size, 0);
@@ -219,11 +245,10 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
 
       {/* Drop Zone */}
       <div
-        className={`border-2 border-dashed rounded p-4 text-center ${dragOver ? 'border-primary bg-light' : 'border-secondary'
-          }`}
+        className={`border-2 border-dashed rounded p-4 text-center ${dragOver ? 'border-primary bg-light' : 'border-secondary'}`}
         onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
         style={{ transition: 'all 0.2s ease', cursor: 'pointer' }}
         onClick={() => fileInputRef.current?.click()}
       >
@@ -233,6 +258,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
           multiple
           accept=".csv,.qfx,.ofx"
           onChange={handleFileInput}
+          onClick={(e) => e.stopPropagation()}
           style={{ display: 'none' }}
         />
 
@@ -243,10 +269,23 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
           </h5>
           <p className="text-muted mb-2">or click to browse</p>
           <p className="small text-muted mb-0">
-            Accepted formats: CSV, QFX, OFX | Max {maxFiles} files | Max {formatFileSize(maxSizePerFile)} per file
+            Accepted formats: CSV, QFX, OFX | Max {maxFiles} files | Max {formatFileSize(MAX_UPLOAD_BYTES)} in total
           </p>
         </div>
       </div>
+
+      {serviceError && (
+        <div className="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 mb-0 py-2 small" role="status">
+          <span>
+            We couldn't check your file just now. You can still continue: we will check it again when we calculate.
+          </span>
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={retry}>Try again</button>
+        </div>
+      )}
+
+      {notice && (
+        <div className="alert alert-info mt-3 mb-0 py-2 small" role="status">{notice}</div>
+      )}
 
       {/* File List */}
       {files.length > 0 && (
@@ -263,8 +302,8 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
 
           <div className="list-group">
             {files.map((brokerFile) => (
-              <div key={brokerFile.id} className="list-group-item">
-                <div className="row g-3 align-items-center">
+              <div key={brokerFile.id} className="list-group-item" data-file-id={brokerFile.id}>
+                <div className="row g-3 align-items-center mb-2">
                   {/* File Info */}
                   <div className="col-12 col-md-4">
                     <div className="d-flex align-items-center">
@@ -273,37 +312,7 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                         <div className="fw-bold text-truncate" style={{ maxWidth: '200px' }}>
                           {brokerFile.file.name}
                         </div>
-                        <div className="small text-muted">
-                          {formatFileSize(brokerFile.file.size)}
-                          {brokerFile.transactionCount && (
-                            <span className="ms-2">
-                              • {brokerFile.transactionCount} transactions
-                            </span>
-                          )}
-                        </div>
-                        {/* Detection Status */}
-                        {brokerFile.detectionStatus && (
-                          <div className="mt-1">
-                            {brokerFile.detectionStatus === 'detecting' && (
-                              <small className="text-info">
-                                <i className="fas fa-spinner fa-spin me-1"></i>
-                                Detecting broker...
-                              </small>
-                            )}
-                            {brokerFile.detectionStatus === 'detected' && (
-                              <small className="text-success">
-                                <i className="fas fa-check-circle me-1"></i>
-                                {brokerFile.detectedBroker} ({Math.round((brokerFile.confidence || 0) * 100)}%)
-                              </small>
-                            )}
-                            {brokerFile.detectionStatus === 'error' && (
-                              <small className="text-danger">
-                                <i className="fas fa-exclamation-triangle me-1"></i>
-                                {brokerFile.detectionError || 'Detection failed'}
-                              </small>
-                            )}
-                          </div>
-                        )}
+                        <div className="small text-muted">{formatFileSize(brokerFile.file.size)}</div>
                       </div>
                     </div>
                   </div>
@@ -311,9 +320,11 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                   {/* Broker Selection */}
                   <div className="col-12 col-md-3">
                     <select
+                      id={`broker-select-${brokerFile.id}`}
+                      aria-label={`Broker for ${brokerFile.file.name}`}
                       className="form-select form-select-sm"
                       value={brokerFile.broker}
-                      onChange={(e) => handleBrokerChange(brokerFile.id, e.target.value as BrokerType)}
+                      onChange={(e) => updateFile(brokerFile.id, { broker: e.target.value as BrokerType })}
                       disabled={brokerFile.detectionStatus === 'detecting'}
                     >
                       {BROKER_OPTIONS.map((option) => (
@@ -330,33 +341,26 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
                       type="text"
                       className="form-control form-control-sm"
                       placeholder="Account label (optional)"
+                      aria-label={`Account label for ${brokerFile.file.name}`}
                       value={brokerFile.accountName || ''}
-                      onChange={(e) => handleAccountNameChange(brokerFile.id, e.target.value)}
+                      onChange={(e) => updateFile(brokerFile.id, { accountName: e.target.value })}
                     />
                   </div>
 
                   {/* Remove Button */}
                   <div className="col-12 col-md-2 text-end">
-                    {brokerFile.detectionStatus === 'detected' && (
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        className="me-2"
-                        onClick={() => setPreviewFileId(brokerFile.id)}
-                        title="Preview file details"
-                      >
-                        <i className="fas fa-eye"></i>
-                      </Button>
-                    )}
                     <Button
                       variant="outline-danger"
                       size="sm"
                       onClick={() => handleRemove(brokerFile.id)}
+                      aria-label={`Remove ${brokerFile.file.name}`}
                     >
                       <i className="fas fa-trash"></i>
                     </Button>
                   </div>
                 </div>
+
+                {renderCheck(brokerFile)}
               </div>
             ))}
           </div>
@@ -374,27 +378,20 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
         </div>
       )}
 
+      {showFeedback && (
+        <div id="upload-feedback">
+          <p className="small text-muted mt-3 mb-0">
+            Tell us which broker and report this is. Please do not paste account numbers or personal details.
+          </p>
+          <FeedbackForm />
+        </div>
+      )}
+
       {files.length === 0 && (
         <div className="alert alert-info mt-3 mb-0" role="alert">
           <i className="fas fa-info-circle me-2"></i>
           <strong>Tip:</strong> You can upload files from multiple brokers. We'll combine them automatically.
         </div>
-      )}
-
-      {/* Preview Modal */}
-      {previewFileId && detectionResults[previewFileId] && (
-        <Modal
-          isOpen={!!previewFileId}
-          onClose={() => setPreviewFileId(null)}
-          title="File Validation Preview"
-          size="lg"
-        >
-          <FileValidationPreview
-            detection={detectionResults[previewFileId]}
-            onConfirm={() => setPreviewFileId(null)}
-            onCancel={() => setPreviewFileId(null)}
-          />
-        </Modal>
       )}
     </div>
   );

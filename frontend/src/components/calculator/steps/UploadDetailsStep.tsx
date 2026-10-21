@@ -7,7 +7,7 @@ import {
   OtherDividendsData,
   OtherCapitalGainsData
 } from '../../../types/calculator';
-import { MultiFileUpload } from '../MultiFileUpload';
+import { MultiFileUpload, UploadGate } from '../MultiFileUpload';
 import { EmploymentIncome } from '../income/EmploymentIncome';
 import { RentalIncome } from '../income/RentalIncome';
 import { SavingsInterest } from '../income/SavingsInterest';
@@ -17,9 +17,14 @@ import { OtherCapitalGains } from '../income/OtherCapitalGains';
 interface UploadDetailsStepProps {
   data: WizardData;
   onChange: (data: WizardData) => void;
+  acknowledged?: boolean;
+  onAcknowledgeChange?: (value: boolean) => void;
+  onUploadGateChange?: (gate: UploadGate) => void;
 }
 
-export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onChange }) => {
+export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({
+  data, onChange, acknowledged, onAcknowledgeChange, onUploadGateChange
+}) => {
   const { incomeSources } = data;
 
   const hasInvestments = incomeSources.investmentPortfolio;
@@ -84,6 +89,9 @@ export const UploadDetailsStep: React.FC<UploadDetailsStepProps> = ({ data, onCh
             files={data.brokerFiles}
             onChange={(files) => onChange({ ...data, brokerFiles: files })}
             maxFiles={10}
+            acknowledged={acknowledged}
+            onAcknowledgeChange={onAcknowledgeChange}
+            onGateChange={onUploadGateChange}
           />
 
           <div className="alert alert-info py-2 mt-2 small" role="alert">

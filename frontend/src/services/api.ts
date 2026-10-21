@@ -189,11 +189,14 @@ export type InspectErrorKind = 'too_large' | 'server' | 'network';
 
 export class InspectError extends Error {
   kind: InspectErrorKind;
+  /** HTTP status when the server answered (undefined for network errors). */
+  status?: number;
 
-  constructor(kind: InspectErrorKind, message: string) {
+  constructor(kind: InspectErrorKind, message: string, status?: number) {
     super(message);
     this.name = 'InspectError';
     this.kind = kind;
+    this.status = status;
   }
 }
 
@@ -222,13 +225,13 @@ export async function inspectFiles(files: File[]): Promise<InspectionResult> {
 
   if (!resp.ok) {
     if (body === null && totalBytes >= GATEWAY_LIMIT_BYTES) {
-      throw new InspectError('too_large', 'Those files are too large to check together. Upload fewer or smaller files.');
+      throw new InspectError('too_large', 'Those files are too large to check together. Upload fewer or smaller files.', resp.status);
     }
     const msg = body && typeof body.error === 'string' ? body.error : 'The server could not check your files (HTTP ' + resp.status + ').';
-    throw new InspectError('server', msg);
+    throw new InspectError('server', msg, resp.status);
   }
   if (body === null) {
-    throw new InspectError('server', 'The server returned an unreadable response.');
+    throw new InspectError('server', 'The server returned an unreadable response.', resp.status);
   }
   return body as InspectionResult;
 }

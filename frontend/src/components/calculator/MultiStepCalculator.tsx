@@ -8,6 +8,10 @@ import { UploadDetailsStep } from './steps/UploadDetailsStep';
 import { PersonalDetailsStep } from './steps/PersonalDetailsStep';
 import { ReviewStep } from './steps/ReviewStep';
 import { useCalculation } from '../../context/CalculationContext';
+import { CalculationErrorDisplay } from './CalculationErrorDisplay';
+import type { UploadGate } from './MultiFileUpload';
+
+const ACK_REASON = "Tick 'I understand my history is incomplete' to continue";
 
 interface MultiStepCalculatorProps {
   onComplete: (data: WizardData) => void;
@@ -44,6 +48,9 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
     }
   });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  // Shared across every file's X-ray: one tick covers all sells with no earlier buy
+  const [historyAcknowledged, setHistoryAcknowledged] = useState(false);
+  const [uploadGate, setUploadGate] = useState<UploadGate>({ blockedReason: null, requiresAck: false });
 
   // Get submission state from context for API errors
   const { state: calculationState } = useCalculation();
@@ -52,6 +59,12 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
     setWizardData((prev) => ({ ...prev, ...updates }));
     setValidationErrors([]);
   };
+
+  const hasFiles = (wizardData.brokerFiles?.length ?? 0) > 0;
+  const uploadBlockedReason: string | null =
+    wizardData.incomeSources?.investmentPortfolio && hasFiles
+      ? uploadGate.blockedReason ?? (uploadGate.requiresAck && !historyAcknowledged ? ACK_REASON : null)
+      : null;
 
   const validateStep = (step: WizardStep): boolean => {
     const errors: string[] = [];
@@ -80,6 +93,8 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
         if (wizardData.incomeSources?.investmentPortfolio) {
           if (!wizardData.brokerFiles || wizardData.brokerFiles.length === 0) {
             errors.push('Please upload at least one broker file for portfolio analysis');
+          } else if (uploadBlockedReason) {
+            errors.push(uploadBlockedReason);
           }
         }
 
@@ -169,6 +184,9 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
           <UploadDetailsStep
             data={wizardData as WizardData}
             onChange={updateWizardData}
+            acknowledged={historyAcknowledged}
+            onAcknowledgeChange={setHistoryAcknowledged}
+            onUploadGateChange={setUploadGate}
           />
         );
 
@@ -202,7 +220,13 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
           />
 
           {/* API/Submission Errors from Context */}
-          {calculationState.status === 'error' && calculationState.error && (
+          {calculationState.status === 'error' && calculationState.errorDetail && (
+            <CalculationErrorDisplay
+              detail={calculationState.errorDetail}
+              onGoToUpload={() => { setCurrentStep(2); setValidationErrors([]); }}
+            />
+          )}
+          {calculationState.status === 'error' && calculationState.error && !calculationState.errorDetail && (
             <Alert variant="danger" className="mb-4">
               <h5 className="alert-heading">
                 <i className="fas fa-exclamation-circle me-2"></i>
@@ -261,14 +285,21 @@ export const MultiStepCalculator: React.FC<MultiStepCalculatorProps> = ({
 
             <div>
               {currentStep < 4 ? (
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={handleNext}
-                >
-                  Next
-                  <i className="fas fa-arrow-right ms-2"></i>
-                </Button>
+                <div className="d-flex align-items-center gap-2">
+                  {currentStep === 2 && uploadBlockedReason && (
+                    <span className="small text-danger" id="next-blocked-reason">{uploadBlockedReason}</span>
+                  )}
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={handleNext}
+                    disabled={currentStep === 2 && !!uploadBlockedReason}
+                    aria-describedby={currentStep === 2 && uploadBlockedReason ? 'next-blocked-reason' : undefined}
+                  >
+                    Next
+                    <i className="fas fa-arrow-right ms-2"></i>
+                  </Button>
+                </div>
               ) : (
                 <Button
                   type="button"
