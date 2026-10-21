@@ -40,6 +40,7 @@
           "mapped_to": "Currency",
           "note": null,
           "samples": [
+            "GBP",
             "USD"
           ],
           "status": "understood"
@@ -234,7 +235,7 @@
       "summary": {
         "buys": 1,
         "currencies": [
-          "USD"
+          "GBP"
         ],
         "first_date": "2025-06-03",
         "last_date": "2025-08-11",
@@ -281,6 +282,7 @@
           "mapped_to": "Currency",
           "note": null,
           "samples": [
+            "GBP",
             "USD"
           ],
           "status": "understood"
@@ -475,7 +477,7 @@
       "summary": {
         "buys": 1,
         "currencies": [
-          "USD"
+          "GBP"
         ],
         "first_date": "2025-06-03",
         "last_date": "2025-08-11",

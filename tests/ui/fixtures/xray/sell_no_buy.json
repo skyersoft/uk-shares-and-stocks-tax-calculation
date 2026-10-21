@@ -5,6 +5,7 @@
       "details": [
         {
           "date": "2025-07-01",
+          "file_index": 0,
           "filename": "sell_no_buy.csv",
           "quantity": "15",
           "symbol": "AAAA"
@@ -46,7 +47,7 @@
           "mapped_to": "Currency",
           "note": null,
           "samples": [
-            "USD"
+            "GBP"
           ],
           "status": "understood"
         },
@@ -212,7 +213,7 @@
       "summary": {
         "buys": 1,
         "currencies": [
-          "USD"
+          "GBP"
         ],
         "first_date": "2025-06-03",
         "last_date": "2025-07-01",

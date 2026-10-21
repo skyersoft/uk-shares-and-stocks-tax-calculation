@@ -32,7 +32,7 @@ def statement(trades) -> bytes:
     for t in trades:
         sym, day, qty, price = t[:4]
         cat = t[4] if len(t) > 4 else "Stocks"
-        lines.append(f'Trades,Data,Order,{cat},USD,U0000000,{sym},"{day}, 10:00:00",{qty},{price},'
+        lines.append(f'Trades,Data,Order,{cat},GBP,U0000000,{sym},"{day}, 10:00:00",{qty},{price},'
                      f'{price},0,-1,0,0,0,O\n')
     return "".join(lines).encode()
 
