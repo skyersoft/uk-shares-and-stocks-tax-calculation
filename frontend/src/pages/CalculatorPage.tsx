@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCalculation } from '../context/CalculationContext';
-import { submitCalculation, submitUnrealisedGains, CSVValidationError } from '../services/api';
+import { submitCalculation, submitUnrealisedGains, CSVValidationError, BrokerDetectionError } from '../services/api';
+import type { CalculateErrorDetail } from '../types/calculator';
 import { MultiStepCalculator } from '../components/calculator/MultiStepCalculator';
 import { normalizeCalculationResults } from '../utils/resultsNormalizer';
 import {
@@ -18,10 +19,19 @@ const CalculatorPage: React.FC = () => {
   const { dispatch } = useCalculation();
   const navigate = useNavigate();
 
-  const formatCsvValidationError = (error: CSVValidationError): string => {
-    const missingCols = error.missing_columns.join(', ');
-    const requiredCols = error.required_columns.join(', ');
-    return `Invalid CSV format.\n\nMissing columns: ${missingCols}\n\nRequired columns: ${requiredCols}\n\nPlease check your CSV file format and try again. See /guide#csv-format for the expected format.`;
+  const toErrorDetail = (error: unknown): CalculateErrorDetail | null => {
+    if (error instanceof CSVValidationError) {
+      return {
+        kind: 'missing_columns',
+        message: error.message,
+        missingColumns: error.missing_columns,
+        requiredColumns: error.required_columns,
+      };
+    }
+    if (error instanceof BrokerDetectionError) {
+      return { kind: 'unknown_broker', message: error.message, supportedBrokers: error.supported_brokers };
+    }
+    return null;
   };
 
   // Handle form completion from MultiStepCalculator
@@ -114,12 +124,15 @@ const CalculatorPage: React.FC = () => {
       // Track calculation error
       const errorType = error instanceof CSVValidationError
         ? 'csv_validation_error'
-        : 'calculation_error';
+        : error instanceof BrokerDetectionError
+          ? 'broker_detection_error'
+          : 'calculation_error';
       trackCalculationError(errorType, error.message || 'Unknown error');
 
-      // Handle CSV validation errors with detailed information
-      if (error instanceof CSVValidationError) {
-        dispatch({ type: 'SUBMIT_ERROR', payload: formatCsvValidationError(error) });
+      // Missing columns / unknown broker get a structured, actionable display
+      const detail = toErrorDetail(error);
+      if (detail) {
+        dispatch({ type: 'SUBMIT_ERROR', payload: detail.message, detail });
       } else {
         dispatch({ type: 'SUBMIT_ERROR', payload: error.message || 'An error occurred during calculation' });
       }

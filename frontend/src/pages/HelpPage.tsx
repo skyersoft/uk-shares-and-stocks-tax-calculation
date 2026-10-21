@@ -458,7 +458,9 @@ MSFT,2024-03-01,DIV,1,2.50,USD,0.00,0.79`}</pre>
               </div>
 
               {/* Feedback Form */}
-              <FeedbackForm />
+              <div id="feedback">
+                <FeedbackForm />
+              </div>
 
             </div>
           </div>

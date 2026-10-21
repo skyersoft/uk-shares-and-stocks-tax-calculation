@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useReducer } from 'react';
 import { NormalizedResults } from '../types/calculation';
-import { WizardData } from '../types/calculator';
+import { WizardData, CalculateErrorDetail } from '../types/calculator';
 
 interface CalculationState {
   status: 'idle' | 'submitting' | 'success' | 'error';
   error: string | null;
+  errorDetail?: CalculateErrorDetail | null;
   result: NormalizedResults | null;
   raw: any | null;
   wizardData: WizardData | null;
@@ -13,6 +14,8 @@ interface CalculationState {
 interface CalculationAction {
   type: 'SUBMIT_START' | 'SUBMIT_SUCCESS' | 'SUBMIT_ERROR';
   payload?: any;
+  /** SUBMIT_ERROR only: structured detail for missing columns / unknown broker. */
+  detail?: CalculateErrorDetail;
 }
 
 interface CalculationContextType {
@@ -38,7 +41,7 @@ const initialState: CalculationState = {
 function reducer(state: CalculationState, action: CalculationAction): CalculationState {
   switch (action.type) {
     case 'SUBMIT_START':
-      return { ...state, status: 'submitting', error: null };
+      return { ...state, status: 'submitting', error: null, errorDetail: null };
     case 'SUBMIT_SUCCESS':
       return {
         ...state,
@@ -48,7 +51,7 @@ function reducer(state: CalculationState, action: CalculationAction): Calculatio
         wizardData: action.payload.wizardData
       };
     case 'SUBMIT_ERROR':
-      return { ...state, status: 'error', error: action.payload };
+      return { ...state, status: 'error', error: action.payload, errorDetail: action.detail ?? null };
     default:
       return state;
   }

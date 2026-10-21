@@ -146,3 +146,8 @@ export const WIZARD_STEPS = [
   { step: 3, title: 'Personal Details', description: 'Tax residency and allowances' },
   { step: 4, title: 'Review & Calculate', description: 'Review and run calculation' }
 ] as const;
+
+/** Structured calculate-time error the UI can act on (from /calculate 400 responses). */
+export type CalculateErrorDetail =
+  | { kind: 'missing_columns'; message: string; missingColumns: string[]; requiredColumns: string[] }
+  | { kind: 'unknown_broker'; message: string; supportedBrokers: string[] };
