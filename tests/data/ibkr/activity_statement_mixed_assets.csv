@@ -1,0 +1,19 @@
+Statement,Header,Field Name,Field Value
+Statement,Data,BrokerName,Example Broker
+Statement,Data,Title,Activity Statement
+Statement,Data,Period,"January 1, 2025 - December 31, 2025"
+Account Information,Header,Field Name,Field Value
+Account Information,Data,Base Currency,USD
+Account Information,Data,Name,Example Person
+Account Information,Data,Account Type,Individual
+Account Information,Data,Customer Type,Individual
+Account Information,Data,Account Capabilities,Margin
+Net Asset Value,Header,Asset Class,Prior Total,Current Total
+Net Asset Value,Data,Cash,0,100
+Trades,Header,DataDiscriminator,Asset Category,Currency,Account,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Realized P/L %,MTM P/L,Code
+Trades,Data,Order,Stocks,USD,U0000000,DDDD,"2025-04-07, 10:00:00",5,50.00,50.10,-250,-1,251,0,0,0.5,O
+Trades,Header,DataDiscriminator,Asset Category,Currency,Account,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,Realized P/L %,MTM P/L,Code
+Trades,Data,Order,Equity and Index Options,USD,U0000000,DDDD 250620C00050000,"2025-04-08, 11:00:00",1,2.00,2.10,-200,-0.65,200.65,0,0,10,O
+Trades,Data,Order,Futures,USD,U0000000,ESZ5,"2025-04-09, 11:00:00",1,5000,5001,0,-2,0,0,0,0,O
+Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,C. Price,Proceeds,Comm/Fee,Basis,Realized P/L,MTM P/L,Code
+Trades,Data,Order,Stocks,USD,EEEE,"2025-04-10, 12:00:00",-3,70.00,69.00,210,-1,-200,9,3,C

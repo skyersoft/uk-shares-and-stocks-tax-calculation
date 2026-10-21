@@ -1,0 +1,8 @@
+Statement,Header,Field Name,Field Value
+Statement,Data,BrokerName,Example Broker
+Statement,Data,Title,Activity Statement
+Statement,Data,Period,"January 1, 2025 - December 31, 2025"
+Account Information,Header,Field Name,Field Value
+Account Information,Data,Base Currency,USD
+Open Positions,Header,DataDiscriminator,Asset Category,Currency,Symbol,Quantity
+Open Positions,Data,Summary,Stocks,USD,AAAA,60

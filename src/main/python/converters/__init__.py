@@ -6,6 +6,7 @@ from .converter_factory import (
     reset_factory
 )
 from .ibkr_converter import IBKRConverter
+from .ibkr_activity_statement_converter import IBKRActivityStatementConverter
 from .trading212_converter import Trading212Converter
 from .hargreaves_converter import HargreavesConverter
 from .freetrade_converter import FreetradeConverter
@@ -17,6 +18,10 @@ def register_default_converters():
     factory = get_factory()
     try:
         factory.register(IBKRConverter())
+    except ValueError:
+        pass  # Already registered
+    try:
+        factory.register(IBKRActivityStatementConverter())
     except ValueError:
         pass  # Already registered
     try:
@@ -42,6 +47,7 @@ __all__ = [
     'get_factory',
     'reset_factory',
     'IBKRConverter',
+    'IBKRActivityStatementConverter',
     'Trading212Converter',
     'HargreavesConverter',
     'FreetradeConverter',
