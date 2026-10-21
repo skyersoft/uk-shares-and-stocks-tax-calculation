@@ -1,5 +1,20 @@
-/** Mirrors backend MAX_INSPECT_BYTES (4 MiB). Applied per file here and to the sum in inspectFiles. */
-export const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+/**
+ * Mirrors backend MAX_INSPECT_BYTES (4 MiB, deployment/lambda_handler.py). It only decides whether
+ * we CALL /inspect-file: files beyond this budget are shown as "not checked", never blocked.
+ */
+export const MAX_INSPECT_BYTES = 4 * 1024 * 1024;
+
+/**
+ * Hard ceiling for one /calculate request (all files together); above it the upload is blocked.
+ *
+ * Arithmetic: API Gateway proxies to a synchronous Lambda invocation, whose whole JSON event is
+ * limited to 6 MB (6,291,456 bytes). The REST API has no binary_media_types, so the multipart body
+ * arrives as a UTF-8 string inside that JSON and grows when escaped (each CRLF becomes 4 characters,
+ * each double quote 2). 5 MiB = 5,242,880 bytes leaves 1,048,576 bytes (20%) for that escaping plus
+ * headers and multipart framing; quote-heavy broker CSVs inflate by roughly 3-20%. The old 10 MB
+ * per-file UI cap was never really reachable: anything much above ~5.5 MB failed at the Lambda.
+ */
+export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 export type PrecheckResult =
   | { ok: true }
@@ -44,7 +59,7 @@ export async function precheckFile(file: File): Promise<PrecheckResult> {
     return {
       ok: false,
       kind: 'too_large',
-      message: 'That file is over 4 MB. Export a shorter period or split it into several files.',
+      message: 'That file is over 5 MB, which is more than we can calculate at once. Export a shorter period or split it into several files.',
     };
   }
   let head: Uint8Array;

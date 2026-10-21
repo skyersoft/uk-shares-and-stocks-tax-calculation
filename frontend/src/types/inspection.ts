@@ -79,6 +79,7 @@ export interface SellWithoutBuy {
   date: string; // YYYY-MM-DD
   quantity: string; // decimal string
   filename: string;
+  file_index: number; // position of the file in the upload (filenames can repeat)
 }
 
 export interface Expectation {

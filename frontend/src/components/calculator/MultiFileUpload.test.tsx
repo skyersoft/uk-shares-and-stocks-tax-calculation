@@ -12,7 +12,7 @@ jest.mock('../../services/api', () => ({
   detectBroker: jest.fn(),
 }));
 jest.mock('../../utils/filePrecheck', () => ({
-  MAX_UPLOAD_BYTES: 4 * 1024 * 1024,
+  ...jest.requireActual('../../utils/filePrecheck'),
   precheckFile: jest.fn(),
 }));
 jest.mock('../../utils/analytics', () => ({
@@ -167,7 +167,7 @@ describe('MultiFileUpload with File X-ray', () => {
     mockInspect.mockResolvedValue(res([ins('a.csv', 'ready_with_warnings')], {
       requires_acknowledgement: true,
       expectations: [{ rule: 'every_sell_has_earlier_buy', passed: false,
-        details: [{ symbol: 'TSLA', date: '2025-07-01', quantity: '3', filename: 'a.csv' }] }],
+        details: [{ symbol: 'TSLA', date: '2025-07-01', quantity: '3', filename: 'a.csv', file_index: 0 }] }],
     }));
     const { container } = render(<Harness />);
     upload(container, mkFile('a.csv'));
@@ -181,7 +181,7 @@ describe('MultiFileUpload with File X-ray', () => {
     mockInspect.mockImplementation(async (fs: File[]) => res(fs.map(f => ins(f.name, 'ready_with_warnings')), {
       requires_acknowledgement: true,
       expectations: [{ rule: 'every_sell_has_earlier_buy', passed: false,
-        details: [{ symbol: 'TSLA', date: '2025-07-01', quantity: '3', filename: 'a.csv' }] }],
+        details: [{ symbol: 'TSLA', date: '2025-07-01', quantity: '3', filename: 'a.csv', file_index: 0 }] }],
     }));
     const { container } = render(<Harness />);
     upload(container, mkFile('a.csv'));
@@ -205,7 +205,7 @@ describe('MultiFileUpload with File X-ray', () => {
     mockInspect.mockResolvedValue(res([ins('a.csv', 'ready_with_warnings')], {
       requires_acknowledgement: true,
       expectations: [{ rule: 'every_sell_has_earlier_buy', passed: false,
-        details: [{ symbol: 'TSLA', date: '2025-07-01', quantity: '3', filename: 'a.csv' }] }],
+        details: [{ symbol: 'TSLA', date: '2025-07-01', quantity: '3', filename: 'a.csv', file_index: 0 }] }],
     }));
     const { container } = render(<Harness />);
     upload(container, mkFile('a.csv'));
@@ -232,30 +232,69 @@ describe('MultiFileUpload with File X-ray', () => {
     expect(screen.queryByRole('button', { name: /Pick my broker/ })).toBeNull();
   });
 
-  it('maps a JSON 413 to the too-large screen', async () => {
+  // The inspect budget (4 MiB) is below the /calculate ceiling (MAX_UPLOAD_BYTES): a file that is
+  // too big to CHECK must still be calculable, so it gets a notice, not a blocking failure.
+  it('a JSON 413 from the check marks the file not checked and keeps Continue open', async () => {
     mockInspect.mockRejectedValue(new InspectError('server', 'Request too large', 413));
     const { container } = render(<Harness />);
     upload(container, mkFile('a.csv'));
-    expect(await screen.findByText('That file is too large')).toBeInTheDocument();
-    expect(screen.getByText(/shorter date range/)).toBeInTheDocument();
-    expect(lastGate?.blockedReason).toBe('Fix or remove file a.csv to continue');
+    expect(await screen.findByText(/too large to check here, you can still calculate/)).toBeInTheDocument();
+    expect(screen.queryByText('That file is too large')).toBeNull();
+    await waitFor(() => expect(lastGate).toEqual({ blockedReason: null, requiresAck: false }));
   });
 
-  it('maps a too_large InspectError to the too-large screen', async () => {
+  it('a too_large InspectError marks the file not checked', async () => {
     mockInspect.mockRejectedValue(new InspectError('too_large', 'Too large'));
     const { container } = render(<Harness />);
     upload(container, mkFile('a.csv'));
-    expect(await screen.findByText('That file is too large')).toBeInTheDocument();
+    expect(await screen.findByText(/too large to check here, you can still calculate/)).toBeInTheDocument();
+    await waitFor(() => expect(lastGate?.blockedReason).toBeNull());
   });
 
-  it('blocks the file that pushes the total over the limit without sending it', async () => {
+  it('total over the inspect budget: overflow file not checked, Continue enabled', async () => {
     mockInspect.mockImplementation(async (fs: File[]) => res(fs.map(f => ins(f.name))));
     const { container } = render(<Harness />);
-    upload(container, mkFile('a.csv', 3 * 1024 * 1024), mkFile('b.csv', 2 * 1024 * 1024));
+    upload(container, mkFile('a.csv', 2.5 * 1024 * 1024), mkFile('b.csv', 2.5 * 1024 * 1024));
+    expect(await screen.findByText(/too large to check here, you can still calculate/)).toBeInTheDocument();
+    await waitFor(() => expect(mockInspect).toHaveBeenCalled());
+    expect(mockInspect.mock.calls[0][0].map(f => f.name)).toEqual(['a.csv']);
+    expect(screen.queryByText('That file is too large')).toBeNull();
+    await waitFor(() => expect(lastGate).toEqual({ blockedReason: null, requiresAck: false }));
+  });
+
+  it('one file over the inspect budget but under the hard limit is not sent and does not block', async () => {
+    const { container } = render(<Harness />);
+    upload(container, mkFile('a.csv', 4.5 * 1024 * 1024));
+    expect(await screen.findByText(/too large to check here, you can still calculate/)).toBeInTheDocument();
+    await new Promise(r => setTimeout(r, 300));
+    expect(mockInspect).not.toHaveBeenCalled();
+    expect(lastGate).toEqual({ blockedReason: null, requiresAck: false });
+  });
+
+  it('total over the /calculate ceiling blocks the overflow file as too large', async () => {
+    mockInspect.mockImplementation(async (fs: File[]) => res(fs.map(f => ins(f.name))));
+    const { container } = render(<Harness />);
+    upload(container, mkFile('a.csv', 3 * 1024 * 1024), mkFile('b.csv', 3 * 1024 * 1024));
     expect(await screen.findByText('That file is too large')).toBeInTheDocument();
     await waitFor(() => expect(mockInspect).toHaveBeenCalled());
     expect(mockInspect.mock.calls[0][0].map(f => f.name)).toEqual(['a.csv']);
     await waitFor(() => expect(lastGate?.blockedReason).toBe('Fix or remove file b.csv to continue'));
+  });
+
+  it('matches sells without a buy to the file by index, not by name', async () => {
+    mockInspect.mockImplementation(async (fs: File[]) => res(fs.map(f => ins(f.name, 'ready_with_warnings')), {
+      requires_acknowledgement: true,
+      expectations: [{ rule: 'every_sell_has_earlier_buy', passed: false,
+        details: [{ symbol: 'TSLA', date: '2025-07-01', quantity: '3', filename: 'same.csv', file_index: 1 }] }],
+    }));
+    const { container } = render(<Harness />);
+    upload(container, mkFile('same.csv'), mkFile('same.csv'));
+    await waitFor(() => expect(screen.getAllByLabelText('Checks on this file')).toHaveLength(2));
+    const boxes = await screen.findAllByTestId('sell-without-buy');
+    expect(boxes).toHaveLength(1);
+    const items = Array.from(container.querySelectorAll('.list-group-item'));
+    expect(items[0].querySelector('[data-testid="sell-without-buy"]')).toBeNull();
+    expect(items[1].querySelector('[data-testid="sell-without-buy"]')).not.toBeNull();
   });
 
   it.each([['server'], ['network']] as const)('%s failure does not block and offers retry', async (kind) => {

@@ -215,13 +215,20 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
     if (check.status === 'failed_precheck') {
       return <FailureScreen kind={check.precheck.kind} precheck={check.precheck} fileName={brokerFile.file.name} onAction={onAction} />;
     }
+    if (check.status === 'not_checked') {
+      return (
+        <div className="text-muted small py-2" role="status">
+          This file is too large to check here, you can still calculate.
+        </div>
+      );
+    }
     if (check.status === 'error' || !result) return null;
     const { inspection } = check;
     if (BAD_VERDICTS.includes(inspection.verdict)) {
       return <FailureScreen kind={inspection.verdict as FailureKind} inspection={inspection} onAction={onAction} />;
     }
     return (
-      <FileXRay inspection={inspection} result={result} onAction={onAction}
+      <FileXRay inspection={inspection} fileIndex={check.index} result={result} onAction={onAction}
         acknowledged={acknowledged} onAcknowledgeChange={onAcknowledgeChange} />
     );
   };

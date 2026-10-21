@@ -11,7 +11,7 @@ jest.mock('../../services/api', () => ({
   detectBroker: jest.fn(),
 }));
 jest.mock('../../utils/filePrecheck', () => ({
-  MAX_UPLOAD_BYTES: 4 * 1024 * 1024,
+  ...jest.requireActual('../../utils/filePrecheck'),
   precheckFile: jest.fn(),
 }));
 
@@ -34,7 +34,7 @@ const ins = (filename: string, verdict: Verdict): FileInspection => ({
 const sellWithoutBuy = (files: FileInspection[]): InspectionResult => ({
   files,
   expectations: [{ rule: 'every_sell_has_earlier_buy', passed: false,
-    details: [{ symbol: 'TSLA', date: '2025-07-01', quantity: '3', filename: files[0].filename }] }],
+    details: [{ symbol: 'TSLA', date: '2025-07-01', quantity: '3', filename: files[0].filename, file_index: 0 }] }],
   can_continue: true,
   requires_acknowledgement: true,
 });

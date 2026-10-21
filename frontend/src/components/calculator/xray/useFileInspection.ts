@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { inspectFiles, InspectError } from '../../../services/api';
-import { precheckFile, MAX_UPLOAD_BYTES } from '../../../utils/filePrecheck';
+import { precheckFile, MAX_INSPECT_BYTES, MAX_UPLOAD_BYTES } from '../../../utils/filePrecheck';
 import type { PrecheckResult } from '../../../utils/filePrecheck';
 import { trackInspection } from '../../../utils/analytics';
 import type { FileInspection, InspectionResult, Verdict } from '../../../types/inspection';
@@ -12,7 +12,10 @@ export type FileCheck =
   | { status: 'precheck' }
   | { status: 'failed_precheck'; precheck: FailedPrecheck }
   | { status: 'inspecting' }
-  | { status: 'inspected'; inspection: FileInspection }
+  /** index: position of the file in the inspected request (matches SellWithoutBuy.file_index) */
+  | { status: 'inspected'; inspection: FileInspection; index: number }
+  /** Over the inspect budget (but within the /calculate ceiling): not checked, still calculable */
+  | { status: 'not_checked' }
   | { status: 'error' };
 
 /** Summary the wizard uses to enable or disable Continue. */
@@ -33,13 +36,7 @@ export const BAD_VERDICTS: Verdict[] = ['blocked', 'unsupported_format', 'no_tra
 const TOTAL_TOO_LARGE: FailedPrecheck = {
   ok: false,
   kind: 'too_large',
-  message: 'Together your files are over 4 MB, which is more than we can check at once. Export a shorter date range for this file, or remove another file.',
-};
-
-const REQUEST_TOO_LARGE: FailedPrecheck = {
-  ok: false,
-  kind: 'too_large',
-  message: 'These files are too large to check together. Export a shorter date range, or remove a file and try again.',
+  message: 'Together your files are over 5 MB, which is more than we can calculate at once. Export a shorter date range for this file, or remove another file.',
 };
 
 function extensionPrecheck(file: File): FailedPrecheck | null {
@@ -93,21 +90,29 @@ export function useFileInspection(files: InspectableFile[]) {
 
   const prechecksDone = files.every(f => prechecks[f.id] !== undefined);
 
-  // Decide which files to send, applying the total-size guard in list order.
-  const { sendable, overTotal } = useMemo(() => {
+  // Decide which files to send, in list order. Two budgets: over MAX_UPLOAD_BYTES (the /calculate
+  // ceiling) a file is blocked; over MAX_INSPECT_BYTES it is only left unchecked.
+  const { sendable, overTotal, unchecked } = useMemo(() => {
     const send: InspectableFile[] = [];
     const over = new Set<string>();
+    const skip = new Set<string>();
     let total = 0;
+    let inspectTotal = 0;
     files.forEach(f => {
       if (!prechecks[f.id]?.ok) return;
       if (total + f.file.size > MAX_UPLOAD_BYTES) {
         over.add(f.id);
-      } else {
-        total += f.file.size;
-        send.push(f);
+        return;
       }
+      total += f.file.size;
+      if (inspectTotal + f.file.size > MAX_INSPECT_BYTES) {
+        skip.add(f.id);
+        return;
+      }
+      inspectTotal += f.file.size;
+      send.push(f);
     });
-    return { sendable: send, overTotal: over };
+    return { sendable: send, overTotal: over, unchecked: skip };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idKey, prechecks]);
 
@@ -150,13 +155,15 @@ export function useFileInspection(files: InspectableFile[]) {
     if (!pre) checks[f.id] = { status: 'precheck' };
     else if (!pre.ok) checks[f.id] = { status: 'failed_precheck', precheck: pre };
     else if (overTotal.has(f.id)) checks[f.id] = { status: 'failed_precheck', precheck: TOTAL_TOO_LARGE };
+    else if (unchecked.has(f.id)) checks[f.id] = { status: 'not_checked' };
     else if (!current) checks[f.id] = { status: 'inspecting' };
-    else if (tooLarge) checks[f.id] = { status: 'failed_precheck', precheck: REQUEST_TOO_LARGE };
+    // The server's inspect limit is below the /calculate ceiling, so a 413 means "not checked"
+    else if (tooLarge) checks[f.id] = { status: 'not_checked' };
     else if (serviceError) checks[f.id] = { status: 'error' };
     else {
       const index = sendable.findIndex(s => s.id === f.id);
       const inspection = result?.files[index];
-      checks[f.id] = inspection ? { status: 'inspected', inspection } : { status: 'error' };
+      checks[f.id] = inspection ? { status: 'inspected', inspection, index } : { status: 'error' };
     }
   });
 

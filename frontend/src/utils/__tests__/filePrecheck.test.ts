@@ -1,4 +1,4 @@
-import { precheckFile, MAX_UPLOAD_BYTES } from '../filePrecheck';
+import { precheckFile, MAX_UPLOAD_BYTES, MAX_INSPECT_BYTES } from '../filePrecheck';
 
 const mk = (bytes: number[] | string, name: string) => {
   const data = typeof bytes === 'string' ? new TextEncoder().encode(bytes) : new Uint8Array(bytes);
@@ -37,6 +37,17 @@ describe('precheckFile', () => {
   it('rejects oversize files', async () => {
     const big = new File([new Uint8Array(MAX_UPLOAD_BYTES + 1)], 'a.csv');
     expect(await precheckFile(big)).toMatchObject({ ok: false, kind: 'too_large' });
+  });
+
+  it('hard limit is the /calculate ceiling, above the 4 MiB inspect budget', () => {
+    expect(MAX_INSPECT_BYTES).toBe(4 * 1024 * 1024);
+    expect(MAX_UPLOAD_BYTES).toBe(5 * 1024 * 1024);
+  });
+
+  it('accepts a file over the inspect budget but under the hard limit', async () => {
+    const f = mk('Date,Symbol\n', 'a.csv');
+    Object.defineProperty(f, 'size', { value: MAX_INSPECT_BYTES + 1 });
+    expect(await precheckFile(f)).toEqual({ ok: true });
   });
 
   it('accepts normal CSV', async () => {

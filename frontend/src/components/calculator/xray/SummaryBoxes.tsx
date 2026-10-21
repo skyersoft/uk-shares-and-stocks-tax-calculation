@@ -4,6 +4,7 @@ import { ACTION_LABELS } from './NextActions';
 
 interface Props {
   inspection: FileInspection;
+  fileIndex?: number;
   result: InspectionResult;
   onAction: (id: NextActionId, fileName: string) => void;
   acknowledged?: boolean;
@@ -19,14 +20,19 @@ export function taxYearStart(iso: string): string {
   return monthDay >= '04-06' ? `${year}-04-06` : `${year - 1}-04-06`;
 }
 
-export const SummaryBoxes: React.FC<Props> = ({ inspection, result, onAction, acknowledged = false, onAcknowledgeChange }) => {
+export const SummaryBoxes: React.FC<Props> = ({ inspection, fileIndex, result, onAction, acknowledged = false, onAcknowledgeChange }) => {
   const ackId = useId();
   const { summary, rows, filename } = inspection;
   const skipped = rows.skipped.filter(s => s.count > 0);
   const skippedTotal = skipped.reduce((n, s) => n + s.count, 0);
   const canShowSkipped = inspection.next_actions.some(a => a.id === 'show_skipped_rows');
   const sellExpectation = result.expectations.find(e => e.rule === 'every_sell_has_earlier_buy' && !e.passed);
-  const sells = sellExpectation ? sellExpectation.details.filter(d => d.filename === filename) : [];
+  // Match by upload position (two uploads can share a filename); fall back to the name only when
+  // the position is unknown (e.g. a result rendered outside the upload list)
+  const index = fileIndex ?? result.files.indexOf(inspection);
+  const sells = sellExpectation
+    ? sellExpectation.details.filter(d => (index >= 0 && d.file_index !== undefined ? d.file_index === index : d.filename === filename))
+    : [];
   const sellsPass = result.expectations.some(e => e.rule === 'every_sell_has_earlier_buy' && e.passed);
   const startsLate = !!summary.first_date && summary.first_date > taxYearStart(summary.first_date);
 

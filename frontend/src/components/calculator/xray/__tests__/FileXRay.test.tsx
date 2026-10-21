@@ -36,8 +36,8 @@ const baseResult = (over: Partial<InspectionResult> = {}): InspectionResult => (
   expectations: [{
     rule: 'every_sell_has_earlier_buy', passed: false,
     details: [
-      { symbol: 'TSLA', date: '2026-01-12', quantity: '12', filename: 't212.csv' },
-      { symbol: 'VUSA', date: '2026-02-04', quantity: '5.5', filename: 't212.csv' },
+      { symbol: 'TSLA', date: '2026-01-12', quantity: '12', filename: 't212.csv', file_index: 0 },
+      { symbol: 'VUSA', date: '2026-02-04', quantity: '5.5', filename: 't212.csv', file_index: 0 },
     ],
   }],
   can_continue: true, requires_acknowledgement: true, ...over,
@@ -272,6 +272,15 @@ describe('X-ray review follow-ups', () => {
     render(<FailureScreen kind="unknown" inspection={ins} onAction={jest.fn()} />);
     expect(screen.queryByRole('button', { name: /pick my broker/i })).toBeNull();
     expect(screen.getByRole('button', { name: /remove file/i })).toBeInTheDocument();
+  });
+
+  it('shows only the sells of its own file when two files share a name', () => {
+    const result = baseResult({ expectations: [{ rule: 'every_sell_has_earlier_buy', passed: false,
+      details: [{ symbol: 'TSLA', date: '2026-01-12', quantity: '12', filename: 't212.csv', file_index: 1 }] }] });
+    const { rerender } = render(<FileXRay inspection={baseInspection()} fileIndex={0} result={result} onAction={jest.fn()} />);
+    expect(screen.queryByTestId('sell-without-buy')).toBeNull();
+    rerender(<FileXRay inspection={baseInspection()} fileIndex={1} result={result} onAction={jest.fn()} />);
+    expect(screen.getByTestId('sell-without-buy')).toHaveTextContent('TSLA');
   });
 
   it('prefixes each warning with a visible warning symbol', () => {
