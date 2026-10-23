@@ -25,6 +25,8 @@ PROJECT_ROOT = Path(__file__).parent.parent
 BLOG_POSTS_DIR = PROJECT_ROOT / 'frontend' / 'public' / 'blog' / 'posts'
 OUTPUT_INDEX_FILE = PROJECT_ROOT / 'frontend' / 'public' / 'blog' / 'index.json'
 SITEMAP_FILE = PROJECT_ROOT / 'frontend' / 'public' / 'sitemap.xml'
+VIDEOS_FILE = PROJECT_ROOT / 'frontend' / 'src' / 'content' / 'videos.json'
+YOUTUBE_TAG = re.compile(r'\{\{youtube:([A-Za-z0-9_-]+)\}\}')
 SITE_URL = 'https://cgttaxtool.uk'
 
 # (path, changefreq, priority) for non-blog pages; /results is disallowed in robots.txt
@@ -97,7 +99,9 @@ def parse_frontmatter(file_path: Path) -> Optional[Dict[str, Any]]:
         # Determine slug. Prefer explicit slug in frontmatter, else filename stem.
         slug = data.get('slug', file_path.stem)
         
-        return {
+        video = YOUTUBE_TAG.search(markdown_body)
+
+        entry = {
             "id": slug,
             "slug": slug,
             "title": data.get('title'),
@@ -109,15 +113,36 @@ def parse_frontmatter(file_path: Path) -> Optional[Dict[str, Any]]:
             "readingTime": data.get('readingTime', estimate_reading_time(markdown_body)),
             "path": relative_path  # We store the relative path to fetch the content
         }
+        if video:
+            entry["videoId"] = video.group(1)
+        return entry
 
     except Exception as e:
         print(f"Error parsing {file_path}: {e}")
         return None
 
+def build_videos(posts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """One watch-page record per post that embeds a YouTube video."""
+    return [{
+        "slug": p['slug'],
+        "videoId": p['videoId'],
+        "title": p['title'],
+        "description": p.get('excerpt', ''),
+        "uploadDate": p['date'],
+        "thumbnailUrl": f"https://i.ytimg.com/vi/{p['videoId']}/hqdefault.jpg",
+    } for p in posts if p.get('videoId')]
+
+def write_videos(posts: List[Dict[str, Any]]) -> None:
+    videos = build_videos(posts)
+    VIDEOS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    VIDEOS_FILE.write_text(json.dumps(videos, indent=2) + '\n', encoding='utf-8')
+    print(f"Wrote {len(videos)} watch-page videos to {VIDEOS_FILE}")
+
 def write_sitemap(posts: List[Dict[str, Any]]) -> None:
     """Generate sitemap.xml with static pages plus one entry per blog post."""
     lines = ['<?xml version="1.0" encoding="UTF-8"?>',
-             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+             'xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">']
     for path, freq, prio in STATIC_PAGES:
         lines += ['  <url>', f'    <loc>{SITE_URL}{path}</loc>',
                   f'    <changefreq>{freq}</changefreq>', f'    <priority>{prio}</priority>', '  </url>']
@@ -125,6 +150,17 @@ def write_sitemap(posts: List[Dict[str, Any]]) -> None:
         lines += ['  <url>', f"    <loc>{SITE_URL}/blog/post/{escape(str(post['slug']))}</loc>",
                   f"    <lastmod>{post['date']}</lastmod>",
                   '    <changefreq>monthly</changefreq>', '    <priority>0.6</priority>', '  </url>']
+    for video in build_videos(posts):
+        lines += ['  <url>', f"    <loc>{SITE_URL}/watch/{escape(video['slug'])}</loc>",
+                  f"    <lastmod>{video['uploadDate']}</lastmod>",
+                  '    <changefreq>monthly</changefreq>', '    <priority>0.6</priority>',
+                  '    <video:video>',
+                  f"      <video:thumbnail_loc>{video['thumbnailUrl']}</video:thumbnail_loc>",
+                  f"      <video:title>{escape(video['title'])}</video:title>",
+                  f"      <video:description>{escape(video['description'] or video['title'])}</video:description>",
+                  f"      <video:player_loc>https://www.youtube.com/embed/{video['videoId']}</video:player_loc>",
+                  f"      <video:publication_date>{video['uploadDate']}</video:publication_date>",
+                  '    </video:video>', '  </url>']
     lines.append('</urlset>')
     SITEMAP_FILE.write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print(f"Wrote {len(STATIC_PAGES) + len(posts)} URLs to {SITEMAP_FILE}")
@@ -152,6 +188,7 @@ def main():
         json.dump(posts, f, indent=2)
 
     print(f"Successfully generated index with {len(posts)} posts at {OUTPUT_INDEX_FILE}")
+    write_videos(posts)
     write_sitemap(posts)
 
 if __name__ == '__main__':

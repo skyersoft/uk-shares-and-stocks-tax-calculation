@@ -31,6 +31,13 @@ export default defineConfig(({ command, mode }) => {
             console.error("Failed to parse blog index for SSG:", e);
           }
         }
+        // One pre-rendered watch page per embedded video
+        const videosPath = path.resolve(__dirname, 'src/content/videos.json');
+        if (fs.existsSync(videosPath)) {
+          JSON.parse(fs.readFileSync(videosPath, 'utf-8')).forEach((v: { slug: string }) => {
+            postRoutes.push(`/watch/${v.slug}`);
+          });
+        }
         console.log("SSG Paths received:", paths);
         console.log("SSG Post Routes:", postRoutes);
 

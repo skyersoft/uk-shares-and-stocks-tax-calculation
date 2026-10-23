@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
   <url>
     <loc>https://cgttaxtool.uk/</loc>
     <changefreq>weekly</changefreq>
@@ -225,5 +225,122 @@
     <lastmod>2024-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://cgttaxtool.uk/watch/hmrc-cgt-calculation-rules-optimization-guide</loc>
+    <lastmod>2026-03-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/kfDLjo2YqUg/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Mastering HMRC CGT Rules: Pooling, 30-Day Rules, and End-of-Year Tax Optimization</video:title>
+      <video:description>Learn how HMRC calculates Capital Gains Tax on stocks using pooling and the 30-day rule. Discover key strategies to optimize your tax bill before the April 5th year-end.</video:description>
+      <video:player_loc>https://www.youtube.com/embed/kfDLjo2YqUg</video:player_loc>
+      <video:publication_date>2026-03-24</video:publication_date>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://cgttaxtool.uk/watch/uk-tax-changes-2026-mtd</loc>
+    <lastmod>2026-03-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/aOtYrE3qk6E/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Huge UK Tax Changes Coming in 2026: Making Tax Digital Explained</video:title>
+      <video:description>Over the next 12 months, the UK tax system is going to change more than it has in the past decade. Find out everything you need to know about Making Tax Digital and other incoming tax hikes.</video:description>
+      <video:player_loc>https://www.youtube.com/embed/aOtYrE3qk6E</video:player_loc>
+      <video:publication_date>2026-03-09</video:publication_date>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://cgttaxtool.uk/watch/4-isa-mistakes-everyone-is-making</loc>
+    <lastmod>2026-02-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/x5L2s8tb6Sc/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>4 ISA Mistakes Everyone is Making</video:title>
+      <video:description>Avoid these 4 common ISA mistakes to maximize your tax-free investment returns and protect your capital gains.</video:description>
+      <video:player_loc>https://www.youtube.com/embed/x5L2s8tb6Sc</video:player_loc>
+      <video:publication_date>2026-02-22</video:publication_date>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://cgttaxtool.uk/watch/how-to-buy-uk-government-bonds-gilts</loc>
+    <lastmod>2026-02-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/eNdYgB0pqwM/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>How To Buy UK Government Bonds (Gilts) for Tax Efficiency</video:title>
+      <video:description>UK Government Bonds (Gilts) enjoy special tax exemptions from Capital Gains Tax. Learn how to buy them and incorporate them into your portfolio.</video:description>
+      <video:player_loc>https://www.youtube.com/embed/eNdYgB0pqwM</video:player_loc>
+      <video:publication_date>2026-02-22</video:publication_date>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://cgttaxtool.uk/watch/capital-gains-taxes-explained-short-vs-long-term</loc>
+    <lastmod>2026-02-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/TLFG1_jFQ_Y/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Capital Gains Taxes Explained: Short-Term vs Long-Term</video:title>
+      <video:description>Understand the fundamental differences between short-term and long-term capital gains taxes and how they impact your trading portfolio.</video:description>
+      <video:player_loc>https://www.youtube.com/embed/TLFG1_jFQ_Y</video:player_loc>
+      <video:publication_date>2026-02-22</video:publication_date>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://cgttaxtool.uk/watch/stocks-and-shares-isa-guide-2026</loc>
+    <lastmod>2026-02-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/vmMJ1tzqNkE/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Stocks &amp; Shares ISA Guide for Beginners (2026)</video:title>
+      <video:description>Learn how a Stocks and Shares ISA works and why it is the ultimate tool for avoiding UK Capital Gains Tax on investments.</video:description>
+      <video:player_loc>https://www.youtube.com/embed/vmMJ1tzqNkE</video:player_loc>
+      <video:publication_date>2026-02-22</video:publication_date>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://cgttaxtool.uk/watch/taxes-for-day-traders-mistakes-to-avoid</loc>
+    <lastmod>2026-02-22</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/WJHgMDyNXKo/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>Don't Make These Mistakes! Taxes for Day Traders</video:title>
+      <video:description>Avoid the most common tax mistakes made by day traders. Learn how to manage your capital gains and losses effectively.</video:description>
+      <video:player_loc>https://www.youtube.com/embed/WJHgMDyNXKo</video:player_loc>
+      <video:publication_date>2026-02-22</video:publication_date>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://cgttaxtool.uk/watch/global-debt-crisis-gold-investing</loc>
+    <lastmod>2025-01-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/RzAxCV6Gq14/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>The Dollar's Decline: Understanding the Global Debt Crisis and Why Gold Is Surging</video:title>
+      <video:description>The US dollar lost 39% of its value against gold in 2024. Understand the 'debt death spiral' driving this shift and what it means for UK investors seeking to protect their portfolios.</video:description>
+      <video:player_loc>https://www.youtube.com/embed/RzAxCV6Gq14</video:player_loc>
+      <video:publication_date>2025-01-30</video:publication_date>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://cgttaxtool.uk/watch/hmrc-tax-investigation-red-flags</loc>
+    <lastmod>2025-01-30</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+    <video:video>
+      <video:thumbnail_loc>https://i.ytimg.com/vi/Q86Bhjtvupk/hqdefault.jpg</video:thumbnail_loc>
+      <video:title>5 Red Flags That Trigger HMRC Tax Investigations (And How to Avoid Them)</video:title>
+      <video:description>Discover the five common mistakes that put you on HMRC's radar for a tax investigation. Learn what triggers the Connect system and practical strategies to stay compliant and avoid costly penalties.</video:description>
+      <video:player_loc>https://www.youtube.com/embed/Q86Bhjtvupk</video:player_loc>
+      <video:publication_date>2025-01-30</video:publication_date>
+    </video:video>
   </url>
 </urlset>

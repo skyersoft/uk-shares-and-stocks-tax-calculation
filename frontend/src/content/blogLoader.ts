@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import { marked } from 'marked';
 import { BlogPost, computeReadingTime } from '../types/blog';
+import videos from './videos.json';
 
 // Custom YouTube embed extension for marked
 // Converts {{youtube:VIDEO_ID}} syntax to responsive iframe embeds
@@ -23,7 +24,14 @@ const youtubeExtension = {
     return undefined;
   },
   renderer(token: { videoId: string }) {
-    return `<div class="youtube-embed-container"><iframe src="https://www.youtube.com/embed/${token.videoId}" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>`;
+    // Videos live on their own watch page (Google only indexes a video whose
+    // page exists for that video). Articles link to it with a thumbnail card.
+    const video = (videos as { slug: string; videoId: string; title: string }[])
+      .find(v => v.videoId === token.videoId);
+    if (!video) {
+      return `<p><a href="https://www.youtube.com/watch?v=${token.videoId}" rel="noopener">Watch the video on YouTube</a></p>`;
+    }
+    return `<a class="video-card" href="/watch/${video.slug}"><img src="https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg" alt="" loading="lazy" width="480" height="360"><span>▶ Watch the video: ${video.title}</span></a>`;
   },
 };
 

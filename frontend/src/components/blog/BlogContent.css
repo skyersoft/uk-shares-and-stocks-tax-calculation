@@ -396,3 +396,30 @@
     border-left: 3pt solid #000 !important;
   }
 }
+/* Link card to a video's watch page (replaces the inline player in articles) */
+.prose .video-card {
+  display: block;
+  position: relative;
+  margin: 2rem 0;
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  color: #fff;
+  background: #111827;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+}
+.prose .video-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  opacity: 0.85;
+}
+.prose .video-card span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.85));
+}

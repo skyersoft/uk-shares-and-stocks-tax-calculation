@@ -11,6 +11,7 @@ import AboutPage from './pages/AboutPage';
 import HelpPage from './pages/HelpPage';
 import GuidePage from './pages/GuidePage';
 import BlogPage from './pages/BlogPage';
+import WatchPage from './pages/WatchPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import SEOHead from './components/seo/SEOHead';
@@ -59,6 +60,7 @@ export const routes: RouteRecord[] = [
       { path: 'privacy', element: <PrivacyPage /> },
       { path: 'blog', element: <BlogPage /> },
       { path: 'blog/post/:slug', element: <BlogPage /> },
+      { path: 'watch/:slug', element: <WatchPage /> },
       { path: 'affiliate-demo', element: <AffiliateDemo /> },
       { path: 'print-report', element: (
         <>
