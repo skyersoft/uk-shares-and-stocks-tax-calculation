@@ -210,19 +210,56 @@ def test_inspect_blocked_when_asset_category_column_missing(conv, tmp_path):
 from src.main.python.interfaces.broker_converter import BrokerConversionError  # noqa: E402
 
 
-@pytest.mark.parametrize("name,ccys", [
-    ("activity_statement_usd.csv", "USD"),
-    ("activity_statement_mixed_currency.csv", "USD"),
-])
-def test_non_gbp_stock_rows_block_inspect_and_convert(conv, name, ccys):
-    """inspect() blocked <=> convert() raises: a non-GBP row must never convert at rate 1.0."""
-    ins = conv.inspect(fx(name))
+def test_usd_rows_are_converted_at_the_hmrc_rate_of_the_trade_month(conv):
+    """Jun 2025: 1.3412 USD per GBP; Aug 2025: 1.3541. Each trade uses its own month."""
+    buy, sell = conv.convert(fx("activity_statement_usd.csv"))
+    assert (buy.transaction_currency, buy.price) == ("USD", Decimal("10.50"))
+    assert buy.fx_rate_to_base == (Decimal(1) / Decimal("1.3412")).quantize(Decimal("0.0000000001"))
+    assert sell.fx_rate_to_base == (Decimal(1) / Decimal("1.3541")).quantize(Decimal("0.0000000001"))
+    assert buy.fx_rate_source == "HMRC monthly rate 2025-06"
+    assert sell.fx_rate_source == "HMRC monthly rate 2025-08"
+    # fees are converted with the same rate
+    assert buy.fees_base == (Decimal("1.00") * buy.fx_rate_to_base).quantize(Decimal("0.01"))
+
+
+def test_gbp_rows_keep_rate_one(conv):
+    tx = conv.convert(fx("activity_statement_basic.csv"))[0]
+    assert tx.fx_rate_to_base == Decimal("1.0")
+
+
+def test_inspect_tells_the_user_which_rates_were_used(conv):
+    ins = conv.inspect(fx("activity_statement_mixed_currency.csv"))
+    assert ins.verdict == "ready_with_warnings"
+    text = " ".join(ins.warnings)
+    assert "2 USD trades" in text and "HMRC monthly" in text
+    assert "Jun 2025" in text and "1.3412" in text and "Aug 2025" in text and "1.3541" in text
+    assert ins.summary.currencies == ["GBP", "USD"]
+    assert ins.rows.usable == 3
+
+
+def _statement(tmp_path, date, ccy="USD"):
+    p = tmp_path / "s.csv"
+    p.write_text(
+        "Statement,Header,Field Name,Field Value\nStatement,Data,BrokerName,X\n"
+        "Trades,Header,DataDiscriminator,Asset Category,Currency,Symbol,Date/Time,Quantity,T. Price,Comm/Fee\n"
+        f'Trades,Data,Order,Stocks,{ccy},AAAA,"{date}, 10:00:00",10,5,-1\n', encoding="utf-8")
+    return str(p)
+
+
+def test_month_without_a_published_rate_blocks_instead_of_guessing(conv, tmp_path):
+    path = _statement(tmp_path, "2019-06-03")
+    ins = conv.inspect(path)
     assert ins.verdict == "blocked"
     text = " ".join(ins.warnings)
-    assert ccys in text and "exchange rate" in text and "Flex Query" in text
+    assert "USD" in text and "Jun 2019" in text and "no HMRC" in text
     with pytest.raises(BrokerConversionError) as exc:
-        conv.convert(fx(name))
-    assert ccys in str(exc.value) and "exchange rate" in str(exc.value)
+        conv.convert(path)
+    assert "Jun 2019" in str(exc.value)
+
+
+def test_unknown_currency_blocks(conv, tmp_path):
+    ins = conv.inspect(_statement(tmp_path, "2025-06-03", ccy="XYZ"))
+    assert ins.verdict == "blocked" and "XYZ" in " ".join(ins.warnings)
 
 
 @pytest.mark.parametrize("name", [
@@ -235,11 +272,9 @@ def test_gbp_and_gbx_files_convert_and_are_not_blocked(conv, name):
     assert conv.convert(fx(name))
 
 
-def test_non_gbp_non_stock_rows_do_not_block(conv):
-    # basic has a USD Forex row and mixed_assets USD option/future rows: only stock rows count
-    assert conv.non_gbp_currencies(fx("activity_statement_basic.csv")) == []
-    assert conv.non_gbp_currencies(fx("activity_statement_mixed_assets.csv")) == []
-    assert conv.non_gbp_currencies(fx("activity_statement_mixed_currency.csv")) == ["USD"]
+def test_non_gbp_non_stock_rows_are_not_converted(conv):
+    # basic has a USD Forex row: only stock rows are converted
+    assert {t.transaction_currency for t in conv.convert(fx("activity_statement_basic.csv"))} == {"GBP"}
 
 
 def test_inspect_blocked_iff_convert_raises_on_all_fixtures(conv):

@@ -7,8 +7,10 @@ foreign exchange rates for tax calculations.
 
 from abc import ABC, abstractmethod
 from datetime import datetime
+import json
 from decimal import Decimal
-from typing import Optional, Dict
+from pathlib import Path
+from typing import Optional, Dict, Tuple
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,45 +44,43 @@ class FxRateServiceInterface(ABC):
 
 class HMRCExchangeRateService(FxRateServiceInterface):
     """
-    FX rate service using HMRC official monthly rates.
+    FX rates from HMRC's published monthly exchange rates ("currency units per £1").
 
-    For UK tax purposes, HMRC publishes monthly and yearly average rates.
-    For spot transactions, the monthly rate is typically accepted.
-
-    Note: A full implementation would scrape/fetch from HMRC API or XML feeds.
-    This is a simplified version that could be expanded.
+    A trade is converted at the rate of the calendar month it falls in, which HMRC accepts for
+    capital gains. The table is bundled (data/hmrc_monthly_rates.json, refreshed with
+    scripts/fetch_hmrc_rates.py); a month or currency it does not hold returns None, never a
+    guess, so callers must refuse or warn rather than assume 1.0.
     """
 
-    def __init__(self):
-        self._cache: Dict[str, Decimal] = {}
+    DATA_FILE = Path(__file__).resolve().parent.parent / "data" / "hmrc_monthly_rates.json"
+    PRECISION = Decimal("0.0000000001")
 
-    def get_rate(
-        self,
-        from_currency: str,
-        to_currency: str,
-        date: datetime
-    ) -> Optional[Decimal]:
-        """
-        Get HMRC exchange rate.
+    def __init__(self, table: Optional[Dict[str, Dict[str, float]]] = None):
+        if table is None:
+            with open(self.DATA_FILE, encoding="utf-8") as f:
+                table = json.load(f)["rates"]
+        self._table = table
 
-        Current implementation is a placeholder/mock.
-        In a real app, this would query a database or external API.
-        """
+    def rate_for(self, currency: str, date: datetime) -> Optional[Tuple[Decimal, str]]:
+        """(GBP per 1 unit of ``currency``, 'YYYY-MM' of the HMRC rate used), or None."""
+        month = f"{date.year}-{date.month:02d}"
+        per_pound = self._table.get(month, {}).get(currency.upper())
+        if not per_pound:
+            return None
+        return (Decimal(1) / Decimal(str(per_pound))).quantize(self.PRECISION), month
+
+    def published_rate(self, currency: str, date: datetime) -> Optional[Decimal]:
+        """The HMRC figure itself: units of ``currency`` per £1."""
+        value = self._table.get(f"{date.year}-{date.month:02d}", {}).get(currency.upper())
+        return Decimal(str(value)) if value else None
+
+    def get_rate(self, from_currency: str, to_currency: str, date: datetime) -> Optional[Decimal]:
+        from_currency, to_currency = from_currency.upper(), to_currency.upper()
         if from_currency == to_currency:
-            return Decimal('1.0')
-
-        # TODO: Implement actual HMRC rate fetching
-        # For now, return a static rate for testing/development
-        logger.warning(
-            f"Using mock FX rate for {from_currency} to {to_currency} on {date}"
-        )
-
-        # Mock rates (approximate)
-        rates = {
-            ('USD', 'GBP'): Decimal('0.79'),
-            ('EUR', 'GBP'): Decimal('0.86'),
-            ('GBP', 'USD'): Decimal('1.27'),
-            ('GBP', 'EUR'): Decimal('1.16'),
-        }
-
-        return rates.get((from_currency, to_currency))
+            return Decimal("1.0")
+        if to_currency == "GBP":
+            found = self.rate_for(from_currency, date)
+            return found[0] if found else None
+        if from_currency == "GBP":
+            return self.published_rate(to_currency, date)
+        return None

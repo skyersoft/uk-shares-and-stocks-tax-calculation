@@ -4,7 +4,7 @@ from datetime import timedelta
 from typing import List, Dict, Tuple
 
 from ..interfaces.calculator_interfaces import TransactionMatcherInterface
-from ..models.domain_models import Transaction, TransactionType, Security
+from ..models.domain_models import Transaction, TransactionType, Security, Currency
 from ..config.tax_config import BED_AND_BREAKFAST_RULE_DAYS
 
 
@@ -124,45 +124,59 @@ class UKTransactionMatcher(TransactionMatcherInterface):
                     # Calculate pool state
                     total_pool_qty = sum(buy_quantities[b.transaction_id] for b in pool_candidates)
 
-                    # Calculate total allowable cost for the pool
-                    # Cost is proportional to the remaining quantity
-                    total_pool_cost = 0.0
-                    total_pool_expenses = 0.0
+                    # Calculate the pool's allowable cost, proportional to the remaining quantity.
+                    # HMRC: each purchase is converted to pounds at the rate of its own date, so the
+                    # pool is summed in pounds (rate_to_base is the rate of that purchase). Native
+                    # amounts are kept too, only to show the original currency on the disposal.
+                    native_cost = gbp_cost = native_expenses = gbp_expenses = 0.0
+                    pool_currencies = set()
 
                     for b in pool_candidates:
                         qty_remaining = buy_quantities[b.transaction_id]
                         fraction = qty_remaining / b.quantity if b.quantity > 0 else 0
+                        rate = b.currency.rate_to_base
 
-                        # Add cost and expenses proportional to what's left
-                        total_pool_cost += (b.price_per_unit * b.quantity) * fraction
-                        total_pool_expenses += (b.commission + b.taxes) * fraction
+                        cost = (b.price_per_unit * b.quantity) * fraction
+                        expenses = (b.commission + b.taxes) * fraction
+                        native_cost += cost
+                        gbp_cost += cost * rate
+                        native_expenses += expenses
+                        gbp_expenses += expenses * rate
+                        pool_currencies.add(b.currency.code)
 
                     # Create a "Pooled" transaction match
                     match_qty = min(remaining_to_match, total_pool_qty)
 
                     if match_qty > 0:
-                        # Calculate cost for the matched portion
                         pool_fraction = match_qty / total_pool_qty
-                        matched_cost = total_pool_cost * pool_fraction
-                        matched_expenses = total_pool_expenses * pool_fraction
+                        matched_cost_gbp = gbp_cost * pool_fraction
+                        matched_expenses_gbp = gbp_expenses * pool_fraction
 
-                        # Create a synthetic transaction representing the pool match
-                        # We use the sell date as the date, or maybe the latest buy date?
-                        # Usually S104 doesn't have a specific date, but for the object we need one.
+                        if len(pool_currencies) == 1 and native_cost > 0 and gbp_cost > 0:
+                            # One currency: keep it, with the pool's cost-weighted rate, so the report
+                            # still shows the original amount and the pounds come out exactly.
+                            code = next(iter(pool_currencies))
+                            pool_rate = gbp_cost / native_cost
+                            pool_currency = Currency(code=code, rate_to_base=pool_rate)
+                            price = native_cost * pool_fraction / match_qty
+                            commission = matched_expenses_gbp / pool_rate
+                        else:
+                            # Mixed currencies: only the pounds figure is meaningful
+                            pool_currency = Currency(code="GBP", rate_to_base=1.0)
+                            price = matched_cost_gbp / match_qty
+                            commission = matched_expenses_gbp
+
                         pooled_tx = Transaction(
                             transaction_id=f"POOL_MATCH_{sell_tx.transaction_id}",
                             transaction_type=TransactionType.BUY,
                             security=sell_tx.security,
-                            date=sell_tx.date,  # Date doesn't matter much for S104 match
+                            date=sell_tx.date,  # S104 has no acquisition date of its own
                             quantity=match_qty,
-                            price_per_unit=matched_cost / match_qty if match_qty > 0 else 0,
-                            commission=matched_expenses,  # We lump expenses here? Or split?
-                            taxes=0.0,  # Lumping all expenses into commission for simplicity or split if needed
-                            currency=sell_tx.currency  # Assuming same currency for now
+                            price_per_unit=price,
+                            commission=commission,  # all expenses lumped into commission
+                            taxes=0.0,
+                            currency=pool_currency,
                         )
-                        # Actually, we should try to preserve the currency of the pool if possible,
-                        # but if mixed currencies, we might need base currency.
-                        # For now assuming single currency or converted.
 
                         matched_buys.append(pooled_tx)
 

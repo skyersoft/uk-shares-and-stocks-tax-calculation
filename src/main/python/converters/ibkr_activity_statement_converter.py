@@ -7,9 +7,10 @@ read, and only stock orders are converted.
 
 Contract shared by ``inspect()`` and ``convert()``: a file is blocked by
 ``inspect()`` exactly when ``convert()`` raises ``BrokerConversionError``
-(see ``_blocking_problems``). In particular, non-GBP stock rows are refused:
-the statement carries no exchange rates, and converting them at 1.0 would
-report a foreign-currency gain as pounds.
+(see ``_blocking_problems``). The statement carries no exchange rates, so
+non-GBP stock rows are converted at HMRC's published monthly rate for the
+trade's month (``HMRCExchangeRateService``); a row whose currency/month has no
+published rate blocks the file rather than being converted at 1.0.
 """
 import re
 import csv
@@ -22,6 +23,7 @@ from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple
 
 from ..interfaces.broker_converter import BaseBrokerConverter, BrokerConversionError
+from ..services.fx_service import HMRCExchangeRateService
 from ..models.file_inspection import (
     ColumnInfo,
     FileInspection,
@@ -205,19 +207,52 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
             return [c for c in self.INSPECT_REQUIRED if c not in section.headers]
         return []
 
-    def _non_gbp(self, section: TradesSection) -> List[str]:
-        return sorted({(row.get('Currency') or 'GBP') for row, asset_class in self._order_rows(section.rows)
-                       if asset_class is not None and (row.get('Currency') or 'GBP') not in self.GBP_CODES})
-
-    def non_gbp_currencies(self, file_path: str) -> List[str]:
-        """Currencies (other than GBP/GBX) of the stock rows in the file, sorted."""
-        return self._non_gbp(self.read_trades_section(file_path))
+    @property
+    def rates(self) -> HMRCExchangeRateService:
+        if getattr(self, '_rates', None) is None:
+            self._rates = HMRCExchangeRateService()
+        return self._rates
 
     @staticmethod
-    def non_gbp_message(currencies: List[str]) -> str:
-        return (f"This statement contains trades in {', '.join(currencies)}. The Activity Statement has no "
-                "exchange rates, so we cannot convert them to pounds yet. Ask us to add support, or export "
-                "a Flex Query that includes FX rates (the FXRateToBase column) and upload that instead.")
+    def _month_label(d: datetime) -> str:
+        return d.strftime('%b %Y')
+
+    def _unconvertible(self, section: TradesSection) -> List[str]:
+        """'USD in Jun 2019'-style labels of stock rows with no HMRC rate for their currency/month."""
+        missing = set()
+        for row, asset_class in self._order_rows(section.rows):
+            currency = row.get('Currency') or 'GBP'
+            if asset_class is None or currency in self.GBP_CODES:
+                continue
+            d = self._parse_date(row.get('Date/Time', ''))
+            if d is not None and self.rates.rate_for(currency, d) is None:
+                missing.add((currency, d.year, d.month, self._month_label(d)))
+        return [f"{c} in {label}" for c, _, _, label in sorted(missing)]
+
+    def unconvertible(self, file_path: str) -> List[str]:
+        return self._unconvertible(self.read_trades_section(file_path))
+
+    @staticmethod
+    def unconvertible_message(labels: List[str]) -> str:
+        return ("There is no HMRC monthly exchange rate for " + ", ".join(labels) + ", so we cannot convert "
+                "those trades to pounds. HMRC publishes rates from January 2021 for the main currencies. "
+                "Ask us to add support, or export a Flex Query that includes FX rates (the FXRateToBase "
+                "column) and upload that instead.")
+
+    def _conversion_note(self, transactions: List[StandardTransaction]) -> Optional[str]:
+        foreign = [t for t in transactions if t.fx_rate_source and t.transaction_currency != t.base_currency]
+        if not foreign:
+            return None
+        counts: Dict[str, int] = {}
+        used = set()
+        for t in foreign:
+            counts[t.transaction_currency] = counts.get(t.transaction_currency, 0) + 1
+            used.add((t.date.year, t.date.month, t.transaction_currency, self._month_label(t.date),
+                      self.rates.published_rate(t.transaction_currency, t.date)))
+        trades = ", ".join(f"{n} {c} trade{'s' if n != 1 else ''}" for c, n in sorted(counts.items()))
+        rates = "; ".join(f"{label}: £1 = {rate} {c}" for _, _, c, label, rate in sorted(used))
+        return (f"Converted {trades} to pounds at HMRC monthly exchange rates ({rates}). "
+                "Each trade uses the rate of the month it was made; check these match your records.")
 
     def _blocking_problems(self, section: TradesSection) -> Tuple[List[str], List[str]]:
         """(missing required columns, warnings) that make the file unusable.
@@ -227,9 +262,9 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
         """
         missing = self._required_missing(section)
         problems = ["Missing required column(s): " + ", ".join(missing)] if missing else []
-        currencies = [] if 'Currency' in missing else self._non_gbp(section)
-        if currencies:
-            problems.append(self.non_gbp_message(currencies))
+        labels = [] if 'Currency' in missing else self._unconvertible(section)
+        if labels:
+            problems.append(self.unconvertible_message(labels))
         return missing, problems
 
     def convert(self, file_path: str, base_currency: str = "GBP", **kwargs) -> List[StandardTransaction]:
@@ -286,6 +321,14 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
             commission = commission / 100
             currency = 'GBP'
 
+        fx_rate = fx_source = None
+        if currency != base_currency:
+            found = self.rates.rate_for(currency, date)
+            if found is None:  # convert()/inspect() block these files first; never fall back to 1.0
+                return None
+            fx_rate, month = found
+            fx_source = f"HMRC monthly rate {month}"
+
         return StandardTransaction(
             date=date,
             symbol=symbol,
@@ -298,6 +341,9 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
             asset_class=asset_class,
             commission=commission,
             base_currency=base_currency,
+            fx_rate_to_base=fx_rate,
+            fx_rate_source=fx_source,
+            fx_rate_date=date if fx_rate is not None else None,
         )
 
     # --------------------------------------------------------------- inspection
@@ -396,6 +442,9 @@ class IBKRActivityStatementConverter(BaseBrokerConverter):
 
         stock_rows = len(transactions) + failed
         if not problems:
+            note = self._conversion_note(transactions)
+            if note:
+                warnings.append(note)
             warnings.extend(self._cost_event_warnings(file_path, transactions))
         if problems:
             verdict = "blocked"

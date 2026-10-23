@@ -20,15 +20,29 @@ class TestHMRCExchangeRateService:
         rate = service.get_rate("GBP", "GBP", datetime(2024, 1, 1))
         assert rate == Decimal('1.0')
     
-    def test_mock_rates(self, service):
-        """Should return mock rates for known pairs."""
-        rate = service.get_rate("USD", "GBP", datetime(2024, 1, 1))
-        assert rate == Decimal('0.79')
-        
-        rate = service.get_rate("EUR", "GBP", datetime(2024, 1, 1))
-        assert rate == Decimal('0.86')
-    
-    def test_unknown_pair(self, service):
-        """Should return None for unknown pair."""
-        rate = service.get_rate("JPY", "GBP", datetime(2024, 1, 1))
-        assert rate is None
+    def test_usd_to_gbp_uses_hmrc_monthly_rate_of_the_trade_month(self, service):
+        """HMRC Sep 2025 publishes 1.3473 USD per GBP, so 1 USD = 1/1.3473 GBP."""
+        rate = service.get_rate("USD", "GBP", datetime(2025, 9, 17))
+        assert rate == (Decimal(1) / Decimal("1.3473")).quantize(Decimal("0.0000000001"))
+
+    def test_gbp_to_usd_is_the_published_rate(self, service):
+        assert service.get_rate("GBP", "USD", datetime(2025, 9, 1)) == Decimal("1.3473")
+
+    def test_month_boundaries_use_their_own_month(self, service):
+        sep = service.get_rate("EUR", "GBP", datetime(2025, 9, 30, 23, 59))
+        octo = service.get_rate("EUR", "GBP", datetime(2025, 10, 1))
+        assert sep != octo
+
+    def test_rate_for_reports_the_month_used(self, service):
+        rate, month = service.rate_for("USD", datetime(2025, 9, 17))
+        assert month == "2025-09" and rate > 0
+
+    def test_month_without_published_rate_is_none_not_a_guess(self, service):
+        assert service.get_rate("USD", "GBP", datetime(2019, 6, 1)) is None
+        assert service.rate_for("USD", datetime(2019, 6, 1)) is None
+
+    def test_unknown_currency_is_none(self, service):
+        assert service.get_rate("XXX", "GBP", datetime(2025, 9, 1)) is None
+
+    def test_cross_rates_are_not_invented(self, service):
+        assert service.get_rate("USD", "EUR", datetime(2025, 9, 1)) is None

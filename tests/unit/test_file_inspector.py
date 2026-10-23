@@ -256,16 +256,14 @@ def test_cross_file_failure_falls_back_to_per_file_results(monkeypatch):
 QFX = DATA / "qfx"
 
 
-def test_usd_activity_statement_is_blocked_with_fx_message_and_actions():
+def test_usd_activity_statement_is_converted_and_the_rates_are_shown():
     for name in ("ibkr/activity_statement_usd.csv", "ibkr/activity_statement_mixed_currency.csv"):
         r = inspect_files([("s.csv", fixture_bytes(name))])
         f = only(r)
-        assert f.verdict == "blocked" and not r.can_continue
+        assert f.verdict == "ready_with_warnings" and r.can_continue
         text = " ".join(f.warnings)
-        assert "USD" in text and "exchange rates" in text and "pounds" in text
-        assert {"request_support", "remove_file"} <= actions(f)
+        assert "HMRC monthly" in text and "1.3412" in text
         assert f.summary.currencies == (["USD"] if "usd" in name else ["GBP", "USD"])
-        assert r.expectations == []  # blocked rows never feed the sell-without-buy walk
 
 
 def test_gbp_and_gbx_activity_statements_still_ready():

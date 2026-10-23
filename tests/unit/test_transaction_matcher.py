@@ -219,3 +219,47 @@ class TestUKTransactionMatcher:
         assert pooled.transaction_id.startswith("POOL_MATCH_")
         assert pooled.quantity == 200.0
         assert pooled.price_per_unit == pytest.approx(4.6, rel=1e-6)  # Weighted average price
+
+
+class TestSection104PoolCurrency:
+    """The pool's cost is in pounds at each purchase's own exchange rate (HMRC: convert at acquisition)."""
+
+    SEC = Security(isin="US0000000001", symbol="AAAA")
+
+    @staticmethod
+    def _tx(tid, kind, day, qty, price, ccy, rate, fee=0.0):
+        return Transaction(
+            transaction_id=tid, transaction_type=kind, security=TestSection104PoolCurrency.SEC,
+            date=day, quantity=qty, price_per_unit=price, commission=fee, taxes=0.0,
+            currency=Currency(code=ccy, rate_to_base=rate))
+
+    @staticmethod
+    def _pooled(matches):
+        [(_, buys)] = matches
+        [pooled] = buys
+        return pooled
+
+    def test_usd_pool_cost_uses_purchase_date_rate_not_sale_date_rate(self):
+        buy = self._tx("b", TransactionType.BUY, datetime(2025, 6, 3), 100.0, 10.50, "USD", 0.7456, fee=1.0)
+        sell = self._tx("s", TransactionType.SELL, datetime(2025, 8, 11), -40.0, 12.0, "USD", 0.7385, fee=1.1)
+        pooled = self._pooled(UKTransactionMatcher().match_disposals([buy, sell]))
+        cost_gbp = pooled.quantity * pooled.price_per_unit * pooled.currency.rate_to_base
+        fee_gbp = pooled.commission * pooled.currency.rate_to_base
+        assert cost_gbp == pytest.approx(0.4 * 1050 * 0.7456)
+        assert fee_gbp == pytest.approx(0.4 * 1.0 * 0.7456)
+        assert pooled.currency.code == "USD"  # original currency stays visible in the report
+
+    def test_pool_mixing_currencies_sums_pounds_not_native_amounts(self):
+        gbp = self._tx("b1", TransactionType.BUY, datetime(2025, 5, 1), 100.0, 4.0, "GBP", 1.0)
+        usd = self._tx("b2", TransactionType.BUY, datetime(2025, 6, 1), 100.0, 10.0, "USD", 0.75)
+        sell = self._tx("s", TransactionType.SELL, datetime(2025, 8, 1), -100.0, 9.0, "USD", 0.74)
+        pooled = self._pooled(UKTransactionMatcher().match_disposals([gbp, usd, sell]))
+        cost_gbp = pooled.quantity * pooled.price_per_unit * pooled.currency.rate_to_base
+        assert cost_gbp == pytest.approx(0.5 * (400 + 750))
+
+    def test_gbp_pool_unchanged(self):
+        buy = self._tx("b", TransactionType.BUY, datetime(2025, 6, 3), 100.0, 5.0, "GBP", 1.0, fee=2.0)
+        sell = self._tx("s", TransactionType.SELL, datetime(2025, 8, 11), -50.0, 6.0, "GBP", 1.0)
+        pooled = self._pooled(UKTransactionMatcher().match_disposals([buy, sell]))
+        assert pooled.quantity * pooled.price_per_unit == pytest.approx(250.0)
+        assert pooled.commission == pytest.approx(1.0)

@@ -302,8 +302,8 @@ def _inspect_one(name: str, data: bytes, workdir: str, index: int) -> Tuple[File
         if ins.verdict == "no_trades":
             _explain_no_trades(path, ins)
         elif ins.verdict == "blocked":
-            if conv.non_gbp_currencies(path):
-                # No FX rates in the statement: convert() refuses these rows (see converter)
+            if conv.unconvertible(path):
+                # No HMRC rate for a currency/month: convert() refuses these rows (see converter)
                 ins.next_actions = _actions("request_support", "view_export_steps", "remove_file")
             else:
                 ins.next_actions = _actions("view_export_steps", "remove_file")
